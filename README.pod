@@ -28,6 +28,8 @@ If you change the routes table then kill -HUP or reload app to regenerate routes
 
 =head2 SQL tables
 
+=over 4
+
 =item * Table of routes
 
     create table routes(
@@ -62,6 +64,7 @@ where:
 	id2 - secondary id
 of relation
 
+=back
 
 =head2 Example routing table records
 
@@ -115,7 +118,7 @@ L<Mojolicious::Plugin::Authentication>, L<Mojolicious::Plugin::Authorization>
 
 =head1 AUTHOR
 
-Михаил Че (Mikhail Che), C<< <mche [] cpan.org> >
+Михаил Че (Mikhail Che), C<< <mche [] cpan.org>>
 
 
 =head1 COPYRIGHT
