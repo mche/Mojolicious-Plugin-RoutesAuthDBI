@@ -18,22 +18,24 @@ sub register {
   $sth->execute();
   while (my $r_item = $sth->fetchrow_hashref()) {
     next if $r_item->{disable};
-    my @request = split /\s+/, $r_item->{request};
-    $r->route(pop @request);
-    $r->via(@request) if @request;
-    $r->over(__PACKAGE__ => $r_item);
-    $r->to(controller=>$r_item->{controller}, action => $r_item->{action},);
-    $r->name($r_item->{name}) if $r_item->{name};
+    my @request = grep /\S/, split /\s+/, $r_item->{request};
+    my $nr = $r->route(pop @request);
+    $nr->via(@request) if @request;
+    $nr->over(__PACKAGE__ => $r_item);
+    $nr->to(controller=>$r_item->{controller}, action => $r_item->{action},);
+    $nr->name($r_item->{name}) if $r_item->{name};
+    $app->log->debug("Generate route [@{[$app->dumper($nr)]}] from __PACKAGE__->register");
   }
   $sth->finish;
 }
 
 # 
 sub _auth {
-  my ($route, $c, $captures, $route) = @_;
+  my ($route, $c, $captures, $r_item) = @_;
   # 1. по паролю выставить куки
   # 2. по кукам выставить пользователя
   # 3. если не проверять доступ вернуть 1
+  return 1 unless $r_item->{auth};
   # 4. получить все группы пользователя
   # 5. по ИДам групп и пользователя проверить доступ
   return 1; #ok
