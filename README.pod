@@ -11,7 +11,7 @@ Mojolicious::Plugin::RoutesAuthDBI - Generate routes from sql-table and make res
     
     $app->plugin(RoutesAuthDBI => { dbh => $app->dbh->{main} });
     # or
-    $app->plugin(RoutesAuthDBI); # will apply dbh=> $app->dbh
+    $app->plugin(RoutesAuthDBI); # will try apply dbh=> $app->dbh
 
 The config attr B<dbh> - DBI connection where are tables: routes, users, groups, rels.
 
@@ -32,8 +32,9 @@ If you change the routes table then kill -HUP or reload app to regenerate routes
         controller varchar not null,
         action varchar not null,
         name varchar null,
+        descr text null,
         auth bit null,
-        descr text null
+        disable bit null
     );
 
 =item * Table of users
