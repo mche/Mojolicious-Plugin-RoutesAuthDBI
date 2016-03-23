@@ -16,7 +16,7 @@ Mojolicious::Plugin::RoutesAuthDBI - Generate routes from sql-table and make res
 
 =head2 Example routing table records
 
-    Route
+    Request
     HTTP method(s) (optional)
     and the URL (space delim)
                                Contoller    Method          Route Name        Auth
@@ -31,7 +31,7 @@ Mojolicious::Plugin::RoutesAuthDBI - Generate routes from sql-table and make res
     /                          Home         index           home_index        0
     GET POST /foo/baz          Foo          baz             foo_baz           1
 
-It will generate the Mojolicious L<routes|http://mojolicious.org/perldoc/Mojolicious/Guides/Routing>:
+It table will generate the L<Mojolicious routes|http://mojolicious.org/perldoc/Mojolicious/Guides/Routing>:
 
     # GET /city/new 
     $r->route('/city/new')->via('get')->to(controller => 'city', action => 'new_form')->name('city_new_form');
