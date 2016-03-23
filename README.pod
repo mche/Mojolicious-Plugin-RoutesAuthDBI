@@ -74,7 +74,7 @@ of relation
     GET /city/delete/:id       City         delete_form     city_delete_form  1
     DELETE /city/:id           City         delete          city_delete       1
     /                          Home         index           home_index        0
-    GET post /foo/baz          Foo          baz             foo_baz           1
+    get post /foo/baz          Foo          baz             foo_baz           1
 
 It table will generate the L<Mojolicious routes|http://mojolicious.org/perldoc/Mojolicious/Guides/Routing>:
 
@@ -104,6 +104,10 @@ It table will generate the L<Mojolicious routes|http://mojolicious.org/perldoc/M
         
     # GET or POST /foo/baz 
     $r->route('/foo/baz')->via('GET', 'post')->over(<auth>)->to(controller => 'Foo', action => 'baz')->name('foo_baz');
+
+=head1 SEE ALSO
+
+L<Mojolicious::Plugin::Authentication>, L<Mojolicious::Plugin::Authorization>
 
 =head1 AUTHOR
 
