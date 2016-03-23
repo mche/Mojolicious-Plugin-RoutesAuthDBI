@@ -15,7 +15,7 @@ __END__
 
 =head1 NAME
 
-Mojolicious::Plugin::RoutesAuthDBI - Generate routes from sql-table and make restrict access to them with users table. Make an auth operations with cookies.
+Mojolicious::Plugin::RoutesAuthDBI - Generate routes from sql-table and make restrict access to them with users/grops tables. Make an auth operations with cookies and check access to the route.
 
 =head1 SYNOPSIS
 
@@ -28,17 +28,17 @@ Mojolicious::Plugin::RoutesAuthDBI - Generate routes from sql-table and make res
     Route
     HTTP method(s) (optional)
     and the URL (space delim)
-                        Contoller         Method          Route Name
-    ------              ---------         -------          ------------
-    GET /city/new               City         new_form        city_new_form
-    GET /city/:id                   City         show            city_show
-    GET /city/edit/:id              City         edit_form       city_edit_form
-    GET /cities                   City         index          city_index
-    POST /city                   City         save          city_save
-    GET /city/delete/:id            City         delete_form     city_delete_form
-    DELETE /city/:id                   City         delete          city_delete
-    /foo/bar               Foo         bar        foo_bar
-    GET POST /foo/baz                   Foo         baz        foo_baz
+                               Contoller    Method          Route Name
+    -------------------------  -----------  --------------  -----------------
+    GET /city/new              City         new_form        city_new_form
+    GET /city/:id              City         show            city_show
+    GET /city/edit/:id         City         edit_form       city_edit_form
+    GET /cities                City         index           city_index
+    POST /city                 City         save            city_save
+    GET /city/delete/:id       City         delete_form     city_delete_form
+    DELETE /city/:id           City         delete          city_delete
+    /foo/bar                   Foo          bar             foo_bar
+    GET POST /foo/baz          Foo          baz             foo_baz
 
 
         # GET /city/new 
