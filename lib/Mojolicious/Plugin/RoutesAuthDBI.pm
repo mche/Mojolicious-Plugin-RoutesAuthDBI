@@ -13,6 +13,8 @@ sub register {
 
 __END__
 
+=encoding utf8
+
 =head1 NAME
 
 Mojolicious::Plugin::RoutesAuthDBI - Generate routes from sql-table and make restrict access to them with users/grops tables. Make an auth operations with cookies and check access to the route.
@@ -25,10 +27,10 @@ Mojolicious::Plugin::RoutesAuthDBI - Generate routes from sql-table and make res
 
 =head2 Example routing table records
 
-    Route
+    B<Route>
     HTTP method(s) (optional)
     and the URL (space delim)
-                               Contoller    Method          Route Name
+                               B<Contoller>    B<Method>          B<Route Name>
     -------------------------  -----------  --------------  -----------------
     GET /city/new              City         new_form        city_new_form
     GET /city/:id              City         show            city_show
@@ -40,7 +42,8 @@ Mojolicious::Plugin::RoutesAuthDBI - Generate routes from sql-table and make res
     /foo/bar                   Foo          bar             foo_bar
     GET POST /foo/baz          Foo          baz             foo_baz
 
-
+  It will generate the routes:
+  
         # GET /city/new 
         $r->route('/city/new')->via('get')->to(controller => 'city', action => 'new_form')->name('city_new_form');
 
