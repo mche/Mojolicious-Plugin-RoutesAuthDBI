@@ -1,5 +1,9 @@
 =encoding utf8
 
+Доброго всем
+
+¡ ¡ ¡ ALL GLORY TO GLORIA ! ! !
+
 =head1 NAME
 
 Mojolicious::Plugin::RoutesAuthDBI - Generate routes from sql-table and make restrict access to them with users/grops tables. Plugin makes an auth operations with cookies and does check access to the route.
