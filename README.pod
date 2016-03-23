@@ -62,53 +62,15 @@ It will generate the Mojolicious L<routes|http://mojolicious.org/perldoc/Mojolic
 
 =head1 AUTHOR
 
-Михаил Че (Mikhail Che), C<< <mche [] cpan.org> >>
-
-=head1 BUGS
-
-Please report any bugs or feature requests to C<bug-mojolicious-plugin-routesauthdbi at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Mojolicious-Plugin-RoutesAuthDBI>.  I will be notified, and then you'll
-automatically be notified of progress on your bug as I make changes.
-
-
-
-
-=head1 SUPPORT
-
-You can find documentation for this module with the perldoc command.
-
-    perldoc Mojolicious::Plugin::RoutesAuthDBI
-
-
-You can also look for information at:
-
-=over 4
-
-=item * RT: CPAN's request tracker (report bugs here)
-
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Mojolicious-Plugin-RoutesAuthDBI>
-
-=item * AnnoCPAN: Annotated CPAN documentation
-
-L<http://annocpan.org/dist/Mojolicious-Plugin-RoutesAuthDBI>
-
-=item * CPAN Ratings
-
-L<http://cpanratings.perl.org/d/Mojolicious-Plugin-RoutesAuthDBI>
-
-=item * Search CPAN
-
-L<http://search.cpan.org/dist/Mojolicious-Plugin-RoutesAuthDBI/>
-
-=back
-
-
-=head1 ACKNOWLEDGEMENTS
+Михаил Че (Mikhail Che), C<< <mche [] cpan.org> >
 
 
 =head1 COPYRIGHT
 
 Copyright 2016 Mikhail Che.
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
 
 =cut
 
