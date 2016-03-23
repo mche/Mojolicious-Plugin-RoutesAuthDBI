@@ -2,9 +2,13 @@
 
 =head1 NAME
 
-Mojolicious::Plugin::RoutesAuthDBI - Generate routes from sql-table and make restrict access to them with users/grops tables. Make an auth operations with cookies and check access to the route.
+Mojolicious::Plugin::RoutesAuthDBI - Generate routes from sql-table and make restrict access to them with users/grops tables. Plugin makes an auth operations with cookies and does check access to the route.
 
 =head1 SYNOPSIS
+
+    # at sub startup
+    # after config
+    $app->plugin(RoutesAuthDBI => { dbh => $app->dbh->{main} });
 
 =head1 DESCRIPTION
 
@@ -15,50 +19,50 @@ Mojolicious::Plugin::RoutesAuthDBI - Generate routes from sql-table and make res
     Route
     HTTP method(s) (optional)
     and the URL (space delim)
-                               Contoller    Method          Route Name
-    -------------------------  -----------  --------------  -----------------
-    GET /city/new              City         new_form        city_new_form
-    GET /city/:id              City         show            city_show
-    GET /city/edit/:id         City         edit_form       city_edit_form
-    GET /cities                City         index           city_index
-    POST /city                 City         save            city_save
-    GET /city/delete/:id       City         delete_form     city_delete_form
-    DELETE /city/:id           City         delete          city_delete
-    /foo/bar                   Foo          bar             foo_bar
-    GET POST /foo/baz          Foo          baz             foo_baz
+                               Contoller    Method          Route Name        Auth
+    -------------------------  -----------  --------------  ----------------- -----
+    GET /city/new              City         new_form        city_new_form     1
+    GET /city/:id              City         show            city_show         1
+    GET /city/edit/:id         City         edit_form       city_edit_form    1
+    GET /cities                City         index           city_index        1
+    POST /city                 City         save            city_save         1
+    GET /city/delete/:id       City         delete_form     city_delete_form  1
+    DELETE /city/:id           City         delete          city_delete       1
+    /                          Home         index           home_index        0
+    GET POST /foo/baz          Foo          baz             foo_baz           1
 
-It will generate the B<routes>:
-  
-        # GET /city/new 
-        $r->route('/city/new')->via('get')->to(controller => 'city', action => 'new_form')->name('city_new_form');
+It will generate the Mojolicious L<routes|http://mojolicious.org/perldoc/Mojolicious/Guides/Routing>:
 
-        # GET /city/123 - show item with id 123
-        $r->route('/city/:id')->via('get')->to(controller => 'city', action => 'show')->name('city_show');
+    # GET /city/new 
+    $r->route('/city/new')->via('get')->to(controller => 'city', action => 'new_form')->name('city_new_form');
 
-        # GET /city/edit/123 - form to edit an item
-        $r->route('/city/edit/:id')->via('get')->to(controller => 'city', action => 'edit_form')->name('city_edit_form');
+    # GET /city/123 - show item with id 123
+    $r->route('/city/:id')->via('get')->to(controller => 'city', action => 'show')->name('city_show');
 
-        # GET /cities - list of all items
-        $r->route('/cities')->via('get')->to(controller => 'city', action => 'index')->name('cities_index');
+    # GET /city/edit/123 - form to edit an item
+    $r->route('/city/edit/:id')->via('get')->to(controller => 'city', action => 'edit_form')->name('city_edit_form');
 
-        # POST /city - create new item or update the item
-        $r->route('/city')->via('post')->to(controller => 'city', action => 'save')->name('city_save');
+    # GET /cities - list of all items
+    $r->route('/cities')->via('get')->to(controller => 'city', action => 'index')->name('cities_index');
 
-        # GET /city/delete/123 - form to confirm delete an item id=123
-        $r->route('/city/delete/:id')->via('get')->to(controller => 'city', action => 'delete_form')->name('city_delete_form');
+    # POST /city - create new item or update the item
+    $r->route('/city')->via('post')->to(controller => 'city', action => 'save')->name('city_save');
+    
+    # GET /city/delete/123 - form to confirm delete an item id=123
+    $r->route('/city/delete/:id')->via('get')->to(controller => 'city', action => 'delete_form')->name('city_delete_form');
 
-        # DELETE /city/123 - delete an item id=123
-        $r->route('/city/:id')->via('delete')->to(controller => 'city', action => 'delete')->name('city_delete');
+    # DELETE /city/123 - delete an item id=123
+    $r->route('/city/:id')->via('delete')->to(controller => 'city', action => 'delete')->name('city_delete');
         
-        # without HTTP method
-        $r->route('/foo/bar')->to(controller => 'Foo', action => 'bar')->name('foo_bar');
+    # without HTTP method and no auth restrict
+    $r->route('/')->to(controller => 'Home', action => 'index')->name('home_index');
         
-        # GET or POST /foo/baz 
-        $r->route('/foo/baz')->via(['GET', 'POST'])->to(controller => 'Foo', action => 'baz')->name('foo_baz');
+    # GET or POST /foo/baz 
+    $r->route('/foo/baz')->via(['GET', 'POST'])->to(controller => 'Foo', action => 'baz')->name('foo_baz');
 
 =head1 AUTHOR
 
-Mikhail Che, C<< <mche [] cpan.org> >>
+Михаил Че (Mikhail Che), C<< <mche [] cpan.org> >>
 
 =head1 BUGS
 
