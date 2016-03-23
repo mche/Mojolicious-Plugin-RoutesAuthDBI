@@ -1,21 +1,12 @@
 package Mojolicious::Plugin::RoutesAuthDBI;
+use Mojo::Base 'Mojolicious::Plugin';
 
-use 5.006;
-use strict;
-use warnings;
-
-=head1 NAME
-
-Mojolicious::Plugin::RoutesAuthDBI - The great new Mojolicious::Plugin::RoutesAuthDBI!
-
-=head1 VERSION
-
-Version 0.01
-
-=cut
 
 our $VERSION = '0.01';
 
+=head1 NAME
+
+Mojolicious::Plugin::RoutesAuthDBI - Generate routes from sql-table and make restrict access to them with users table. Make an auth operations with cookies.
 
 =head1 SYNOPSIS
 
