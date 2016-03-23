@@ -4,41 +4,69 @@ use Mojo::Base 'Mojolicious::Plugin';
 
 our $VERSION = '0.01';
 
+sub register {
+  my ($plugin, $app, @args) = @_;
+  
+}
+
+1;
+
+__END__
+
 =head1 NAME
 
 Mojolicious::Plugin::RoutesAuthDBI - Generate routes from sql-table and make restrict access to them with users table. Make an auth operations with cookies.
 
 =head1 SYNOPSIS
 
-Quick summary of what the module does.
+=head1 DESCRIPTION
 
-Perhaps a little code snippet.
 
-    use Mojolicious::Plugin::RoutesAuthDBI;
 
-    my $foo = Mojolicious::Plugin::RoutesAuthDBI->new();
-    ...
+=head2 Example routing table records
 
-=head1 EXPORT
+    Route
+    HTTP method(s) (optional)
+    and the URL (space delim)
+                        Contoller         Method          Route Name
+    ------              ---------         -------          ------------
+    GET /city/new               City         new_form        city_new_form
+    GET /city/:id                   City         show            city_show
+    GET /city/edit/:id              City         edit_form       city_edit_form
+    GET /cities                   City         index          city_index
+    POST /city                   City         save          city_save
+    GET /city/delete/:id            City         delete_form     city_delete_form
+    DELETE /city/:id                   City         delete          city_delete
+    /foo/bar               Foo         bar        foo_bar
+    GET POST /foo/baz                   Foo         baz        foo_baz
 
-A list of functions that can be exported.  You can delete this section
-if you don't export anything, such as for a purely object-oriented module.
 
-=head1 SUBROUTINES/METHODS
+        # GET /city/new 
+        $r->route('/city/new')->via('get')->to(controller => 'city', action => 'new_form')->name('city_new_form');
 
-=head2 function1
+        # GET /city/123 - show item with id 123
+        $r->route('/city/:id')->via('get')->to(controller => 'city', action => 'show')->name('city_show');
 
-=cut
+        # GET /city/edit/123 - form to edit an item
+        $r->route('/city/edit/:id')->via('get')->to(controller => 'city', action => 'edit_form')->name('city_edit_form');
 
-sub function1 {
-}
+        # GET /cities - list of all items
+        $r->route('/cities')->via('get')->to(controller => 'city', action => 'index')->name('cities_index');
 
-=head2 function2
+        # POST /city - create new item or update the item
+        $r->route('/city')->via('post')->to(controller => 'city', action => 'save')->name('city_save');
 
-=cut
+        # GET /city/delete/123 - form to confirm delete an item id=123
+        $r->route('/city/delete/:id')->via('get')->to(controller => 'city', action => 'delete_form')->name('city_delete_form');
 
-sub function2 {
-}
+        # DELETE /city/123 - delete an item id=123
+        $r->route('/city/:id')->via('delete')->to(controller => 'city', action => 'delete')->name('city_delete');
+        
+        # without HTTP method
+        $r->route('/foo/bar')->to(controller => 'Foo', action => 'bar')->name('foo_bar');
+        
+        # GET or POST /foo/baz 
+        $r->route('/foo/baz')->via(['GET', 'POST'])->to(controller => 'Foo', action => 'baz')->name('foo_baz');
 
 =head1 AUTHOR
 
@@ -86,47 +114,9 @@ L<http://search.cpan.org/dist/Mojolicious-Plugin-RoutesAuthDBI/>
 =head1 ACKNOWLEDGEMENTS
 
 
-=head1 LICENSE AND COPYRIGHT
+=head1 COPYRIGHT
 
 Copyright 2016 Mikhail Che.
 
-This program is free software; you can redistribute it and/or modify it
-under the terms of the the Artistic License (2.0). You may obtain a
-copy of the full license at:
-
-L<http://www.perlfoundation.org/artistic_license_2_0>
-
-Any use, modification, and distribution of the Standard or Modified
-Versions is governed by this Artistic License. By using, modifying or
-distributing the Package, you accept this license. Do not use, modify,
-or distribute the Package, if you do not accept this license.
-
-If your Modified Version has been derived from a Modified Version made
-by someone other than you, you are nevertheless required to ensure that
-your Modified Version complies with the requirements of this license.
-
-This license does not grant you the right to use any trademark, service
-mark, tradename, or logo of the Copyright Holder.
-
-This license includes the non-exclusive, worldwide, free-of-charge
-patent license to make, have made, use, offer to sell, sell, import and
-otherwise transfer the Package with respect to any patent claims
-licensable by the Copyright Holder that are necessarily infringed by the
-Package. If you institute patent litigation (including a cross-claim or
-counterclaim) against any party alleging that the Package constitutes
-direct or contributory patent infringement, then this Artistic License
-to you shall terminate on the date that such litigation is filed.
-
-Disclaimer of Warranty: THE PACKAGE IS PROVIDED BY THE COPYRIGHT HOLDER
-AND CONTRIBUTORS "AS IS' AND WITHOUT ANY EXPRESS OR IMPLIED WARRANTIES.
-THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
-PURPOSE, OR NON-INFRINGEMENT ARE DISCLAIMED TO THE EXTENT PERMITTED BY
-YOUR LOCAL LAW. UNLESS REQUIRED BY LAW, NO COPYRIGHT HOLDER OR
-CONTRIBUTOR WILL BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, OR
-CONSEQUENTIAL DAMAGES ARISING IN ANY WAY OUT OF THE USE OF THE PACKAGE,
-EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
 =cut
 
-1; # End of Mojolicious::Plugin::RoutesAuthDBI
