@@ -118,7 +118,7 @@ L<Mojolicious::Plugin::Authentication>, L<Mojolicious::Plugin::Authorization>
 
 =head1 AUTHOR
 
-Михаил Че (Mikhail Che), C<< <mche [] cpan.org>>
+Михаил Че (Mikhail Che), C<< <mche [] cpan.org> >>
 
 
 =head1 COPYRIGHT
