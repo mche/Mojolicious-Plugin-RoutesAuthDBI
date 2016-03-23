@@ -8,9 +8,16 @@ Mojolicious::Plugin::RoutesAuthDBI - Generate routes from sql-table and make res
 
     # at sub startup
     # after config
+    
     $app->plugin(RoutesAuthDBI => { dbh => $app->dbh->{main} });
+    # or
+    $app->plugin(RoutesAuthDBI); # will apply dbh=> $app->dbh
 
 The config attr B<dbh> - DBI connection where are tables: routes, users, groups, rels.
+
+=head3 Warning
+
+If you change the routes table then kill -HUP or reload app to regenerate routes.
 
 
 =head1 DESCRIPTION
@@ -66,36 +73,36 @@ of relation
     GET /city/delete/:id       City         delete_form     city_delete_form  1
     DELETE /city/:id           City         delete          city_delete       1
     /                          Home         index           home_index        0
-    GET POST /foo/baz          Foo          baz             foo_baz           1
+    GET post /foo/baz          Foo          baz             foo_baz           1
 
 It table will generate the L<Mojolicious routes|http://mojolicious.org/perldoc/Mojolicious/Guides/Routing>:
 
     # GET /city/new 
-    $r->route('/city/new')->via('get')->to(controller => 'city', action => 'new_form')->name('city_new_form');
+    $r->route('/city/new')->via('get')->over(<auth>)->to(controller => 'city', action => 'new_form')->name('city_new_form');
 
     # GET /city/123 - show item with id 123
-    $r->route('/city/:id')->via('get')->to(controller => 'city', action => 'show')->name('city_show');
+    $r->route('/city/:id')->via('get')->over(<auth>)->to(controller => 'city', action => 'show')->name('city_show');
 
     # GET /city/edit/123 - form to edit an item
-    $r->route('/city/edit/:id')->via('get')->to(controller => 'city', action => 'edit_form')->name('city_edit_form');
+    $r->route('/city/edit/:id')->via('get')->over(<auth>)->to(controller => 'city', action => 'edit_form')->name('city_edit_form');
 
     # GET /cities - list of all items
-    $r->route('/cities')->via('get')->to(controller => 'city', action => 'index')->name('cities_index');
+    $r->route('/cities')->via('get')->over(<auth>)->to(controller => 'city', action => 'index')->name('cities_index');
 
     # POST /city - create new item or update the item
     $r->route('/city')->via('post')->to(controller => 'city', action => 'save')->name('city_save');
     
     # GET /city/delete/123 - form to confirm delete an item id=123
-    $r->route('/city/delete/:id')->via('get')->to(controller => 'city', action => 'delete_form')->name('city_delete_form');
+    $r->route('/city/delete/:id')->via('get')->over(<auth>)->to(controller => 'city', action => 'delete_form')->name('city_delete_form');
 
     # DELETE /city/123 - delete an item id=123
-    $r->route('/city/:id')->via('delete')->to(controller => 'city', action => 'delete')->name('city_delete');
+    $r->route('/city/:id')->via('delete')->over(<auth>)->to(controller => 'city', action => 'delete')->name('city_delete');
         
     # without HTTP method and no auth restrict
     $r->route('/')->to(controller => 'Home', action => 'index')->name('home_index');
         
     # GET or POST /foo/baz 
-    $r->route('/foo/baz')->via(['GET', 'POST'])->to(controller => 'Foo', action => 'baz')->name('foo_baz');
+    $r->route('/foo/baz')->via('GET', 'post')->over(<auth>)->to(controller => 'Foo', action => 'baz')->name('foo_baz');
 
 =head1 AUTHOR
 
