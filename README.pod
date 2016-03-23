@@ -10,8 +10,45 @@ Mojolicious::Plugin::RoutesAuthDBI - Generate routes from sql-table and make res
     # after config
     $app->plugin(RoutesAuthDBI => { dbh => $app->dbh->{main} });
 
+The config attr B<dbh> - DBI connection where are tables: routes, users, groups, rels.
+
+
 =head1 DESCRIPTION
 
+=head2 SQL tables
+
+=item * Table of routes
+
+    create table routes(
+        id int not null primary key,
+        request varchar not null,
+        controller varchar not null,
+        action varchar not null,
+        name varchar null,
+        auth bit null,
+        descr text null
+    );
+
+=item * Table of users
+
+    create table users(...);
+
+=item * Table of users groups
+
+    create table groups(...);
+
+=item * Table of relations between routes, users and groups
+
+    create table rels(
+        id int not null primary key,
+        id1 int not null,
+        id2 int not null
+    );
+
+where:
+	id1 - primary id,
+	id2 - secondary id
+of relation
 
 
 =head2 Example routing table records
