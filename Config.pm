@@ -25,18 +25,18 @@
 			#~ ['ParamsArray'],
 	],
 	# Хуки
-	mojo_hooks=>{
-		before_dispatch => sub {1;},
-	},
-	# Хазы
-	#~ mojo_has => [# упорядоченные пары можно hash
+	#~ mojo_hooks=>{
+		#~ before_dispatch => sub {1;},
+	#~ },
+	# Хазы (не катят в Plugin::ApplyConfig)
+	#~ mojo_has => {
 		#~ foo=>sub {my $app = shift; },
-	#~ ],
+	#~ },
 	mojo_secret => rand,
 	#!!! пустой has dbh=>sub{{};}; в startup !!!
 	dbh=>{# dsn, user, passwd
 		'main'=>{
-			connect=>["DBI:Pg:dbname=postgres;", "guest", undef, {# DBI->connect
+			connect=>["DBI:Pg:dbname=test;", "guest", undef, {# DBI->connect
 				ShowErrorStatement => 1,
 				AutoCommit => 1,
 				RaiseError => 1,
@@ -52,7 +52,7 @@
 	},
 	#!!! пустой has sth=>sub{{};}; в startup !!!
 	sth => {# prepared sth
-		main=>{now=>"select now();"},
+		main=>{now2=>"select now();"},
 	},
 };
 

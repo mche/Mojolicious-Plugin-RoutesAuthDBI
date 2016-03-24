@@ -6,7 +6,7 @@
 
 =head1 NAME
 
-Mojolicious::Plugin::RoutesAuthDBI - Generate routes from sql-table and make restrict access to them with users/grops tables. Plugin makes an auth operations with cookies and does check access to the route.
+Mojolicious::Plugin::RoutesAuthDBI - Generate routes from sql-table and make restrict access to them with users/roles tables. Plugin makes an auth operations with cookies and does check access to the route.
 
 =head1 SYNOPSIS
 
@@ -17,7 +17,7 @@ Mojolicious::Plugin::RoutesAuthDBI - Generate routes from sql-table and make res
     # or
     $app->plugin(RoutesAuthDBI); # will try apply dbh=> $app->dbh
 
-The config attr B<dbh> - DBI connection where are tables: routes, users, groups, rels.
+The config attr B<dbh> - DBI connection where are tables: routes, users, roles, rels.
 
 =head3 Warning
 
@@ -28,12 +28,18 @@ If you change the routes table then kill -HUP or reload app to regenerate routes
 
 =head2 SQL tables
 
+All tables has primary column id from one sequence. 
+
 =over 4
+
+=item * Pg sequence for all tables
+
+    create sequence ID;
 
 =item * Table of routes
 
     create table routes(
-        id int not null primary key,
+        id int default nextval('ID'::regclass) not null  primary key,
         request varchar not null,
         controller varchar not null,
         action varchar not null,
@@ -45,16 +51,23 @@ If you change the routes table then kill -HUP or reload app to regenerate routes
 
 =item * Table of users
 
-    create table users(...);
+    create table users(
+        id int default nextval('ID'::regclass) not null  primary key,
+        login varchar not null,
+        pass varchar not null
+    );
 
-=item * Table of users groups
+=item * Table of users roles
 
-    create table groups(...);
+    create table roles(
+        id int default nextval('ID'::regclass) not null  primary key,
+        name varchar not null
+    );
 
-=item * Table of relations between routes, users and groups
+=item * Table of relations between routes, users and roles
 
     create table rels(
-        id int not null primary key,
+        id int default nextval('ID'::regclass) not null  primary key,
         id1 int not null,
         id2 int not null
     );
