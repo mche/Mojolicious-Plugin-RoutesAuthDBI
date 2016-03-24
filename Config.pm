@@ -10,7 +10,6 @@
 
 {
 	'Проект'=>'Тест плугинов',
-	
 	# установка лог файла раньше установки режима, поэтому всегда log/development.log!!!!
 	#mojo_mode=>$ENV{PLACK_ENV} ? 'production' : 'development', #  production $ENV{ MOJO_MODE}
 	mojo_mode=> 'development',
@@ -19,7 +18,6 @@
 	mojo_plugins=>[ # map $self->plugin($_)
 			#~ ['PODRenderer'], # Documentation browser under "/perldoc"
 			[charset => { charset => 'UTF-8' }, ],
-			#~ [Config=>{file => __PACKAGE__.'.pm'}], убрал в startup
 			#[PoweredBy => {name => "Perl $^V Web Service"}],
 			#~ [ConfigRoutes => {file=>"ConfigRoutes.pm",},],#"$FindBin::Bin/ConfigRoutes.pm",
 			 #~ ['ConfigApply'],
@@ -28,13 +26,14 @@
 	],
 	# Хуки
 	mojo_hooks=>{
-		#~ before_dispatch => sub {},
+		before_dispatch => sub {1;},
 	},
 	# Хазы
-	mojo_has => [# упорядоченные пары можно hash
+	#~ mojo_has => [# упорядоченные пары можно hash
 		#~ foo=>sub {my $app = shift; },
-	],
+	#~ ],
 	mojo_secret => rand,
+	#!!! пустой has dbh=>sub{{};}; в startup !!!
 	dbh=>{# dsn, user, passwd
 		'main'=>{
 			connect=>["DBI:Pg:dbname=postgres;", "guest", undef, {# DBI->connect
@@ -48,11 +47,12 @@
 				#~ AutoInactiveDestroy => 1,
 			}],
 			do=>['set  datestyle to "ISO, DMY";',],
-			#~ sth=>{foo=>"select * from foo;"},# prepared sth
+			sth=>{now=>"select now();"},# prepared sth
 		}
 	},
+	#!!! пустой has sth=>sub{{};}; в startup !!!
 	sth => {# prepared sth
-		#~ main=>{bar=>"select * from bar;"},
+		main=>{now=>"select now();"},
 	},
 };
 
