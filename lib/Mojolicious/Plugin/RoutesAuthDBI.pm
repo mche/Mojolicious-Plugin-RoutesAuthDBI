@@ -33,7 +33,7 @@ my $user_roles = sub {
 my $access = sub {
   
   
-}
+};
 
 my $fail_render = {format=>'txt', text=>"Access denied!!!"};
 

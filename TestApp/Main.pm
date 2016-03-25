@@ -6,11 +6,11 @@ sub index {
   
   #~ $c->render(format=>'txt', text=>__PACKAGE__ . " At home!!! ".$c->dumper( $c->session('auth_data')));
   
-  $c->render(format=>'txt', text=>__PACKAGE__ . " At home!!! You are signed! ".$c->dumper( $c->auth_user))
+  $c->render(format=>'txt', text=>__PACKAGE__ . " You are signed!!! ".$c->dumper( $c->auth_user))
     and return
     if $c->is_user_authenticated;
   
-  $c->render(format=>'txt', text=>__PACKAGE__.": At home!!! You are not signed. To sign in/up go to /sign/<login>/<pass>");
+  $c->render(format=>'txt', text=>__PACKAGE__." You are not signed!!! To sign in/up go to /sign/<login>/<pass>");
 }
 
 sub sign {
@@ -21,7 +21,16 @@ sub sign {
     and return;
     
   
-  $c->render(format=>'txt', text=>__PACKAGE__ . "Bad sign!!! Try again");
+  $c->render(format=>'txt', text=>__PACKAGE__ . " Bad sign!!! Try again");
+}
+
+sub signout {
+  my $c = shift;
+  
+  $c->logout;
+  
+  $c->render(format=>'txt', text=>__PACKAGE__ . "Go away!!!");
+  
 }
 
 1;
