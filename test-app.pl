@@ -1,4 +1,5 @@
 #!/usr/bin/env perl
+package TestApp;
 use Mojo::Base 'Mojolicious';
 
 use FindBin;
@@ -12,8 +13,7 @@ sub startup {#
   has dbh => sub { {}; };
   has sth => sub { {}; };
   $app->plugin('ConfigApply');
-  $app->plugin('RoutesAuthDBI', dbh=>$app->dbh->{'main'});
-  $app->routes->namespaces(['Controll']);
+  $app->plugin('RoutesAuthDBI', dbh=>$app->dbh->{'main'}, auth=>{current_user_fn=>'auth_user'});
 }
 
 __PACKAGE__->new()->start();

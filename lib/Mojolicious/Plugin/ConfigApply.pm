@@ -15,7 +15,7 @@ sub register {
   $self->_sth($app);
   $self->_hooks($app);
   
-  $app->secrets($conf->{'mojo_secret'} || $conf->{'mojo_secrets'} || $conf->{'mojo'}{'secret'} || $conf->{'mojo'}{'secrets'} || rand);
+  $app->secrets($conf->{'mojo_secret'} || $conf->{'mojo_secrets'} || $conf->{'mojo'}{'secret'} || $conf->{'mojo'}{'secrets'} || [rand]);
 
 
 }

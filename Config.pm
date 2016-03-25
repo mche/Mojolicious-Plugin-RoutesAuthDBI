@@ -32,7 +32,7 @@
 	#~ mojo_has => {
 		#~ foo=>sub {my $app = shift; },
 	#~ },
-	mojo_secret => rand,
+	mojo_secrets => ['__test-app',],
 	#!!! пустой has dbh=>sub{{};}; в startup !!!
 	dbh=>{# dsn, user, passwd
 		'main'=>{
@@ -47,13 +47,12 @@
 				#~ AutoInactiveDestroy => 1,
 			}],
 			do=>['set  datestyle to "ISO, DMY";',],
-			sth=>{now=>"select now();"},# prepared sth
+			#~ sth=>{now=>"select now();"},# prepared sth
 		}
 	},
 	#!!! пустой has sth=>sub{{};}; в startup !!!
-	sth => {# prepared sth
-		main=>{now2=>"select now();"},
-	},
+	#~ sth => { main=>{now2=>"select now();"},},# prepared sth
+
 };
 
 
