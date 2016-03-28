@@ -25,6 +25,13 @@ my $validate_user = sub {
   return undef;
 };
 
+my $sth_routes = sub {
+  my $sth = $dbh->prepare("select * from routes where coalesce(disable, 0::bit) <> 1::bit;");
+  $sth->execute();
+  $sth;
+};
+
+
 my $user_roles = sub {#load all roles of some user
   my ($c, $uid) = @_;
   $dbh->selectall_hashref("select g.* from roles g join refs r on g.id=r.id1 where r.id2=?", undef, ($uid));
@@ -49,21 +56,14 @@ sub register {
 
 }
 
-my $sth_routes = <<'CODE';
-sub {
-  my $sth = shift->prepare("select * from routes;");
-  $sth->execute();
-  $sth;
-};
-CODE
 
 sub generate_routes {
   my ($self, $app,) = @_;
   my $r = $app->routes;
   $r->add_condition(__PACKAGE__ => \&_auth);
-  my $sth = (eval $sth_routes)->($dbh);
+  my $sth = $sth_routes->();
   while (my $r_item = $sth->fetchrow_hashref()) {
-    next if $r_item->{disable};
+    #~ next if $r_item->{disable};
     my @request = grep /\S/, split /\s+/, $r_item->{request};
     my $nr = $r->route(pop @request);
     $nr->via(@request) if @request;

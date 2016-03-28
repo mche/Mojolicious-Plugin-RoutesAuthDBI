@@ -6,16 +6,16 @@
 
 =head1 NAME
 
-Mojolicious::Plugin::RoutesAuthDBI - Generate routes from sql-table and make restrict access to them with users/roles tables. Plugin makes an auth operations with cookies and does check access to the route.
+Mojolicious::Plugin::RoutesAuthDBI - Generate routes from sql-table and make restrict access to them with users/roles tables. Plugin makes an auth operations throught the plugin L<Mojolicious::Plugin::Authentication> on which is based.
 
 =head1 SYNOPSIS
 
     # at sub startup
     # after config
     
-    $app->plugin(RoutesAuthDBI,  dbh => $app->dbh->{main}, auth => {...}, ...);
+    $app->plugin('RoutesAuthDBI',  dbh => $app->dbh->{main}, auth => {...}, ...);
     # or
-    $app->plugin(RoutesAuthDBI); # will try apply options from $app->config('RoutesAuthDBI')
+    $app->plugin('RoutesAuthDBI'); # will try apply options from $app->config('RoutesAuthDBI')
 
 =head2 OPTIONS
 
