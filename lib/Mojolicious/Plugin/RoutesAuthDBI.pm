@@ -2,7 +2,7 @@ package Mojolicious::Plugin::RoutesAuthDBI;
 use Mojo::Base 'Mojolicious::Plugin::Authentication';
 
 
-our $VERSION = '0.02';
+our $VERSION = '0.05';
 
 my $dbh;
 
@@ -35,7 +35,7 @@ my $access = sub {
   
 };
 
-my $fail_render = {format=>'txt', text=>"Access denied!!!"};
+my $fail_render = {format=>'txt', text=>"Please sign in/up at /sign/<login>/<pass>!!!"};
 
 sub register {
   my ($self, $app, $args) = @_;
@@ -68,7 +68,7 @@ sub generate_routes {
     $nr->over(authenticated=>$r_item->{auth});
     $nr->to(controller=>$r_item->{controller}, action => $r_item->{action},);
     $nr->name($r_item->{name}) if $r_item->{name};
-    $app->log->debug(__PACKAGE__." Generate route [@{[$app->dumper($r_item)]}]");
+    $app->log->debug(__PACKAGE__." generate the route [@{[$app->dumper($r_item)]}]");
   }
   $sth->finish;
 }

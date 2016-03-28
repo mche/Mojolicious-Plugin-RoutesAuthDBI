@@ -64,9 +64,9 @@ All tables has primary column id from one sequence.
         name varchar not null
     );
 
-=item * Table of relations between routes, users and roles
+=item * Table of references between routes, users and roles
 
-    create table rels(
+    create table refs(
         id int default nextval('ID'::regclass) not null  primary key,
         id1 int not null,
         id2 int not null
@@ -75,11 +75,20 @@ All tables has primary column id from one sequence.
 where:
 	id1 - primary id,
 	id2 - secondary id
-of relation
+of reference
 
 =back
 
 =head2 Example routing table records
+
+    test=# select * from routes ;
+     id |      request       | controller | action  |    name    | descr | auth | disable 
+    ----+--------------------+------------+---------+------------+-------+------+---------
+      2 | /                  | Main       | index   | home       |       | 0    | 
+      3 | /sign/:login/:pass | Main       | sign    | sign in&up |       | 0    | 
+      5 | /signout           | Main       | signout | go away    |       | 1    | 
+
+
 
     Request
     HTTP method(s) (optional)
