@@ -13,11 +13,22 @@ Mojolicious::Plugin::RoutesAuthDBI - Generate routes from sql-table and make res
     # at sub startup
     # after config
     
-    $app->plugin(RoutesAuthDBI => { dbh => $app->dbh->{main} });
+    $app->plugin(RoutesAuthDBI,  dbh => $app->dbh->{main}, auth => {...}, ...);
     # or
-    $app->plugin(RoutesAuthDBI); # will try apply dbh=> $app->dbh
+    $app->plugin(RoutesAuthDBI); # will try apply options from $app->config('RoutesAuthDBI')
 
-The config attr B<dbh> - DBI connection where are tables: routes, users, roles, rels.
+=head2 OPTIONS
+
+=over 4
+
+=item * B<dbh> - DBI connection where are tables: routes, users, roles, refs.
+
+=item * B<auth> - hashref with options of L<Mojolicious::Plugin::Authentication>
+
+=item * B<load_roles> - an SQL-string for select of all roles of current user. The helper B<roles> can retrivie roles as DBI selectall_hashref.
+
+=item * B<
+
 
 =head3 Warning
 
@@ -26,13 +37,13 @@ If you change the routes table then kill -HUP or reload app to regenerate routes
 
 =head1 DESCRIPTION
 
-=head2 SQL tables
+=head2 SQL schema
 
-All tables has primary column id from one sequence. 
+    route -> role -> user
 
 =over 4
 
-=item * Pg sequence for all tables
+=item * Pg sequence for column id on all tables
 
     create sequence ID;
 
@@ -40,10 +51,10 @@ All tables has primary column id from one sequence.
 
     create table routes(
         id int default nextval('ID'::regclass) not null  primary key,
-        request varchar not null,
+        request varchar not null unique,
         controller varchar not null,
         action varchar not null,
-        name varchar null,
+        name varchar not null unique,
         descr text null,
         auth bit null,
         disable bit null

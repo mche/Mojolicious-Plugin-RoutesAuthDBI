@@ -25,17 +25,20 @@ my $validate_user = sub {
   return undef;
 };
 
-my $user_roles = sub {
+my $user_roles = sub {#load all roles of some user
   my ($c, $uid) = @_;
-  $dbh->selectall_hashref("select g.* from roles g join rels r on g.id=r.id1 where r.id2=?", undef, ($uid));
+  $dbh->selectall_hashref("select g.* from roles g join refs r on g.id=r.id1 where r.id2=?", undef, ($uid));
 };
 
-my $access = sub {
-  
+my $ref = sub {#  check if ref between id1 and [IDs2] exists
+  my ($c, $id1, $id2) = @_;
+  return scalar $dbh->selectrow_array("select count(*) from refs where id1 = ? and id2 = ANY(?)", undef, ($id1, $id2));
   
 };
 
-my $fail_render = {format=>'txt', text=>"Please sign in/up at /sign/<login>/<pass>!!!"};
+my $fail_render = {format=>'txt', text=>"Deny at auth step. Please sign in/up at /sign/<login>/<pass>!!!"};
+
+###########################END OF OPTIONS #####################################
 
 sub register {
   my ($self, $app, $args) = @_;
