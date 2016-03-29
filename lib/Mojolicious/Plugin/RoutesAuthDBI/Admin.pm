@@ -1,4 +1,4 @@
-package TestApp::Main;
+package Admin;
 use Mojo::Base 'Mojolicious::Controller';
 
 sub index {
@@ -29,7 +29,14 @@ sub signout {
   
   $c->logout;
   
-  $c->render(format=>'txt', text=>__PACKAGE__ . "Go away!!!");
+  $c->render(format=>'txt', text=>__PACKAGE__ . "You are exited!!!");
+  
+}
+
+sub init {
+  my $c = shift;
+  
+  $c->render(format=>'txt', text=>__PACKAGE__ . " This is first run of plugin RoutesAuthDBI!!!");
   
 }
 
