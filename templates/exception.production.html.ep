@@ -1,0 +1,7 @@
+<!DOCTYPE html>
+<html>
+  <head><title>Die on error</title></head>
+  <body><h1>Page died on error <%= $status %></h1>
+   <pre><%= $exception->message %></pre>
+  </body>
+</html>

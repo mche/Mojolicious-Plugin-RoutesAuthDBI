@@ -5,6 +5,8 @@ use Mojo::Base 'Mojolicious::Plugin::Authentication';
 our $VERSION = '0.07';
 
 my $dbh;
+my $sth;
+my $pkg = __PACKAGE__;
 
 my $load_user = sub {
   my ($c, $uid) = @_;
@@ -26,7 +28,7 @@ my $validate_user = sub {
 };
 
 my $sth_routes = sub {
-  my $sth = $dbh->prepare("select * from routes where coalesce(disable, 0::bit) <> 1::bit;");
+  my $sth = $dbh->prepare("select * from routes where coalesce(disable, 0::bit) <> 1::bit order by order_by, ts;");
   $sth->execute();
   $sth;
 };
@@ -50,6 +52,7 @@ my $fail_render = {format=>'txt', text=>"Deny at auth step. Please sign in/up at
 sub register {
   my ($self, $app, $args) = @_;
   $dbh = $args->{dbh} ||= $app->dbh;
+  $sth = $args->{sth}{__PACKAGE__} ||= {};
   die "Plugin must work with arg dbh, see SYNOPSIS" unless $args->{dbh};
   $self->SUPER::register($app, {load_user=>$load_user, validate_user=> $validate_user, fail_render => $fail_render, %{$args->{auth} || {}}, },);
   $self->generate_routes($app);
@@ -60,7 +63,7 @@ sub register {
 sub generate_routes {
   my ($self, $app,) = @_;
   my $r = $app->routes;
-  $r->add_condition(__PACKAGE__ => \&_access);
+  $r->add_condition($pkg => \&_access);
   my $sth = $sth_routes->();
   my $skip_init;
   while (my $r_item = $sth->fetchrow_hashref()) {
@@ -70,7 +73,7 @@ sub generate_routes {
     $nr->via(@request) if @request;
     #~ $nr->over(__PACKAGE__ => $r_item);
     $nr->over(authenticated=>$r_item->{auth});
-    $nr->to(controller=>$r_item->{controller}, action => $r_item->{action},);
+    $nr->to(controller=>$r_item->{controller}, action => $r_item->{action},  $r_item->{namespace} ? (namespace => $r_item->{namespace}) : (),);
     $nr->name($r_item->{name}) if $r_item->{name};
     $app->log->debug(__PACKAGE__." generate the route [@{[$app->dumper($r_item)]}]");
     $skip_init ||= 1;
@@ -82,9 +85,10 @@ sub generate_routes {
 sub _init {
   my ($self, $app,) = @_;
   my $r = $app->routes;
-  my $ns = $r->namespaces;
-  push @$ns, grep !($_ ~~ $ns), __PACKAGE__;
-  $r->route('/')->to('admin#init');
+  #~ my $ns = $r->namespaces;
+  #~ push @$ns, grep !($_ ~~ $ns), __PACKAGE__;
+  $r->route('/')->to('admin#init', namespace=>__PACKAGE__,);
+  $r->route('/admin/init')->to('admin#init_routes', namespace=>__PACKAGE__,);
 }
 
 

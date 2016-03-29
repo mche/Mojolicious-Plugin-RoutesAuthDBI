@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title> <%= title %> </title>
+    <script src="/public/js/jquery.min.js"></script>
+        <!-- jQuery Version 1.11.0 -->
+
+    <!-- Bootstrap Core JavaScript -->
+    <script src="/public/js/bootstrap.min.js"></script>
+
+    <!-- Bootstrap Core CSS -->
+    <link href="/public/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom Fonts -->
+    <link href="/public/files/font-awesome-4.1.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+	
+	<link href="/public/css/main.css" rel="stylesheet" type="text/css">
+	<link media00="print, handheld" rel="stylesheet" href="/public/css/print1.css">
+	<script src="/public/js/main.js"></script>
+
+</head>
+
+<body>
+<style type="text/css">
+@media print { /* Стиль для печати */
+	.table-bordered > thead:first-child > tr:first-child > th, .table-bordered > tbody > tr > td, .table-bordered > thead > tr > th {
+		border: 1px solid black;
+	}
+}
+</style>
+<div class="hidden-print" >
+<svg height="30" width="30" style="cursor:pointer;" onclick="print()"><g transform="scale(2.0)"><path d="M4,2h8v2h1V1H3v3h1M0,5v6h3v1l3,3h7v-4h3V5m-3,2v1H12v6H6V12H4V8H3V7m2,1h6v1H5m0,1h6v1H5"></path></g></svg>
+<a href="#назад" onclick="history.back()">
+	<img style="height:30px; vertical-align: top;" src="/public/images/udom2.png">
+	<!--span href="/" style="color: rgb(0,140,240);">Уютный дом</span-->
+</a>
+</div>
+<div class="content"><%== stash('content') %>
+
+</body>
+
+</html>

@@ -33,7 +33,7 @@
 		#~ foo=>sub {my $app = shift; },
 	#~ },
 	mojo_secrets => ['__test-app',],
-	#!!! пустой has dbh=>sub{{};}; в startup !!!
+	#!!! пустой has dbh=>sub{{};}; в app !!!
 	dbh=>{# dsn, user, passwd
 		'main'=>{
 			connect=>["DBI:Pg:dbname=test;", "guest", undef, {# DBI->connect
@@ -50,8 +50,8 @@
 			#~ sth=>{now=>"select now();"},# prepared sth
 		}
 	},
-	#!!! пустой has sth=>sub{{};}; в startup !!!
-	#~ sth => { main=>{now2=>"select now();"},},# prepared sth
+	#!!! пустой has sth=>sub{{};}; в app !!!
+	sth => { main=>{},},# prepared sth
 
 };
 
