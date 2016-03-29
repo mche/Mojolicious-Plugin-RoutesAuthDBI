@@ -52,10 +52,11 @@ my $fail_render = {format=>'txt', text=>"Deny at auth step. Please sign in/up at
 sub register {
   my ($self, $app, $args) = @_;
   $dbh = $args->{dbh} ||= $app->dbh;
-  $sth = $args->{sth}{__PACKAGE__} ||= {};
+  $sth = $args->{sth}{$pkg} ||= {};
   die "Plugin must work with arg dbh, see SYNOPSIS" unless $args->{dbh};
   $self->SUPER::register($app, {load_user=>$load_user, validate_user=> $validate_user, fail_render => $fail_render, %{$args->{auth} || {}}, },);
-  $self->generate_routes($app);
+  $self->generate_routes($app, );
+  $self->admin($app) if $args->{admin};
 
 }
 
@@ -65,30 +66,32 @@ sub generate_routes {
   my $r = $app->routes;
   $r->add_condition($pkg => \&_access);
   my $sth = $sth_routes->();
-  my $skip_init;
   while (my $r_item = $sth->fetchrow_hashref()) {
     #~ next if $r_item->{disable};
     my @request = grep /\S/, split /\s+/, $r_item->{request};
     my $nr = $r->route(pop @request);
     $nr->via(@request) if @request;
-    #~ $nr->over(__PACKAGE__ => $r_item);
+    #~ $nr->over($pkg => $r_item);
     $nr->over(authenticated=>$r_item->{auth});
+    
     $nr->to(controller=>$r_item->{controller}, action => $r_item->{action},  $r_item->{namespace} ? (namespace => $r_item->{namespace}) : (),);
     $nr->name($r_item->{name}) if $r_item->{name};
-    $app->log->debug(__PACKAGE__." generate the route [@{[$app->dumper($r_item)]}]");
-    $skip_init ||= 1;
+    $app->log->debug("$pkg generate the route from data row [@{[$app->dumper($r_item)]}]");
   }
   $sth->finish;
-  $self->_init($app) unless $skip_init;
 }
 
-sub _init {
+
+sub admin {
   my ($self, $app,) = @_;
   my $r = $app->routes;
   #~ my $ns = $r->namespaces;
   #~ push @$ns, grep !($_ ~~ $ns), __PACKAGE__;
-  $r->route('/')->to('admin#init', namespace=>__PACKAGE__,);
-  $r->route('/admin/init')->to('admin#init_routes', namespace=>__PACKAGE__,);
+  $r->route('/admin')->to('admin#index', namespace=>$pkg,);
+  $r->route('/admin/schema')->to('admin#schema', namespace=>$pkg,);
+  
+  #~ require Cwd;
+  #~ push @{$app->renderer->paths}, Cwd::cwd().'/templates';
 }
 
 

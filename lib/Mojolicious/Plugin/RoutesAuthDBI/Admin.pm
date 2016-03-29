@@ -3,11 +3,12 @@ use Mojo::Base 'Mojolicious::Controller';
 
 my $dbh;
 my $sth;
+my $pkg = __PACKAGE__;
 
 sub new {
 	my $self = shift->SUPER::new(@_);
 	$dbh =  $self->app->dbh->{'main'};
-        $sth = $self->app->sth->{'main'}{__PACKAGE__} ||= {};
+        $sth = $self->app->sth->{'main'}{$pkg} ||= {};
 	return $self;
 }
 
@@ -16,22 +17,22 @@ sub index {
   
   #~ $c->render(format=>'txt', text=>__PACKAGE__ . " At home!!! ".$c->dumper( $c->session('auth_data')));
   
-  $c->render(format=>'txt', text=>__PACKAGE__ . " You are signed!!! ".$c->dumper( $c->auth_user))
+  $c->render(format=>'txt', text=>__PACKAGE__ . "\n\nYou are signed!!! ".$c->dumper( $c->auth_user))
     and return
     if $c->is_user_authenticated;
   
-  $c->render(format=>'txt', text=>__PACKAGE__." You are not signed!!! To sign in/up go to /sign/<login>/<pass>");
+  $c->render(format=>'txt', text=>__PACKAGE__."\n\nYou are not signed!!! To sign in/up go to /sign/<login>/<pass>");
 }
 
 sub sign {
   my $c = shift;
   
   $c->authenticate($c->stash('login'), $c->stash('pass'))
-    and $c->render(format=>'txt', text=>__PACKAGE__ . " Successfull signed! ".$c->dumper( $c->auth_user))
+    and $c->render(format=>'txt', text=>__PACKAGE__ . "\n\nSuccessfull signed! ".$c->dumper( $c->auth_user))
     and return;
     
   
-  $c->render(format=>'txt', text=>__PACKAGE__ . " Bad sign!!! Try again");
+  $c->render(format=>'txt', text=>__PACKAGE__ . "\n\nBad sign!!! Try again");
 }
 
 sub signout {
@@ -39,7 +40,7 @@ sub signout {
   
   $c->logout;
   
-  $c->render(format=>'txt', text=>__PACKAGE__ . "You are exited!!!");
+  $c->render(format=>'txt', text=>__PACKAGE__ . "\n\nYou are exited!!!");
   
 }
 
@@ -62,14 +63,26 @@ sub init_routes {
 insert into routes (request, namespace, controller, action, name, auth) values (?,?,?,?,?,?) returning *;
 SQL
   
-  my $r = $dbh->selectrow_hashref($sth->{insert_routes}, undef, ('/','Mojolicious::Plugin::RoutesAuthDBI','admin','index','admin home', undef));
+
   
-    $c->render(format=>'txt', text=>__PACKAGE__ ."\n\n". $c->dumper($r).<<TXT);
+    $c->render(format=>'txt', text=>__PACKAGE__ ."\n\n". $c->dumper([
+  map($dbh->selectrow_hashref($sth->{insert_routes}, undef, @$_),
+  (['/','Mojolicious::Plugin::RoutesAuthDBI','admin','index','admin home', undef],
+    ['/sign/:login/:pass','Mojolicious::Plugin::RoutesAuthDBI','admin','sign','sign in & up', undef],
+    ['/sign/out','Mojolicious::Plugin::RoutesAuthDBI','admin','signout','go away', 1],
+  )),
+    ]).<<TXT);
 
-
+You must kill -HUP (reload/restart) your app! 
 
 TXT
   
+}
+
+sub schema {
+  my $c = shift;
+  # ~/Mojolicious-Plugin-RoutesAuthDBI $ perl test-app.pl get /admin/schema 2>/dev/null | ~/postgres/bin/psql -d test
+  $c->render(format=>'txt', text => join '', <Mojolicious::Plugin::RoutesAuthDBI::Admin::DATA>);
 }
 
 1;
