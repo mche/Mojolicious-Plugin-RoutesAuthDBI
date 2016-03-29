@@ -21,8 +21,8 @@ my $validate_user = sub {
     return $u->{id}
       if $u->{pass} eq $pass;
   } else {# auto sign UP
-    $c->app->log->debug("Register new user $login:$pass");
-    return scalar  $dbh->selectrow_array("insert into users (login, pass) values (?,?) returning id;", undef, ($login, $pass));
+    #~ $c->app->log->debug("Register new user $login:$pass");
+    #~ return scalar  $dbh->selectrow_array("insert into users (login, pass) values (?,?) returning id;", undef, ($login, $pass));
   }
   return undef;
 };
@@ -87,9 +87,10 @@ sub admin {
   my $r = $app->routes;
   #~ my $ns = $r->namespaces;
   #~ push @$ns, grep !($_ ~~ $ns), __PACKAGE__;
+  $r->route('/')->to('admin#home', namespace=>$pkg,);
   $r->route('/admin')->to('admin#index', namespace=>$pkg,);
   $r->route('/admin/schema')->to('admin#schema', namespace=>$pkg,);
-  
+  $r->route('/admin/routes/init')->to('admin#init_routes', namespace=>$pkg,);
   #~ require Cwd;
   #~ push @{$app->renderer->paths}, Cwd::cwd().'/templates';
 }
