@@ -4,6 +4,7 @@ use Mojo::Base 'Mojolicious::Controller';
 my $dbh;
 my $sth;
 my $pkg = __PACKAGE__;
+my $ns = 'Mojolicious::Plugin::RoutesAuthDBI';
 
 sub new {
 	my $self = shift->SUPER::new(@_);
@@ -84,7 +85,7 @@ User already exists!
 
 @{[$c->dumper( $r)]}
 TXT
-    and ($r->{not_new} = 1)
+    and ($r->{not_new} = '!')
     and return $r;
   
   $r = $dbh->selectrow_hashref("insert into users (login, pass) values (?,?) returning *;", undef, ($login, $pass));
@@ -103,14 +104,38 @@ sub trust_new_user {
   my $c = shift;
   
   my $u = $c->new_user;
-  return if $u->{not_new};
+  #~ return if $u->{not_new};
   
-  return;
+  # ROLE
+  my $rl = $dbh->selectrow_hashref("select * from roles where lower(name)=?", undef, ('admin'));
+  $rl ||= $dbh->selectrow_hashref("insert into roles (name) values (?) returning *;", undef, ('admin'));
+  
+  # REF role->user
+  my $ru = $dbh->selectrow_hashref("select * from refs where id1=? and id2=?;", undef, ($rl->{id}, $u->{id}));
+  $ru ||= $dbh->selectrow_hashref("insert into refs (id1,id2) values (?,?) returning *;", undef, ($rl->{id}, $u->{id}));
+  
+  # ROUTE
+  my $rt = $dbh->selectrow_hashref("select * from routes where namespace=? and lower(controller)=? and request is null and action is null", undef, ($ns, 'admin'));
+  $rt ||= $dbh->selectrow_hashref("insert into routes (name, namespace, controller, auth, descr) values (?,?,?,?,?) returning *;", undef, ('admin controller', $ns, 'admin', 1, "Access to all $ns\::Admin.pm actions"));
+    
+    #REF route->role
+  my $rr = $dbh->selectrow_hashref("select * from refs where id1=? and id2=?", undef, ($rt->{id}, $rl->{id}));
+  $rr ||= $dbh->selectrow_hashref("insert into refs (id1,id2) values (?,?) returning *;", undef, ($rt->{id}, $rl->{id}));
   
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
-Success sign up new user!
+Success sign up new trust-user!
+
+USER:
+@{[$c->dumper( $u)]}
+
+ROLE:
+@{[$c->dumper( $rl)]}
+
+ROUTE:
+@{[$c->dumper( $rt)]}
+
 TXT
 }
 
@@ -120,7 +145,7 @@ sub admin_routes {
   my $c = shift;
   my $prefix = (shift || 'admin') =~ s/^\///r;
   my $trust = shift =~ s/\W/-/gr;
-  my $ns = 'Mojolicious::Plugin::RoutesAuthDBI';
+
   my $t = <<TABLE;
 	$ns	admin				1	Access to all $ns\::Admin.pm actions
 /$prefix	$ns	admin	index	$prefix admin home	1	View main page
@@ -145,6 +170,8 @@ post /sign/in	$ns	admin	sign	signin params	0	Auth by params
 /sign/out	$ns	admin	signout	go away	1	Exit
 
 /$prefix/schema	$ns	admin	schema	$prefix sql schema	0	Postgres SQL schema
+/$prefix/schema/drop	$ns	admin	schema_drop	$prefix drop schema	0	Postgres SQL schema remove
+/$prefix/schema/flush	$ns	admin	schema_flush	$prefix flush schema	0	Postgres SQL schema clean
 /$prefix/install	$ns	admin	install	$prefix install	0	Manual
 
 TABLE
@@ -165,7 +192,7 @@ TRUST
 }
 
 
-sub routes {
+sub routes000 {
   my $c = shift;
   
   $sth->{insert_routes} ||= $dbh->prepare(<<SQL);
@@ -191,11 +218,39 @@ sub schema {
   $c->render(format=>'txt', text => join '', <Mojolicious::Plugin::RoutesAuthDBI::Admin::DATA>);
 }
 
+sub schema_drop {
+  my $c = shift;
+  
+  $c->render(format=>'txt', text => <<TXT);
+
+drop table refs;
+drop table users;
+drop table roles;
+drop table routes;
+drop sequence ID;
+
+TXT
+}
+
+sub schema_flush {
+  my $c = shift;
+  
+  $c->render(format=>'txt', text => <<TXT);
+
+delete from refs;
+delete from users;
+delete from roles;
+delete from routes;
+
+TXT
+}
+
 1;
 
 __DATA__
 
-CREATE SEQUENCE ID;
+
+CREATE SEQUENCE ID;-- one sequence for all tables id
 
 CREATE TABLE routes (
     id integer default nextval('ID'::regclass) not null primary key,
@@ -232,3 +287,5 @@ create table refs (
         unique(id1, id2)
 );
 create index on refs (id2);
+
+

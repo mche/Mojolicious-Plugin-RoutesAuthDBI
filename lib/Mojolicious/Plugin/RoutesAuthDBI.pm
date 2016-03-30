@@ -7,6 +7,7 @@ our $VERSION = '0.07';
 my $dbh;
 my $sth;
 my $pkg = __PACKAGE__;
+my $args = {};# set on ->registrer
 
 my $load_user = sub {
   my ($c, $uid) = @_;
@@ -46,17 +47,19 @@ my $ref = sub {#  check if ref between id1 and [IDs2] exists
   
 };
 
-my $fail_render = {format=>'txt', text=>"Deny at auth step. Please sign in at /sign/in/<login>/<pass>!!!"};
+my $fail_auth = {format=>'txt', text=>"Deny at auth step. Please sign in!!!"};
 
 ###########################END OF OPTIONS #####################################
 
 sub register {
-  my ($self, $app, $args) = @_;
+  my ($self, $app,) = (shift, shift);
+  $args = shift; # global
   $dbh = $args->{dbh} ||= $app->dbh;
   $sth = $args->{sth}{$pkg} ||= {};
   die "Plugin must work with arg dbh, see SYNOPSIS" unless $args->{dbh};
-  $self->SUPER::register($app, {load_user=>$load_user, validate_user=> $validate_user, fail_render => $fail_render, %{$args->{auth} || {}}, },);
-  $app->routes->add_condition($pkg => \&_access);
+  $args->{auth}{stash_key} ||= $pkg;
+  $self->SUPER::register($app, {load_user=>$load_user, validate_user=> $validate_user, fail_render => $fail_auth, %{$args->{auth} || {}}, },);
+  $app->routes->add_condition(access => \&_access);
   $self->apply_routes($app, $db_routes->());
   $self->_admin_controller($app, $args->{admin}) if $args->{admin};
 }
@@ -74,8 +77,11 @@ sub apply_routes {
       or next;
     my $nr = $r->route(pop @request);
     $nr->via(@request) if @request;
-    #~ $nr->over($pkg => $r_item);
+    
+    # STEP AUTH
     $nr->over(authenticated=>$r_item->{auth});
+    # STEP ACCESS
+    $nr->over(access => $r_item) if $r_item->{auth};
     
     $nr->to(controller=>$r_item->{controller}, action => $r_item->{action},  $r_item->{namespace} ? (namespace => $r_item->{namespace}) : (),);
     $nr->name($r_item->{name}) if $r_item->{name};
@@ -102,15 +108,28 @@ sub _admin_controller {
 
 
 # 
-sub _access {
+sub _access {# add_condition
   my ($route, $c, $captures, $r_item) = @_;
+  return 1 unless $r_item->{auth};
+  #~ $c->app->log->debug($c->dumper($route));
   # 1. по паролю выставить куки
   # 2. по кукам выставить пользователя
   # 3. если не проверять доступ вернуть 1
-  return 1 unless $r_item->{auth};
+  #~ return 1 unless $r_item->{auth};
   # 4. получить все группы пользователя
+  #~ my $r = $c->stash($args->{auth}{stash_key})->{roles} ||= $user_roles->($c, $c->stash($args->{auth}{stash_key})->{user}{id});
+  my $u = $c->auth_user
+    or return undef;
+  $u->{roles} ||= $user_roles->($c, $u->{'id'});
+  #~ $c->app->log->debug($c->dumper($c->auth_user));
   # 5. по ИДам групп и пользователя проверить доступ
+  #~ return undef;
   return 1; #ok
+}
+
+sub _roles {
+  my ($c) = @_;
+  
 }
 
 1;
