@@ -58,6 +58,7 @@ sub register {
   $sth = $args->{sth}{$pkg} ||= {};
   die "Plugin must work with arg dbh, see SYNOPSIS" unless $args->{dbh};
   $args->{auth}{stash_key} ||= $pkg;
+  $conf->{auth}{current_user_fn} ||= 'auth_user';
   $self->SUPER::register($app, {load_user=>$load_user, validate_user=> $validate_user, fail_render => $fail_auth, %{$args->{auth} || {}}, },);
   $app->routes->add_condition(access => \&_access);
   $self->apply_routes($app, $db_routes->());
@@ -118,7 +119,7 @@ sub _access {# add_condition
   #~ return 1 unless $r_item->{auth};
   # 4. получить все группы пользователя
   #~ my $r = $c->stash($args->{auth}{stash_key})->{roles} ||= $user_roles->($c, $c->stash($args->{auth}{stash_key})->{user}{id});
-  my $u = $c->auth_user
+  my $u = $c->$conf->{auth}{current_user_fn};
     or return undef;
   $u->{roles} ||= $user_roles->($c, $u->{'id'});
   #~ $c->app->log->debug($c->dumper($c->auth_user));
