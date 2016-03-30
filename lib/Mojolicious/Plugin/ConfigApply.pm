@@ -4,6 +4,8 @@ use Mojo::Base 'Mojolicious::Plugin';
 sub register {
   my ($self, $app, $arg) = @_;
   my $conf = $app->config($arg)->config;
+  
+  $app->secrets($conf->{'mojo_secret'} || $conf->{'mojo_secrets'} || $conf->{'mojo'}{'secret'} || $conf->{'mojo'}{'secrets'} || [rand]);
 
   $app->mode($conf->{'mojo_mode'} || $conf->{'mojo'}{'mode'} || 'development'); # Файл лога уже не переключишь
   $app->log->level( $conf->{'mojo_log_level'} || $conf->{'mojo'}{'log_level'} || 'debug');
@@ -14,9 +16,6 @@ sub register {
   $self->_dbh($app);
   $self->_sth($app);
   $self->_hooks($app);
-  
-  $app->secrets($conf->{'mojo_secret'} || $conf->{'mojo_secrets'} || $conf->{'mojo'}{'secret'} || $conf->{'mojo'}{'secrets'} || [rand]);
-
 
 }
 

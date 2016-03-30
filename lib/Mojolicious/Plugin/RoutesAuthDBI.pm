@@ -22,21 +22,22 @@ my $validate_user = sub {
       if $u->{pass} eq $pass;
   } else {# auto sign UP
     #~ $c->app->log->debug("Register new user $login:$pass");
-    #~ return scalar  $dbh->selectrow_array("insert into users (login, pass) values (?,?) returning id;", undef, ($login, $pass));
+    #~ return scalar  $dbh->selectrow_array("insert into cubieusers (login, pass) values (?,?) returning id;", undef, ($login, $pass));
   }
   return undef;
 };
 
-my $sth_routes = sub {
-  my $sth = $dbh->prepare("select * from routes where coalesce(disable, 0::bit) <> 1::bit order by order_by, ts;");
-  $sth->execute();
-  $sth;
+my $db_routes = sub {
+  #~ my $sth = 
+  $dbh->selectall_arrayref("select * from routes where coalesce(disable, 0::bit) <> 1::bit order by order_by, ts;", { Slice => {} },);
+  #~ $sth->execute();
+  #~ $sth;
 };
 
 
 my $user_roles = sub {#load all roles of some user
   my ($c, $uid) = @_;
-  $dbh->selectall_hashref("select g.* from roles g join refs r on g.id=r.id1 where r.id2=?", undef, ($uid));
+  $dbh->selectall_arrayref("select g.* from roles g join refs r on g.id=r.id1 where r.id2=?", { Slice => {} }, ($uid));
 };
 
 my $ref = sub {#  check if ref between id1 and [IDs2] exists
@@ -45,7 +46,7 @@ my $ref = sub {#  check if ref between id1 and [IDs2] exists
   
 };
 
-my $fail_render = {format=>'txt', text=>"Deny at auth step. Please sign in/up at /sign/<login>/<pass>!!!"};
+my $fail_render = {format=>'txt', text=>"Deny at auth step. Please sign in at /sign/in/<login>/<pass>!!!"};
 
 ###########################END OF OPTIONS #####################################
 
@@ -55,20 +56,22 @@ sub register {
   $sth = $args->{sth}{$pkg} ||= {};
   die "Plugin must work with arg dbh, see SYNOPSIS" unless $args->{dbh};
   $self->SUPER::register($app, {load_user=>$load_user, validate_user=> $validate_user, fail_render => $fail_render, %{$args->{auth} || {}}, },);
-  $self->generate_routes($app, );
-  $self->admin($app) if $args->{admin};
-
+  $app->routes->add_condition($pkg => \&_access);
+  $self->apply_routes($app, $db_routes->());
+  $self->_admin_controller($app, $args->{admin}) if $args->{admin};
 }
 
 
-sub generate_routes {
-  my ($self, $app,) = @_;
+sub apply_routes {
+  my ($self, $app, $rs) = @_;
+  return unless $rs && @$rs;
   my $r = $app->routes;
-  $r->add_condition($pkg => \&_access);
-  my $sth = $sth_routes->();
-  while (my $r_item = $sth->fetchrow_hashref()) {
+  while (my $r_item = shift @$rs) {
+  #~ my $sth = $sth_routes->();
+  #~ while (my $r_item = $sth->fetchrow_hashref()) {
     #~ next if $r_item->{disable};
-    my @request = grep /\S/, split /\s+/, $r_item->{request};
+    my @request = grep /\S/, split /\s+/, $r_item->{request}
+      or next;
     my $nr = $r->route(pop @request);
     $nr->via(@request) if @request;
     #~ $nr->over($pkg => $r_item);
@@ -78,20 +81,22 @@ sub generate_routes {
     $nr->name($r_item->{name}) if $r_item->{name};
     $app->log->debug("$pkg generate the route from data row [@{[$app->dumper($r_item)]}]");
   }
-  $sth->finish;
+  #~ $sth->finish;
 }
 
 
-sub admin {
-  my ($self, $app,) = @_;
+sub _admin_controller {
+  my ($self, $app, $conf) = @_;
   my $r = $app->routes;
+  require ($pkg =~ s/::/\//gr).'/Admin.pm';
+  #~ my $c = ($pkg.'::Admin')->new;
+  #~ require Mojolicious::Controller;
+  my @r = (bless {}, $pkg.'::Admin')->admin_routes($conf->{prefix}, $conf->{trust} && $app->secrets->[0]);
+  $self->apply_routes($app, \@r);
+  return;
+
   #~ my $ns = $r->namespaces;
   #~ push @$ns, grep !($_ ~~ $ns), __PACKAGE__;
-  $r->route('/')->to('admin#home', namespace=>$pkg,);
-  $r->route('/admin')->to('admin#index', namespace=>$pkg,);
-  $r->route('/admin/schema')->to('admin#schema', namespace=>$pkg,);
-  $r->route('/admin/routes/init')->to('admin#init_routes', namespace=>$pkg,);
-  #~ require Cwd;
   #~ push @{$app->renderer->paths}, Cwd::cwd().'/templates';
 }
 

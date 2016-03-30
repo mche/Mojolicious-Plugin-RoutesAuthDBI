@@ -32,7 +32,7 @@
 	#~ mojo_has => {
 		#~ foo=>sub {my $app = shift; },
 	#~ },
-	mojo_secrets => ['__test-app',],
+	mojo_secrets => ['хороший 123 test-app',],
 	#!!! пустой has dbh=>sub{{};}; в app !!!
 	dbh=>{# dsn, user, passwd
 		'main'=>{
