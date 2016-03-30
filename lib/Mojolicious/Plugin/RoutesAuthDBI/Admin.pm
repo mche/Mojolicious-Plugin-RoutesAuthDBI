@@ -195,10 +195,10 @@ sub schema {
 
 __DATA__
 
-CREATE SEQUENCE id;
+CREATE SEQUENCE ID;
 
 CREATE TABLE routes (
-    id integer default nextval('id'::regclass) not null primary key,
+    id integer default nextval('ID'::regclass) not null primary key,
     ts timestamp without time zone default now() not null,
     request character varying null,
     namespace character varying null,
@@ -211,4 +211,24 @@ CREATE TABLE routes (
     order_by int
 );
 
+create table users (
+        id int default nextval('ID'::regclass) not null  primary key,
+        ts timestamp without time zone default now() not null,
+        login varchar not null unique,
+        pass varchar not null
+);
+    
+create table roles (
+        id int default nextval('ID'::regclass) not null  primary key,
+        ts timestamp without time zone default now() not null,
+        name varchar not null unique
+);
 
+create table refs (
+        id int default nextval('ID'::regclass) not null  primary key,
+        ts timestamp without time zone default now() not null,
+        id1 int not null,
+        id2 int not null,
+        unique(id1, id2)
+);
+create index on refs (id2);
