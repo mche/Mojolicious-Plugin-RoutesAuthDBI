@@ -2,5 +2,4 @@
 
 #~ use Mojo::Base -strict;
 
-1;
 

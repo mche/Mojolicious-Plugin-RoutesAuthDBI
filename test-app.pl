@@ -18,7 +18,7 @@ sub startup {#
   my $app = shift;
   $app->plugin(Config =>{file => 'Config.pm'});
   $app->plugin('ConfigApply');
-  $app->plugin('RoutesAuthDBI', dbh=>$app->dbh->{'main'}, sth=>$app->sth->{'main'}, auth=>{current_user_fn=>'auth_user'}, admin=>{prefix=>'myadmin', trust=>1,},);
+  $app->plugin('RoutesAuthDBI', dbh=>$app->dbh->{'main'}, auth=>{current_user_fn=>'auth_user'}, admin=>{prefix=>'myadmin', trust=>'fooobaaar',},);
 }
 
 __PACKAGE__->new()->start();
