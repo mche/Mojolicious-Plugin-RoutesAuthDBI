@@ -2,32 +2,34 @@ package Mojolicious::Plugin::RoutesAuthDBI::SQL;
 use Mojo::Base -strict;
 
 =pod
-my $a = {};
-print ($a, (bless $a, 'Foo')->a, "\n");
-print "hop\n";
-$a = {};
-print ($a, (bless $a, 'Foo')->a, "\n");
 
-exit;
-
-package Foo;
-
-print "init Foo!\n";
-my $a = 1;
-
-sub a {(shift, ++$a);} 
-1;
 =cut
 
 my $dbh;
 my $sth;
 my $sql = {
-  'user/id'=>"select * from users where id = ?",# Plugin load_user by id
+  'user/id'=>"select * from users where id = ? and coalesce(disable, 0::bit) <> 1::bit",# Plugin load_user by id
   'user/login'=>"select * from users where login=?",
-  'all routes'=> "select * from routes where coalesce(disable, 0::bit) <> 1::bit order by order_by, ts;",
-  'user roles'=> "select g.* from roles g join refs r on g.id=r.id1 where r.id2=?",
+  'user'=>"select * from users where id = ? or login=?",
+  'all routes'=> "select * from routes order by order_by, ts;",
+  'user roles'=> "select g.* from roles g join refs r on g.id=r.id1 where r.id2=? and coalesce(g.disable, 0::bit) <> 1::bit",
   'cnt refs' => "select count(*) from refs where id1 = ? and id2 = ANY(?)",#  check if ref between id1 and [IDs2] exists
-  'access controller'=>"select count(r.*) from routes r join refs s on r.id=s.id1 where lower(r.controller)=lower(?) and r.namespace=? and r.request is null and r.action is null and s.id2=any(?);",# доступ ко всем действиям по имени контроллера
+  'access controller'=>"select count(r.*) from routes r join refs s on r.id=s.id1 where lower(r.controller)=lower(?) and r.namespace=? and r.request is null and r.action is null and s.id2=any(?) and coalesce(r.disable, 0::bit) <> 1::bit;",# доступ ко всем действиям по имени контроллера
+  
+  'new_user'=> "insert into users (login, pass) values (?,?) returning *;",
+  #~ 'role/name'=>"select * from roles where lower(name)=?",
+  'role'=>"select * from roles where id=? or lower(name)=?",
+  'new_role'=>"insert into roles (name) values (?) returning *;",
+  
+  'ref'=>"select * from refs where id1=? and id2=?;",
+  'new_ref'=>"insert into refs (id1,id2) values (?,?) returning *;",
+  
+  'route/controller'=>"select * from routes where namespace=? and lower(controller)=? and request is null and action is null",
+  'new_route'=>"insert into routes (request, name, namespace, controller, action, auth, descr, disable, order_by) values (?,?,?,?,?,?,?,?,?) returning *;",
+  
+  'role_users'=>"select u.* from users u join refs r on u.id=r.id2 where r.id1=?",
+  'role_routes'=> "select t.* from routes t join refs r on t.id=r.id1 where r.id2=?",
+  
   
   
 };

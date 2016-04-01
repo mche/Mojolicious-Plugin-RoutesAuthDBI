@@ -10,17 +10,17 @@ my $pkg = __PACKAGE__;
 my $conf ;# set on ->registrer
 
 ################################ SQL #####################################
-sub load_user {
+sub load_user {# Mojolicious::Plugin::Authentication
   my ($c, $uid) = @_;
   #~ $c->app->log->debug($c->dumper($c));
   my $u = $admin->get_user($uid);
-  $c->app->log->debug("Loading user by id=$uid ".$u ? 'success' : 'failed');
+  $c->app->log->debug("Loading user by id=$uid ". ($u ? 'success' : 'failed'));
   return $u;
 }
 
-sub validate_user {
-  my ($c, $login, $pass, $extradata) = @_;
-  $admin->validate_user($login, $pass, $extradata);
+sub validate_user { # Mojolicious::Plugin::Authentication
+  my $c = shift;
+  $admin->validate_user(@_);
 }
 
 sub sql_routes {$admin->plugin_routes(@_)}
@@ -28,7 +28,7 @@ sub sql_routes {$admin->plugin_routes(@_)}
 
 sub user_roles {#load all roles of some user
   my ($c, $uid) = @_;
-  $admin->user_roles($uid);
+  $admin->plugin_user_roles($uid);
 }
 
 sub access_route {#  check if ref between id1 and [IDs2] exists
@@ -54,7 +54,7 @@ sub register {
   $conf = shift; # global
   $dbh ||= $conf->{dbh} ||= $app->dbh;
   die "Plugin must work with arg dbh, see SYNOPSIS" unless $conf->{dbh};
-  $admin ||= $self->_admin_controller($app, $conf->{admin} || {});
+  $admin ||= $self->admin_controller($app, $conf->{admin} || {});
   $conf->{auth}{stash_key} ||= $pkg;
   $conf->{auth}{current_user_fn} ||= 'auth_user';
   $conf->{auth}{load_user} ||= \&load_user;
@@ -72,7 +72,7 @@ sub register {
 }
 
 
-sub _admin_controller {
+sub admin_controller {# pseudo controller for access methods
   my ($self, $app, $conf) = @_;
   $conf->{trust} ||= $app->secrets->[0];
   $conf->{namespace} ||= $pkg;
@@ -85,6 +85,7 @@ sub _admin_controller {
 sub apply_route {
   my ($self, $app, $r_hash) = @_;
   my $r = $app->routes;
+  return if $r_hash->{disable};
   return unless $r_hash->{request};
   my @request = grep /\S/, split /\s+/, $r_hash->{request}
     or return;
@@ -98,7 +99,7 @@ sub apply_route {
   
   $nr->to(controller=>$r_hash->{controller}, action => $r_hash->{action},  $r_hash->{namespace} ? (namespace => $r_hash->{namespace}) : (),);
   $nr->name($r_hash->{name}) if $r_hash->{name};
-  $app->log->debug("$pkg generate the route from data row [@{[$app->dumper($r_hash) =~ s/\n/ /gr]}]");
+  #~ $app->log->debug("$pkg generate the route from data row [@{[$app->dumper($r_hash) =~ s/\n/ /gr]}]");
   return $nr;
 }
 
@@ -118,7 +119,7 @@ sub _access {# add_condition
   # 4. получить все группы пользователя
   $u->{roles} ||= user_roles($c, $u->{'id'});
   # 5. по ИДам групп и пользователя проверить доступ
-  my $id2 = [$u->{id}, map($_->{id}, @{$u->{roles}})];
+  my $id2 = [$u->{id}, map($_->{id}, grep !$_->{disable},@{$u->{roles}})];
   ($r_item->{id} && access_route($c, $r_item->{id}, $id2))
     and return 1;
   access_controller($c, $r_item, $id2)

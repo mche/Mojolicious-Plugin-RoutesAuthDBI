@@ -14,6 +14,8 @@ sub new {
 	return $self;
 }
 
+######################## Plugin! ##########################################
+
 sub init {# from plugin! init Class vars
 	my $self = shift;
 	my $args = {@_};
@@ -26,19 +28,14 @@ sub init {# from plugin! init Class vars
 
 sub get_user {
 	my ($c, $uid) = @_;
-	#~ die $sql->sth('user/id');
-	#~ die ($c->dumper($sql->sth));
 	$dbh->selectrow_hashref($sql->sth('user/id'), undef, ($uid));
 }
 
-sub validate_user {
+sub validate_user {# plugin
   my ($c, $login, $pass, $extradata) = @_;
   if (my $u = $dbh->selectrow_hashref($sql->sth('user/login'), undef, ($login))) {
     return $u->{id}
-      if $u->{pass} eq $pass;
-  } else {# auto sign UP
-    #~ $c->app->log->debug("Register new user $login:$pass");
-    #~ return scalar  $dbh->selectrow_array("insert into cubieusers (login, pass) values (?,?) returning id;", undef, ($login, $pass));
+      if $u->{pass} eq $pass  && !$u->{disable};
   }
   return undef;
 }
@@ -47,7 +44,7 @@ sub plugin_routes {
   $dbh->selectall_arrayref($sql->sth('all routes'), { Slice => {} },);
 }
 
-sub user_roles {
+sub plugin_user_roles {
 	my ($c, $uid) = @_;
 	$dbh->selectall_arrayref($sql->sth('user roles'), { Slice => {} }, ($uid));
 }
@@ -62,21 +59,48 @@ sub access_controller {
 	return scalar $dbh->selectrow_array($sql->sth('access controller'), undef, ($r->{controller}, $r->{namespace},  $id2));
 }
 
+################################ END PLUGIN #################################
+
 sub install {
   my $c = shift;
   
    $c->render(format=>'txt', text=><<TXT);
 Welcome $pkg controller!
 
-1.  Run create db schema:
+1. Edit test-app.pl and Config.pm to define DBI->connect dsn, url admin prefix and trust subprefix.
+------------------------
 
-\$ perl test-app.pl get /$plugin_conf->{prefix}/schema 2>/dev/null | psql -d test
 
-2. Go to trust url for admin-user creation :
 
+2. View admin routes:
+------------------------
+\$ perl test-app.pl routes
+
+
+
+3.  Run create db schema:
+-----------------------------
+\$ perl test-app.pl get /$plugin_conf->{prefix}/schema 2>/dev/null | psql -d <dbname>
+
+
+4. Go to trust url for admin-user creation :
+------------------------------------------------
 \$ perl test-app.pl get /$plugin_conf->{prefix}/$plugin_conf->{trust}/user/new/<login>/<pass>
 
-User should be created, assigned to role 'Admin' and role 'Admin' assigned to pseudo-route that has access to all routes of this Controller!
+User will be created and assigned to role 'Admin' . Role 'Admin' assigned to pseudo-route that has access to all routes of this controller!
+
+
+
+5. Go to /sign/in/<login>/<pass>
+-------------------------------------
+
+
+
+6. Go to /$plugin_conf->{prefix}
+------------------------------------
+
+
+Administration of system ready!
 
 TXT
 }
@@ -90,7 +114,8 @@ $pkg
 You are signed as:
 @{[$c->dumper( $c->auth_user)]}
 
-@{[$c->dumper( $sql->sth)]}
+@{[map "$_->{request}\t\t$_->{descr}\n", $c->admin_routes]}
+
 TXT
     and return
     if $c->is_user_authenticated;
@@ -124,7 +149,7 @@ sub new_user {
   my ($login, $pass) = ($c->stash('login') || $c->param('login'), $c->stash('pass') ||  $c->param('pass'));
   
   my $r;
-  ($r = $dbh->selectrow_hashref("select * from users where login=?", undef, ($login)))
+  ($r = $dbh->selectrow_hashref($sql->sth('user/login'), undef, ($login)))
     and $c->render(format=>'txt', text=><<TXT)
 $pkg
 
@@ -135,7 +160,7 @@ TXT
     and ($r->{not_new} = '!')
     and return $r;
   
-  $r = $dbh->selectrow_hashref("insert into users (login, pass) values (?,?) returning *;", undef, ($login, $pass));
+  $r = $dbh->selectrow_hashref($sql->sth('new_user'), undef, ($login, $pass));
   
   $c->render(format=>'txt', text=><<TXT);
 $pkg
@@ -154,20 +179,20 @@ sub trust_new_user {
   #~ return if $u->{not_new};
   
   # ROLE
-  my $rl = $dbh->selectrow_hashref("select * from roles where lower(name)=?", undef, ('admin'));
-  $rl ||= $dbh->selectrow_hashref("insert into roles (name) values (?) returning *;", undef, ('admin'));
+  my $rl = $dbh->selectrow_hashref($sql->sth('role'), undef, (undef, 'admin'));
+  $rl ||= $dbh->selectrow_hashref($sql->sth('new_role'), undef, ('admin'));
   
   # REF role->user
-  my $ru = $dbh->selectrow_hashref("select * from refs where id1=? and id2=?;", undef, ($rl->{id}, $u->{id}));
-  $ru ||= $dbh->selectrow_hashref("insert into refs (id1,id2) values (?,?) returning *;", undef, ($rl->{id}, $u->{id}));
+  my $ru = $dbh->selectrow_hashref($sql->sth('ref'), undef, ($rl->{id}, $u->{id}));
+  $ru ||= $dbh->selectrow_hashref($sql->sth('new_ref'), undef, ($rl->{id}, $u->{id}));
   
   # ROUTE
-  my $rt = $dbh->selectrow_hashref("select * from routes where namespace=? and lower(controller)=? and request is null and action is null", undef, ($namespace, 'admin'));
-  $rt ||= $dbh->selectrow_hashref("insert into routes (name, namespace, controller, auth, descr) values (?,?,?,?,?) returning *;", undef, ('admin controller', $namespace, 'admin', 1, "Access to all $namespace\::Admin.pm actions"));
+  my $rt = $dbh->selectrow_hashref($sql->sth('route/controller'), undef, ($namespace, 'admin'));
+  $rt ||= $dbh->selectrow_hashref($sql->sth('new_route'), undef, (undef, 'admin controller', $namespace, 'admin', undef, 1, "Access to all $namespace\::Admin.pm actions", undef, undef,));
     
     #REF route->role
-  my $rr = $dbh->selectrow_hashref("select * from refs where id1=? and id2=?", undef, ($rt->{id}, $rl->{id}));
-  $rr ||= $dbh->selectrow_hashref("insert into refs (id1,id2) values (?,?) returning *;", undef, ($rt->{id}, $rl->{id}));
+  my $rr = $dbh->selectrow_hashref($sql->sth('ref'), undef, ($rt->{id}, $rl->{id}));
+  $rr ||= $dbh->selectrow_hashref($sql->sth('new_ref'), undef, ($rt->{id}, $rl->{id}));
   
   $c->render(format=>'txt', text=><<TXT);
 $pkg
@@ -186,27 +211,186 @@ ROUTE:
 TXT
 }
 
+sub new_role {
+	my $c = shift;
+	my $name = $c->stash('name');
+	my $r = $dbh->selectrow_hashref($sql->sth('role'), undef, (undef, $name));
+	$c->render(format=>'txt', text=><<TXT)
+$pkg
+
+Exists role!
+
+@{[$c->dumper( $r)]}
+
+TXT
+		and return $c
+		if $r;
+	$r = $dbh->selectrow_hashref($sql->sth('new_role'), undef, ($name));
+	
+	$c->render(format=>'txt', text=><<TXT);
+$pkg
+
+Success created role!
+
+@{[$c->dumper( $r)]}
+
+TXT
+	
+}
+
+sub user_roles {
+  my $c = shift;
+  my $user = $c->stash('user') || $c->param('user');
+  my $u =  $dbh->selectrow_hashref($sql->sth('user'), undef, ($user =~ s/\D//gr || undef, $user));
+  
+  $c->render(format=>'txt', text=><<TXT)
+$pkg
+
+No such user [$user]!
+
+TXT
+    and return
+    unless $u;
+  
+  my $r = $dbh->selectall_arrayref($sql->sth('user roles'), { Slice => {} }, ($u->{id}));
+  
+  $c->render(format=>'txt', text=><<TXT);
+$pkg
+
+USER
+@{[$c->dumper( $u)]}
+
+ROLES
+@{[$c->dumper( $r)]}
+
+TXT
+  
+}
+
+sub new_role_user {
+  my $c = shift;
+  
+  my $role = $c->stash('role') || $c->param('role');
+  # ROLE
+  my $r = $dbh->selectrow_hashref($sql->sth('role'), undef, ($role =~ s/\D//gr || undef, $role));
+  $c->render(format=>'txt', text=><<TXT)
+$pkg
+
+Can't create new role by only digits[$role] in name!
+
+TXT
+    and return
+    unless $r && $role =~ /\w/;
+  $r ||= $dbh->selectrow_hashref($sql->sth('new_role'), undef, ($role)) ;
+  
+  
+  
+  my $user = $c->stash('user') || $c->param('user');
+  my $u =  $dbh->selectrow_hashref($sql->sth('user'), undef, ($user =~ s/\D//gr || undef, $user));
+  
+  $c->render(format=>'txt', text=><<TXT)
+$pkg
+
+No such user [$user]!
+
+TXT
+    and return
+    unless $u;
+  
+  my $ref = $dbh->selectrow_hashref($sql->sth('ref'), undef, ($r->{id}, $u->{id}));
+  $c->render(format=>'txt', text=><<TXT)
+$pkg
+
+Allready ref ROLE->USER!
+
+@{[$c->dumper( $ref)]}
+TXT
+    and return
+    if $ref;
+  
+  $ref = $dbh->selectrow_hashref($sql->sth('new_ref'), undef, ($r->{id}, $u->{id}));
+  
+  $c->render(format=>'txt', text=><<TXT);
+$pkg
+
+Success create ref ROLE->USER!
+
+@{[$c->dumper( $ref)]}
+TXT
+  
+  
+}
+
+sub role_users {# все пользователи роли по запросу /myadmin/users/:role
+  my $c = shift;
+  
+  my $role = $c->stash('role') || $c->param('role');
+  # ROLE
+  my $r = $dbh->selectrow_hashref($sql->sth('role'), undef, ($role =~ s/\D//gr || undef, $role));
+  $c->render(format=>'txt', text=><<TXT)
+$pkg
+
+No such role [$role]!
+
+TXT
+    and return
+    unless $r;
+  
+  my $u = $dbh->selectall_arrayref($sql->sth('role_users'), { Slice => {} }, ($r->{id}));
+  $c->render(format=>'txt', text=><<TXT);
+$pkg
+
+All @{[scalar @$u]} users by role [$r->{name}]
+
+@{[$c->dumper( $u)]}
+TXT
+}
+
+sub role_routes {# все маршруты роли по запросу /myadmin/routes/:role
+  my $c = shift;
+  
+   my $role = $c->stash('role') || $c->param('role');
+  # ROLE
+  my $r = $dbh->selectrow_hashref($sql->sth('role'), undef, ($role =~ s/\D//gr || undef, $role));
+  $c->render(format=>'txt', text=><<TXT)
+$pkg
+
+No such role [$role]!
+
+TXT
+    and return
+    unless $r;
+  
+  my $t = $dbh->selectall_arrayref($sql->sth('role_routes'), { Slice => {} }, ($r->{id}));
+  $c->render(format=>'txt', text=><<TXT);
+$pkg
+
+All @{[scalar @$t]} routes by role [$r->{name}]
+
+@{[$c->dumper( $t)]}
+TXT
+}
+
 
 my @admin_routes_cols = qw(request namespace controller action name auth descr);
 sub admin_routes {# from plugin!
   my $c = shift;
   $plugin_conf ||= $c;
-  $c->{prefix} =~ s/^\///;
-  my $prefix = $c->{prefix};
-  $c->{trust} =~ s/\W/-/g;
-  $namespace = $c->{namespace} if $c->{namespace};
+  $plugin_conf->{prefix} =~ s/^\///;
+  my $prefix = $plugin_conf->{prefix};
+  my $trust = $plugin_conf->{trust} =~ s/\W/-/gr;
+  my $namespace = $plugin_conf->{namespace};
 
   my $t = <<TABLE;
-	$namespace	admin				1	Access to all $namespace\::Admin.pm actions
 /$prefix	$namespace	admin	index	$prefix admin home	1	View main page
 /$prefix/role/new/:name	$namespace	admin	new_role	$prefix create role	1	Add new role by :name
 /$prefix/roles	$namespace	admin	roles	$prefix view roles	1	View roles table
 /$prefix/roles/:user	$namespace	admin	user_roles	$prefix roles of user	1	View roles of :user by id|login
-/$prefix/role/:role/:user	$namespace	admin	ref	$prefix create ref role->user	1	Assign :user to :role by user.id|user.login and role.id|role.name
+/$prefix/role/:role/:user	$namespace	admin	new_role_user	$prefix create ref role->user	1	Assign :user to :role by user.id|user.login and role.id|role.name.
 
 /$prefix/route/new	$namespace	admin	new_route	$prefix create route	1	Add new route by params: request,namespace, controller,....
 /$prefix/routes	$namespace	admin	routes	$prefix view routes	1	View routes table
-/$prefix/routes/:role	$namespace	admin	role_routes	$prefix routes of role	1	View routes of :role by id|name
+/$prefix/routes/:role	$namespace	admin	role_routes	$prefix routes of role	1	All routes of :role by id|name
 /$prefix/route/:route/:role	$namespace	admin	ref	$prefix create ref route->role	1	Assign :route with :role by route.id and role.id|role.name
 
 /$prefix/user/new	$namespace	admin	new_user	$prefix create user	1	Add new user by params: login,pass,...
@@ -224,7 +408,7 @@ post /sign/in	$namespace	admin	sign	signin params	0	Auth by params
 /$prefix/schema/flush	$namespace	admin	schema_flush	$prefix flush schema	0	Postgres SQL schema clean
 /$prefix/install	$namespace	admin	install	$prefix install	0	Manual
 
-/$prefix/$c->{trust}/user/new/:login/:pass	$namespace	admin	trust_new_user	$prefix/$c->{trust} !trust create user!	0	Add new user by :login & :pass and auto assign to role 'Admin' and assign to access this controller!
+/$prefix/$trust/user/new/:login/:pass	$namespace	admin	trust_new_user	$prefix/$trust !trust create user!	0	Add new user by :login & :pass and auto assign to role 'Admin' and assign to access this controller!
 TABLE
   
   
@@ -318,13 +502,15 @@ create table users (
         id int default nextval('ID'::regclass) not null  primary key,
         ts timestamp without time zone default now() not null,
         login varchar not null unique,
-        pass varchar not null
+        pass varchar not null,
+	disable bit(1)
 );
     
 create table roles (
         id int default nextval('ID'::regclass) not null  primary key,
         ts timestamp without time zone default now() not null,
-        name varchar not null unique
+        name varchar not null unique,
+	disable bit(1)
 );
 
 create table refs (
