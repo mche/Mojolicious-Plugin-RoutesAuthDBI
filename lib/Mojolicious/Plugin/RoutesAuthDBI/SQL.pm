@@ -19,6 +19,7 @@ sub a {(shift, ++$a);}
 1;
 =cut
 
+my $dbh;
 my $sth;
 my $sql = {
   'user/id'=>"select * from users where id = ?",# Plugin load_user by id
@@ -32,15 +33,17 @@ my $sql = {
 };
 
 sub new {
-  my ($class, $dbh, $st) = @_;
+  my ($class, $db, $st) = @_;
+  $dbh ||= $db or die "Not defined dbh DBI handle";
   $sth ||= $st ||= {};
   bless([$dbh, $sth], $class);
 }
 
 sub sth {
-  my ($dbh, $st) = @{ shift() };
+  my ($db, $st) = @{ shift() };
   my $key = shift;
-  $sth ||= $st; # init cache
+  $dbh ||= $db or die "Not defined dbh DBI handle"; # init dbh once
+  $sth ||= $st; # init cache once
   return $sth unless $key;
   $sth->{$key} ||= $dbh->prepare($sql->{$key});
 }

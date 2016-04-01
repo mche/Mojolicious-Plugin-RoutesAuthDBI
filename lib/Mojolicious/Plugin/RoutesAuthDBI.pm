@@ -1,81 +1,86 @@
 package Mojolicious::Plugin::RoutesAuthDBI;
 use Mojo::Base 'Mojolicious::Plugin::Authentication';
-use Mojolicious::Plugin::RoutesAuthDBI::SQL;#  sth cache
 
-our $VERSION = '0.08';
+our $VERSION = '0.100';
 
 my $dbh;
 #~ my $sth = {};
-my $sql;# sth cache
-
+my $admin;# 
 my $pkg = __PACKAGE__;
 my $conf ;# set on ->registrer
 
-my $load_user = sub {
+################################ SQL #####################################
+sub load_user {
   my ($c, $uid) = @_;
-  $c->app->log->debug("Loading user by id=$uid");
-  $dbh->selectrow_hashref($sql->sth('user/id'), undef, ($uid));
-};
+  #~ $c->app->log->debug($c->dumper($c));
+  my $u = $admin->get_user($uid);
+  $c->app->log->debug("Loading user by id=$uid ".$u ? 'success' : 'failed');
+  return $u;
+}
 
-my $validate_user = sub {
+sub validate_user {
   my ($c, $login, $pass, $extradata) = @_;
-  
-  if (my $u = $dbh->selectrow_hashref($sql->sth('user/login'), undef, ($login))) {
-    return $u->{id}
-      if $u->{pass} eq $pass;
-  } else {# auto sign UP
-    #~ $c->app->log->debug("Register new user $login:$pass");
-    #~ return scalar  $dbh->selectrow_array("insert into cubieusers (login, pass) values (?,?) returning id;", undef, ($login, $pass));
-  }
-  return undef;
-};
+  $admin->validate_user($login, $pass, $extradata);
+}
 
-my $db_routes = sub {$dbh->selectall_arrayref($sql->sth('all routes'), { Slice => {} },);};
+sub sql_routes {$admin->plugin_routes(@_)}
 
 
-my $user_roles = sub {#load all roles of some user
+sub user_roles {#load all roles of some user
   my ($c, $uid) = @_;
-  $dbh->selectall_arrayref($sql->sth('user roles'), { Slice => {} }, ($uid));
-};
+  $admin->user_roles($uid);
+}
 
-my $access_route = sub {#  check if ref between id1 and [IDs2] exists
-  my ($id1, $id2) = @_;#id1 - the route, id2[] - user roles ids
-  return scalar $dbh->selectrow_array($sql->sth('cnt refs'), undef, ($id1, $id2));
-  
-};
+sub access_route {#  check if ref between id1 and [IDs2] exists
+  my $c = shift;#id1 - the route, id2[] - user roles ids
+  $admin->access_route(@_);
+}
 
-my $access_controller = sub {
-  my ($r, $id2) = @_;
-  return scalar $dbh->selectrow_array($sql->sth('access controller'), undef, ($r->{controller}, $r->{namespace},  $id2));
-};
+sub access_controller {
+  my $c = shift;
+  $admin->access_controller(@_);
+}
+
+###########################END SQL SPECIFIC #################################
 
 my $fail_auth = {format=>'txt', text=>"Deny at auth step. Please sign in!!!"};
-my $fail_auth_cb = sub {shift->render(%$fail_auth);};
-my $fail_access_cb = sub {shift->render(format=>'txt', text=>"You don`t have access on this action!!!");};
+sub fail_auth {shift->render(%$fail_auth);}
+sub fail_access {shift->render(format=>'txt', text=>"You don`t have access on this action!!!");}
 
 
-###########################END SQL SPECIFIC #####################################
 
 sub register {
   my ($self, $app,) = (shift, shift);
   $conf = shift; # global
   $dbh ||= $conf->{dbh} ||= $app->dbh;
-  #~ $sth = $conf->{sth}{$pkg} ||= {};
   die "Plugin must work with arg dbh, see SYNOPSIS" unless $conf->{dbh};
-  $sql ||= bless [$dbh, {}], $pkg.'::SQL';
+  $admin ||= $self->_admin_controller($app, $conf->{admin} || {});
   $conf->{auth}{stash_key} ||= $pkg;
   $conf->{auth}{current_user_fn} ||= 'auth_user';
-  $conf->{auth}{load_user} ||= $load_user;
-  $conf->{auth}{validate_user} ||= $validate_user;
+  $conf->{auth}{load_user} ||= \&load_user;
+  $conf->{auth}{validate_user} ||= \&validate_user;
   $conf->{auth}{fail_render} ||= $fail_auth;
   $self->SUPER::register($app, $conf->{auth});
   
   $app->routes->add_condition(access => \&_access);
-  $self->apply_route($app, $_) for @{$db_routes->()};
+  $self->apply_route($app, $_) for @{sql_routes()};
   
-  $self->_admin_controller($app, $conf->{admin}) if $conf->{admin};
+  if ($conf->{admin}) {
+    $self->apply_route($app, $_) for $admin->admin_routes();
+  }
+
 }
 
+
+sub _admin_controller {
+  my ($self, $app, $conf) = @_;
+  $conf->{trust} ||= $app->secrets->[0];
+  $conf->{namespace} ||= $pkg;
+  $conf->{prefix} ||= 'admin';
+  $conf->{dbh} ||= $dbh;
+  require ($pkg =~ s/::/\//gr).'/Admin.pm';# нельзя use!
+  return (bless $conf, $pkg.'::Admin')->init;
+}
 
 sub apply_route {
   my ($self, $app, $r_hash) = @_;
@@ -97,27 +102,9 @@ sub apply_route {
   return $nr;
 }
 
-
-sub _admin_controller {
-  my ($self, $app, $conf) = @_;
-  $conf->{trust} ||= $app->secrets->[0];
-  $conf->{namespace} ||= $pkg;
-  $conf->{prefix} ||= 'admin';
-  #~ my $r = $app->routes;
-  require ($pkg =~ s/::/\//gr).'/Admin.pm';
-  $self->apply_route($app, $_) for (bless $conf, $pkg.'::Admin')->admin_routes();
-  return;
-
-  #~ my $ns = $r->namespaces;
-  #~ push @$ns, grep !($_ ~~ $ns), __PACKAGE__;
-  #~ push @{$app->renderer->paths}, Cwd::cwd().'/templates';
-}
-
-
 # 
 sub _access {# add_condition
   my ($route, $c, $captures, $r_item) = @_;
-  
   # 1. по паролю выставить куки
   # 2. по кукам выставить пользователя
   my $meth = $conf->{auth}{current_user_fn};
@@ -125,27 +112,23 @@ sub _access {# add_condition
   # 3. если не проверять доступ вернуть 1
   return 1 unless $r_item->{auth};
   # не авторизовался
-  $fail_auth_cb->($c)
+  fail_auth($c)
     and return undef
     unless $u;
   # 4. получить все группы пользователя
-  $u->{roles} ||= $user_roles->($c, $u->{'id'});
+  $u->{roles} ||= user_roles($c, $u->{'id'});
   # 5. по ИДам групп и пользователя проверить доступ
   my $id2 = [$u->{id}, map($_->{id}, @{$u->{roles}})];
-  ($r_item->{id} && $access_route->($r_item->{id}, $id2))
+  ($r_item->{id} && access_route($c, $r_item->{id}, $id2))
     and return 1;
-  $access_controller->($r_item, $id2)
+  access_controller($c, $r_item, $id2)
     and $c->app->log->debug("Access all actions on $r_item->{namespace}::$r_item->{controller} to user id=$u->{id}")
     and return 1;
-  $fail_access_cb->($c);
+  fail_access($c);
   #~ $c->app->log->debug($c->dumper($r_item));
   return undef;
 }
 
-sub _roles {
-  my ($c) = @_;
-  
-}
 
 1;
 

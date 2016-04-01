@@ -3,7 +3,6 @@ use Mojo::Base 'Mojolicious::Controller';
 use Mojolicious::Plugin::RoutesAuthDBI::SQL;#  sth cache
 
 my $dbh;
-#~ my $sth;
 my $pkg = __PACKAGE__;
 my $namespace = 'Mojolicious::Plugin::RoutesAuthDBI';
 my $plugin_conf;
@@ -11,11 +10,56 @@ my $sql;#sth cache
 
 sub new {
 	my $self = shift->SUPER::new(@_);
-	$self->{dbh} = $dbh ||=  $self->app->dbh->{'main'};
-        #~ $sth ||= $self->app->sth->{'main'}{$pkg} ||= {};
-	$self->{sql} = $sql ||= bless [$dbh, undef], $namespace.'::SQL';#sth cache
-	#~ $self->{sql} = $sql ||= $namespace.'::SQL'->new($dbh);
+	$self->init;
 	return $self;
+}
+
+sub init {# from plugin! init Class vars
+	my $self = shift;
+	my $args = {@_};
+	$self->{dbh} ||= $dbh ||=  $args->{dbh};
+	$dbh ||= $self->{dbh};
+	$self->{sql} ||= $sql ||= $args->{sql} ||= bless [$dbh, {}], $namespace.'::SQL';#sth cache
+	$sql ||= $self->{sql};
+	return $self;
+}
+
+sub get_user {
+	my ($c, $uid) = @_;
+	#~ die $sql->sth('user/id');
+	#~ die ($c->dumper($sql->sth));
+	$dbh->selectrow_hashref($sql->sth('user/id'), undef, ($uid));
+}
+
+sub validate_user {
+  my ($c, $login, $pass, $extradata) = @_;
+  if (my $u = $dbh->selectrow_hashref($sql->sth('user/login'), undef, ($login))) {
+    return $u->{id}
+      if $u->{pass} eq $pass;
+  } else {# auto sign UP
+    #~ $c->app->log->debug("Register new user $login:$pass");
+    #~ return scalar  $dbh->selectrow_array("insert into cubieusers (login, pass) values (?,?) returning id;", undef, ($login, $pass));
+  }
+  return undef;
+}
+
+sub plugin_routes {
+  $dbh->selectall_arrayref($sql->sth('all routes'), { Slice => {} },);
+}
+
+sub user_roles {
+	my ($c, $uid) = @_;
+	$dbh->selectall_arrayref($sql->sth('user roles'), { Slice => {} }, ($uid));
+}
+
+sub access_route {
+	my ($c, $id1, $id2,) = @_;
+	return scalar $dbh->selectrow_array($sql->sth('cnt refs'), undef, ($id1, $id2));
+}
+
+sub access_controller {
+	my ($c, $r, $id2,) = @_;
+	return scalar $dbh->selectrow_array($sql->sth('access controller'), undef, ($r->{controller}, $r->{namespace},  $id2));
 }
 
 sub install {
@@ -46,7 +90,7 @@ $pkg
 You are signed as:
 @{[$c->dumper( $c->auth_user)]}
 
-@{[$c->dumper( $sql)]}
+@{[$c->dumper( $sql->sth)]}
 TXT
     and return
     if $c->is_user_authenticated;
