@@ -3,17 +3,18 @@ use Mojo::Base 'Mojolicious::Controller';
 use Mojolicious::Plugin::RoutesAuthDBI::SQL;#  sth cache
 
 my $dbh;
-my $sth;
+#~ my $sth;
 my $pkg = __PACKAGE__;
 my $namespace = 'Mojolicious::Plugin::RoutesAuthDBI';
 my $plugin_conf;
-my $sth;
+my $sql;#sth cache
 
 sub new {
 	my $self = shift->SUPER::new(@_);
-	$dbh ||=  $self->app->dbh->{'main'};
+	$self->{dbh} = $dbh ||=  $self->app->dbh->{'main'};
         #~ $sth ||= $self->app->sth->{'main'}{$pkg} ||= {};
-	$sth ||= bless [$dbh, undef], $namespace.'::SQL';
+	$self->{sql} = $sql ||= bless [$dbh, undef], $namespace.'::SQL';#sth cache
+	#~ $self->{sql} = $sql ||= $namespace.'::SQL'->new($dbh);
 	return $self;
 }
 
@@ -21,17 +22,15 @@ sub install {
   my $c = shift;
   
    $c->render(format=>'txt', text=><<TXT);
-Welcome $pkg!
-
-Check <prefix> option for plugin RoutesAuthDBI on app.pl
+Welcome $pkg controller!
 
 1.  Run create db schema:
 
-\$ perl test-app.pl get /<prefix>/schema 2>/dev/null | psql -d test
+\$ perl test-app.pl get /$plugin_conf->{prefix}/schema 2>/dev/null | psql -d test
 
 2. Go to trust url for admin-user creation :
 
-\$ perl test-app.pl get /<prefix>/$plugin_conf->{trust}/user/new/<login>/<pass>
+\$ perl test-app.pl get /$plugin_conf->{prefix}/$plugin_conf->{trust}/user/new/<login>/<pass>
 
 User should be created, assigned to role 'Admin' and role 'Admin' assigned to pseudo-route that has access to all routes of this Controller!
 
@@ -41,13 +40,13 @@ TXT
 sub index {
   my $c = shift;
   
-  #~ $c->render(format=>'txt', text=>__PACKAGE__ . " At home!!! ".$c->dumper( $c->session('auth_data')));
-  
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
 You are signed as:
 @{[$c->dumper( $c->auth_user)]}
+
+@{[$c->dumper( $sql)]}
 TXT
     and return
     if $c->is_user_authenticated;
@@ -185,7 +184,7 @@ post /sign/in	$namespace	admin	sign	signin params	0	Auth by params
 TABLE
   
   
-  my @r;
+  my @r = ();
   for my $line (grep /\S+/, split /\n/, $t) {
     my $r = {};
     @$r{@admin_routes_cols} = map($_ eq '' ? undef : $_, split /\t/, $line);
@@ -195,7 +194,7 @@ TABLE
   return @r;
 }
 
-
+=pod
 sub routes000 {
   my $c = shift;
   
@@ -215,6 +214,7 @@ TXT
   
   $dbh->rollback;
 }
+=cut
 
 sub schema {
   my $c = shift;
