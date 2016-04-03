@@ -1,0 +1,7 @@
+ в admin.pm:
+ use Exporter 'import'; # gives you Exporter's import() method directly
+  @EXPORT_OK = qw(load_user validate...);  # symbols to export on 
+  
+  в плугине:
+  require полное имя модуля;
+  <полное::имя::модуля>->import(qw(load_user ...))
