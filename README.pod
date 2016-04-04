@@ -23,7 +23,8 @@ Mojolicious::Plugin::RoutesAuthDBI - Generate routes from sql-table, make authen
 
 =item * B<dbh> - DBI connection where are tables: routes, users, roles, refs.
 
-=item * B<auth> - hashref options pass to base plugin L<Mojolicious::Plugin::Authentication>. By default the option:
+=item * B<auth> - hashref options pass to base plugin L<Mojolicious::Plugin::Authentication>.
+By default the option:
 
     current_user_fn => 'auth_user',
     
@@ -34,7 +35,24 @@ The options:
 
 are imported from package admin controller. See below.
 
-=item * B<admin> - hashref options for special admin controller. This controller has subs and methods for manage auth and access operations, will appling routes from sql-table. See L<Mojolicious::Plugin::RoutesAuthDBI::Admin>
+=item * B<admin> - hashref options for special admin controller. This controller has subs and methods for manage auth and access operations, has appling routes from sql-table. By default plugin will load the builtin controller:
+
+    admin => {
+        controller => 'Admin',
+        namespace => 'Mojolicious::Plugin::RoutesAuthDBI',
+        ...,
+    },
+
+
+You might define your own controller by passing options:
+
+    admin => {
+        controller => 'Foo',
+        namespace => 'Bar::Baz', 
+        ...,
+    },
+
+See L<Mojolicious::Plugin::RoutesAuthDBI::Admin> for detail options list.
 
 
 =back
@@ -45,7 +63,7 @@ See L<Mojolicious::Plugin::RoutesAuthDBI::Install>.
 
 =head3 Warning
 
-If you change the routes table then kill -HUP or reload app to regenerate routes.
+If you changed the routes table then kill -HUP or reload app to regenerate routes.
 
 
 =head1 DESCRIPTION
@@ -165,6 +183,9 @@ L<Mojolicious::Plugin::Authentication>, L<Mojolicious::Plugin::Authorization>
 
 Михаил Че (Mikhail Che), C<< <mche [] cpan.org> >>
 
+=head1 BUGS / CONTRIBUTING
+
+Please report any bugs or feature requests at L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/issues>. Pull requests also welcome.
 
 =head1 COPYRIGHT
 

@@ -3,6 +3,21 @@ use Mojo::Base -strict;
 
 =pod
 
+=encoding utf8
+
+=head NAME
+
+Mojolicious::Plugin::RoutesAuthDBI::PgSQL - is a SQL hub for L<Mojolicious::Plugin::RoutesAuthDBI::Admin>.
+
+=head1 SYNOPSIS
+
+    my $sql = bless [$dbh, {}], 'Mojolicious::Plugin::RoutesAuthDBI::PgSQL';
+    my $r = $dbh->selectrow_hashref($sql->sth('foo key'));
+
+=head1 DESCRIPTION
+
+A whole class DBI statement cache.
+
 =cut
 
 my $dbh;

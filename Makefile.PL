@@ -9,7 +9,7 @@ WriteMakefile(
     VERSION_FROM     => 'lib/Mojolicious/Plugin/RoutesAuthDBI.pm',
     #~ ABSTRACT_FROM    => 'lib/Mojolicious/Plugin/RoutesAuthDBI.pm',
     ABSTRACT_FROM    => 'README.pod',
-    LICENSE          => 'artistic_2',
+    LICENSE          => 'same terms as Perl itself',
     PL_FILES         => {},
     MIN_PERL_VERSION => 5.014,
     CONFIGURE_REQUIRES => {

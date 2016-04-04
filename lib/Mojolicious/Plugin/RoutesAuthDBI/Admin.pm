@@ -9,11 +9,87 @@ my $pkg = __PACKAGE__;
 my $plugin_conf;
 my $sql;#sth hub
 
-#~ sub new {
-	#~ my $self = shift->SUPER::new(@_);
-	#~ $self->init;
-	#~ return $self;
-#~ }
+=pod
+=encoding utf8
+
+=head NAME
+
+Mojolicious::Plugin::RoutesAuthDBI::Admin - is a mixed Mojolicious::Controller. It invoking from plugin module and might also using as standard Mojolicious::Controller.
+
+=head1 SYNOPSIS
+
+From plugin:
+    
+    $conf->{admin}{namespace} = 'Mojolicious::Plugin::RoutesAuthDBI';
+    $conf->{admin}{controller} = 'Admin';
+    require ($conf->{admin}{namespace} =~ s/::/\//gr)."/$conf->{admin}{controller}.pm";
+    my $module = "$conf->{admin}{namespace}::$conf->{admin}{controller}";
+    $module->import( qw(load_user validate_user) );
+    my $admin = (bless $conf->{admin}, $module)->init_class;
+
+From Mojolicious routing:
+
+    $r->get('/myadmin')->over(<access>)->to('admin#index', namespace=>'Mojolicious::Plugin::RoutesAuthDBI',);
+
+=head1 OPTIONS for plugin
+
+    $app->plugin('RoutesAuthDBI',  dbh => $app->dbh, auth => {...}, admin => {<options>},);
+
+=over 4
+
+=item * B<namespace> - default 'Mojolicious::Plugin::RoutesAuthDBI',
+
+=item * B<controller> - default 'Admin',
+
+=item * B<admin_routes> - hashref, key I<prefix> => is prefix for admin urls of this module, key I<trust> => is a url subprefix for admin urls of this module
+
+    admin_routes = > {prefix=>'myadmin', trust => 'foooobaaar'},
+
+By default:
+
+    admin_routes = > {prefix=>'admin', trust => $app->secrets->[0]},
+    
+
+=item * B<fail_auth_cb> = sub {my $c = shift;...}
+
+This callback invoke when you need auth route but authentication was failure.
+
+=item * B<fail_access_cb> = sub {my ($c, $route, $r_hash) = @_;...}
+
+This callback invoke when you need auth route but access was failure. $route - Mojolicious::Routes::Route object, $r_hash - route hash db item.
+
+=back
+
+=head1 EXPORT SUBS
+
+=over 4
+
+=item * B<load_user($c, $uid)> - fetch user record from table users by COOKIES. Import for Mojolicious::Plugin::Authentication.
+
+=item * B<validate_user($c, $login, $pass, $extradata)> - fetch user record from table users by Mojolicious::Plugin::Authentication.
+
+=back
+
+
+head1 METHODS NEEDS IN PLUGIN
+
+=over 4
+
+=item * B<init_class()> - make initialization of class vars: $dbh, $sql, $plugin_conf. Return $self;
+
+=item * B<apply_route($self, $app, $r_hash)> - insert to app->routes an hash item $r_hash. Return new Mojolicious route;
+
+=item * B<table_routes()> - fetch records from table routes. Return arrayref of hashrefs records.
+
+=item * B<load_user_roles($self, $c, $uid)> - fetch records roles for auth user. Return hashref record.
+
+=item * B<access_route($self, $c, $id1, $id2)> - make check access to route by $id1 for user roles ids $id2 arrayref. Return false for deny access or true - allow access.
+
+=item * B<access_controller($self, $c, $r, $id2)> - make check access to route by special route record with request=NULL by $r->{namespace} and $r->{controller} for user roles ids $id2 arrayref. Return false for deny access or true - allow access to all actions of controller.
+
+=back
+
+=cut
 
 ######################## PLUGIN SPECIFIC! ##########################################
 
@@ -21,8 +97,10 @@ sub init_class {# from plugin! init Class vars
 	my $c = shift;
 	my $args = {@_};
   $plugin_conf ||= $c;
-  $c->{prefix} =~ s/^\///;
-  $c->{trust} =~ s/\W/-/g;
+  if ($c->{admin_routes}) {
+    $c->{admin_routes}{prefix} =~ s/^\///;
+    $c->{admin_routes}{trust} =~ s/\W/-/g;
+  }
 	$c->{dbh} ||= $dbh ||=  $args->{dbh};
 	$dbh ||= $c->{dbh};
 	$c->{sql} ||= $sql ||= $args->{sql} ||= bless [$dbh, {}], $c->{namespace}.'::PgSQL';#sth cache
@@ -362,8 +440,8 @@ TXT
 my @admin_routes_cols = qw(request namespace controller action name auth descr);
 sub admin_routes {# from plugin!
   my $c = shift;
-  my $prefix = $plugin_conf->{prefix};
-  my $trust = $plugin_conf->{trust};
+  my $prefix = $plugin_conf->{admin_routes}{prefix};
+  my $trust = $plugin_conf->{admin_routes}{trust};
   my $ns = $plugin_conf->{namespace};
 
   my $t = <<TABLE;

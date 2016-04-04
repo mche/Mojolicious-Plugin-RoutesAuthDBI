@@ -23,8 +23,10 @@ sub register {
   $conf->{admin} ||= {};
   $conf->{admin}{namespace} ||= $pkg unless $conf->{admin}{controller};
   $conf->{admin}{controller} ||= 'Admin';
-  $conf->{admin}{prefix} ||= lc($conf->{controller});
-  $conf->{admin}{trust} ||= $app->secrets->[0];
+  if ($conf->{admin}{admin_routes}) {
+    $conf->{admin}{admin_routes}{prefix} ||= lc($conf->{controller});
+    $conf->{admin}{admin_routes}{trust} ||= $app->secrets->[0];
+  }
   $conf->{admin}{dbh} = $dbh;
   $conf->{admin}{fail_auth_cb} ||= $fail_auth_cb;
   $conf->{admin}{fail_access_cb} ||= $fail_access_cb;
@@ -65,7 +67,7 @@ sub access {# add_condition
   # 3. если не проверять доступ вернуть 1
   return 1 unless $r_item->{auth};
   # не авторизовался
-  $conf->{admin}{fail_auth_cb}->($c)
+  $conf->{admin}{fail_auth_cb}->($c, )
     and return undef
     unless $u;
   # 4. получить все группы пользователя
@@ -78,7 +80,7 @@ sub access {# add_condition
   $admin->access_controller($c, $r_item, $id2)
     and $c->app->log->debug("Access all actions on $r_item->{namespace}::$r_item->{controller} for user id=$u->{id} by request=[$r_item->{request}]")
     and return 1;
-  $conf->{admin}{fail_access_cb}->($c);
+  $conf->{admin}{fail_access_cb}->($c, $route, $r_item);
   #~ $c->app->log->debug($c->dumper($r_item));
   return undef;
 }
