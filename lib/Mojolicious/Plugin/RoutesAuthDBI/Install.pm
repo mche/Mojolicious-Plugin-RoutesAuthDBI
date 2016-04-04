@@ -114,7 +114,7 @@ sub startup {
   $app->plugin('RoutesAuthDBI',
     dbh=>$app->dbh,
     auth=>{current_user_fn=>'auth_user'},
-    admin=>{namespace=>'Mojolicious::Plugin::RoutesAuthDBI', controller=>'Admin', prefix=>'myadmin', trust=>'fooobaaar',},
+    admin=>{namespace=>'Mojolicious::Plugin::RoutesAuthDBI', controller=>'Admin', prefix=>'myadmin', trust=>'fooobaaar', admin_routes=>1,},
   );
 }
 

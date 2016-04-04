@@ -1,8 +1,11 @@
 Changes
 lib/Mojolicious/Plugin/RoutesAuthDBI.pm
+lib/Mojolicious/Plugin/RoutesAuthDBI/Admin.pm
+lib/Mojolicious/Plugin/RoutesAuthDBI/Install.pm
+lib/Mojolicious/Plugin/RoutesAuthDBI/PgSQL.pm
+README.pod
 Makefile.PL
 MANIFEST			This list of files
-README
 t/00-load.t
 t/manifest.t
 t/pod-coverage.t

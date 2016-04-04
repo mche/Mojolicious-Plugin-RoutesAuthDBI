@@ -15,7 +15,7 @@ my $sql;#sth hub
 	#~ return $self;
 #~ }
 
-######################## Plugin! ##########################################
+######################## PLUGIN SPECIFIC! ##########################################
 
 sub init_class {# from plugin! init Class vars
 	my $c = shift;
@@ -31,14 +31,14 @@ sub init_class {# from plugin! init Class vars
 	return $c;
 }
 
-sub load_user {
+sub load_user {# import for Mojolicious::Plugin::Authentication
 	my ($c, $uid) = @_;
 	my $u = $dbh->selectrow_hashref($sql->sth('user/id'), undef, ($uid));
   $c->app->log->debug("Loading user by id=$uid ". ($u ? 'success' : 'failed'));
   return $u;
 }
 
-sub validate_user {# plugin
+sub validate_user {# import for Mojolicious::Plugin::Authentication
   my ($c, $login, $pass, $extradata) = @_;
   if (my $u = $dbh->selectrow_hashref($sql->sth('user/login'), undef, ($login))) {
     return $u->{id}
@@ -47,22 +47,44 @@ sub validate_user {# plugin
   return undef;
 }
 
-sub db_routes {
+sub apply_route {# meth in Plugin
+  my ($self, $app, $r_hash) = @_;
+  my $r = $app->routes;
+  return if $r_hash->{disable};
+  return unless $r_hash->{request};
+  my @request = grep /\S/, split /\s+/, $r_hash->{request}
+    or return;
+  my $nr = $r->route(pop @request);
+  $nr->via(@request) if @request;
+  
+  # STEP AUTH не катит! только один over!
+  #~ $nr->over(authenticated=>$r_hash->{auth});
+  # STEP ACCESS
+  $nr->over(access => $r_hash);
+  
+  $nr->to(controller=>$r_hash->{controller}, action => $r_hash->{action},  $r_hash->{namespace} ? (namespace => $r_hash->{namespace}) : (),);
+  $nr->name($r_hash->{name}) if $r_hash->{name};
+  #~ $app->log->debug("$pkg generate the route from data row [@{[$app->dumper($r_hash) =~ s/\n/ /gr]}]");
+  return $nr;
+}
+
+sub table_routes {
+  my ($self, $c, ) = @_;
   $dbh->selectall_arrayref($sql->sth('all routes'), { Slice => {} },);
 }
 
-sub access_user_roles {
-	my ($c, $uid) = @_;
+sub load_user_roles {
+	my ($self, $c, $uid) = @_;
 	$dbh->selectall_arrayref($sql->sth('user roles enbl'), { Slice => {} }, ($uid));
 }
 
 sub access_route {
-	my ($c, $id1, $id2,) = @_;
+	my ($self, $c, $id1, $id2,) = @_;
 	return scalar $dbh->selectrow_array($sql->sth('cnt refs'), undef, ($id1, $id2));
 }
 
 sub access_controller {
-	my ($c, $r, $id2,) = @_;
+	my ($self, $c, $r, $id2,) = @_;
 	return scalar $dbh->selectrow_array($sql->sth('access controller'), undef, ($r->{controller}, $r->{namespace},  $id2));
 }
 
