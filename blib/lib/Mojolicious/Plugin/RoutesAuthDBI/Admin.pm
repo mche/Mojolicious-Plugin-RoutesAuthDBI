@@ -1,41 +1,34 @@
 package Mojolicious::Plugin::RoutesAuthDBI::Admin;
 use Mojo::Base 'Mojolicious::Controller';
-use Mojolicious::Plugin::RoutesAuthDBI::PgSQL;#  sth cache
-use Exporter 'import'; 
-our @EXPORT_OK = qw(load_user validate_user);
+use Mojolicious::Plugin::RoutesAuthDBI::SQL;#  sth cache
 
 my $dbh;
 my $pkg = __PACKAGE__;
+my $namespace = 'Mojolicious::Plugin::RoutesAuthDBI';
 my $plugin_conf;
-my $sql;#sth hub
+my $sql;#sth cache
 
-#~ sub new {
-	#~ my $self = shift->SUPER::new(@_);
-	#~ $self->init;
-	#~ return $self;
-#~ }
+sub new {
+	my $self = shift->SUPER::new(@_);
+	$self->init;
+	return $self;
+}
 
 ######################## Plugin! ##########################################
 
-sub init_class {# from plugin! init Class vars
-	my $c = shift;
+sub init {# from plugin! init Class vars
+	my $self = shift;
 	my $args = {@_};
-  $plugin_conf ||= $c;
-  $c->{prefix} =~ s/^\///;
-  $c->{trust} =~ s/\W/-/g;
-	$c->{dbh} ||= $dbh ||=  $args->{dbh};
-	$dbh ||= $c->{dbh};
-	$c->{sql} ||= $sql ||= $args->{sql} ||= bless [$dbh, {}], $c->{namespace}.'::PgSQL';#sth cache
-	$sql ||= $c->{sql};
-    
-	return $c;
+	$self->{dbh} ||= $dbh ||=  $args->{dbh};
+	$dbh ||= $self->{dbh};
+	$self->{sql} ||= $sql ||= $args->{sql} ||= bless [$dbh, {}], $namespace.'::SQL';#sth cache
+	$sql ||= $self->{sql};
+	return $self;
 }
 
-sub load_user {
+sub get_user {
 	my ($c, $uid) = @_;
-	my $u = $dbh->selectrow_hashref($sql->sth('user/id'), undef, ($uid));
-  $c->app->log->debug("Loading user by id=$uid ". ($u ? 'success' : 'failed'));
-  return $u;
+	$dbh->selectrow_hashref($sql->sth('user/id'), undef, ($uid));
 }
 
 sub validate_user {# plugin
@@ -47,13 +40,13 @@ sub validate_user {# plugin
   return undef;
 }
 
-sub db_routes {
+sub plugin_routes {
   $dbh->selectall_arrayref($sql->sth('all routes'), { Slice => {} },);
 }
 
-sub access_user_roles {
+sub plugin_user_roles {
 	my ($c, $uid) = @_;
-	$dbh->selectall_arrayref($sql->sth('user roles enbl'), { Slice => {} }, ($uid));
+	$dbh->selectall_arrayref($sql->sth('user roles'), { Slice => {} }, ($uid));
 }
 
 sub access_route {
@@ -68,7 +61,49 @@ sub access_controller {
 
 ################################ END PLUGIN #################################
 
+sub install {
+  my $c = shift;
+  
+   $c->render(format=>'txt', text=><<TXT);
+Welcome $pkg controller!
 
+1. Edit test-app.pl and Config.pm to define DBI->connect dsn, url admin prefix and trust subprefix.
+------------------------
+
+
+
+2. View admin routes:
+------------------------
+\$ perl test-app.pl routes
+
+
+
+3.  Run create db schema:
+-----------------------------
+\$ perl test-app.pl get /$plugin_conf->{prefix}/schema 2>/dev/null | psql -d <dbname>
+
+
+4. Go to trust url for admin-user creation :
+------------------------------------------------
+\$ perl test-app.pl get /$plugin_conf->{prefix}/$plugin_conf->{trust}/user/new/<login>/<pass>
+
+User will be created and assigned to role 'Admin' . Role 'Admin' assigned to pseudo-route that has access to all routes of this controller!
+
+
+
+5. Go to /sign/in/<login>/<pass>
+-------------------------------------
+
+
+
+6. Go to /$plugin_conf->{prefix}
+------------------------------------
+
+
+Administration of system ready!
+
+TXT
+}
 
 sub index {
   my $c = shift;
@@ -152,8 +187,8 @@ sub trust_new_user {
   $ru ||= $dbh->selectrow_hashref($sql->sth('new_ref'), undef, ($rl->{id}, $u->{id}));
   
   # ROUTE
-  my $rt = $dbh->selectrow_hashref($sql->sth('route/controller'), undef, ($plugin_conf->{namespace}, $plugin_conf->{controller}));
-  $rt ||= $dbh->selectrow_hashref($sql->sth('new_route'), undef, (undef, 'admin controller', $plugin_conf->{namespace}, $plugin_conf->{controller}, undef, 1, "Access to all $plugin_conf->{namespace}\::$plugin_conf->{controller} actions", undef, undef,));
+  my $rt = $dbh->selectrow_hashref($sql->sth('route/controller'), undef, ($namespace, 'admin'));
+  $rt ||= $dbh->selectrow_hashref($sql->sth('new_route'), undef, (undef, 'admin controller', $namespace, 'admin', undef, 1, "Access to all $namespace\::Admin.pm actions", undef, undef,));
     
     #REF route->role
   my $rr = $dbh->selectrow_hashref($sql->sth('ref'), undef, ($rt->{id}, $rl->{id}));
@@ -340,39 +375,40 @@ TXT
 my @admin_routes_cols = qw(request namespace controller action name auth descr);
 sub admin_routes {# from plugin!
   my $c = shift;
+  $plugin_conf ||= $c;
+  $plugin_conf->{prefix} =~ s/^\///;
   my $prefix = $plugin_conf->{prefix};
-  my $trust = $plugin_conf->{trust};
-  my $ns = $plugin_conf->{namespace};
+  my $trust = $plugin_conf->{trust} =~ s/\W/-/gr;
+  my $namespace = $plugin_conf->{namespace};
 
   my $t = <<TABLE;
-/$prefix	$ns	admin	index	$prefix admin home	1	View main page
-/$prefix/role/new/:name	$ns	admin	new_role	$prefix create role	1	Add new role by :name
-/$prefix/roles	$ns	admin	roles	$prefix view roles	1	View roles table
-/$prefix/roles/:user	$ns	admin	user_roles	$prefix roles of user	1	View roles of :user by id|login
-/$prefix/role/:role/:user	$ns	admin	new_role_user	$prefix create ref role->user	1	Assign :user to :role by user.id|user.login and role.id|role.name.
+/$prefix	$namespace	admin	index	$prefix admin home	1	View main page
+/$prefix/role/new/:name	$namespace	admin	new_role	$prefix create role	1	Add new role by :name
+/$prefix/roles	$namespace	admin	roles	$prefix view roles	1	View roles table
+/$prefix/roles/:user	$namespace	admin	user_roles	$prefix roles of user	1	View roles of :user by id|login
+/$prefix/role/:role/:user	$namespace	admin	new_role_user	$prefix create ref role->user	1	Assign :user to :role by user.id|user.login and role.id|role.name.
 
-/$prefix/route/new	$ns	admin	new_route	$prefix create route	1	Add new route by params: request,namespace, controller,....
-/$prefix/routes	$ns	admin	routes	$prefix view routes	1	View routes table
-/$prefix/routes/:role	$ns	admin	role_routes	$prefix routes of role	1	All routes of :role by id|name
-/$prefix/route/:route/:role	$ns	admin	ref	$prefix create ref route->role	1	Assign :route with :role by route.id and role.id|role.name
+/$prefix/route/new	$namespace	admin	new_route	$prefix create route	1	Add new route by params: request,namespace, controller,....
+/$prefix/routes	$namespace	admin	routes	$prefix view routes	1	View routes table
+/$prefix/routes/:role	$namespace	admin	role_routes	$prefix routes of role	1	All routes of :role by id|name
+/$prefix/route/:route/:role	$namespace	admin	ref	$prefix create ref route->role	1	Assign :route with :role by route.id and role.id|role.name
 
-/$prefix/user/new	$ns	admin	new_user	$prefix create user	1	Add new user by params: login,pass,...
-/$prefix/user/new/:login/:pass	$ns	admin	new_user	$prefix create user st	1	Add new user by :login & :pass
-/$prefix/users	$ns	admin	users	$prefix view users	1	View users table
-/$prefix/users/:role	$ns	admin	role_users	$prefix users of role	1	View users of :role by id|name
+/$prefix/user/new	$namespace	admin	new_user	$prefix create user	1	Add new user by params: login,pass,...
+/$prefix/user/new/:login/:pass	$namespace	admin	new_user	$prefix create user st	1	Add new user by :login & :pass
+/$prefix/users	$namespace	admin	users	$prefix view users	1	View users table
+/$prefix/users/:role	$namespace	admin	role_users	$prefix users of role	1	View users of :role by id|name
 
-get foo /sign/in	$ns	admin	sign	signin form	0	Login&pass form
-post /sign/in	$ns	admin	sign	signin params	0	Auth by params
-/sign/in/:login/:pass	$ns	admin	sign	signin stash	0	Auth by stash
-/sign/out	$ns	admin	signout	go away	1	Exit
+get foo /sign/in	$namespace	admin	sign	signin form	0	Login&pass form
+post /sign/in	$namespace	admin	sign	signin params	0	Auth by params
+/sign/in/:login/:pass	$namespace	admin	sign	signin stash	0	Auth by stash
+/sign/out	$namespace	admin	signout	go away	1	Exit
 
-/$prefix/$trust/user/new/:login/:pass	$ns	admin	trust_new_user	$prefix/$trust !trust create user!	0	Add new user by :login & :pass and auto assign to role 'Admin' and assign to access this controller!
+/$prefix/schema	$namespace	admin	schema	$prefix sql schema	0	Postgres SQL schema
+/$prefix/schema/drop	$namespace	admin	schema_drop	$prefix drop schema	0	Postgres SQL schema remove
+/$prefix/schema/flush	$namespace	admin	schema_flush	$prefix flush schema	0	Postgres SQL schema clean
+/$prefix/install	$namespace	admin	install	$prefix install	0	Manual
 
-/$prefix/schema	$ns	install	schema	$prefix sql schema	0	Postgres SQL schema
-/$prefix/schema/drop	$ns	install	schema_drop	$prefix drop schema	0	Postgres SQL schema remove
-/$prefix/schema/flush	$ns	install	schema_flush	$prefix flush schema	0	Postgres SQL schema clean
-/$prefix/install	$ns	install	manual	$prefix install	0	Manual
-
+/$prefix/$trust/user/new/:login/:pass	$namespace	admin	trust_new_user	$prefix/$trust !trust create user!	0	Add new user by :login & :pass and auto assign to role 'Admin' and assign to access this controller!
 TABLE
   
   
@@ -386,10 +422,7 @@ TABLE
   return @r;
 }
 
-
-1;
-
-__END__
+=pod
 sub routes000 {
   my $c = shift;
   
@@ -409,3 +442,84 @@ TXT
   
   $dbh->rollback;
 }
+=cut
+
+sub schema {
+  my $c = shift;
+  # ~/Mojolicious-Plugin-RoutesAuthDBI $ perl test-app.pl get /admin/schema 2>/dev/null | ~/postgres/bin/psql -d test
+  $c->render(format=>'txt', text => join '', <Mojolicious::Plugin::RoutesAuthDBI::Admin::DATA>);
+}
+
+sub schema_drop {
+  my $c = shift;
+  
+  $c->render(format=>'txt', text => <<TXT);
+
+drop table refs;
+drop table users;
+drop table roles;
+drop table routes;
+drop sequence ID;
+
+TXT
+}
+
+sub schema_flush {
+  my $c = shift;
+  
+  $c->render(format=>'txt', text => <<TXT);
+
+delete from refs;
+delete from users;
+delete from roles;
+delete from routes;
+
+TXT
+}
+
+1;
+
+__DATA__
+
+
+CREATE SEQUENCE ID;-- one sequence for all tables id
+
+CREATE TABLE routes (
+    id integer default nextval('ID'::regclass) not null primary key,
+    ts timestamp without time zone default now() not null,
+    request character varying null,
+    namespace character varying null,
+    controller character varying not null,
+    action character varying null,
+    name character varying not null,
+    descr text,
+    auth bit(1),
+    disable bit(1),
+    order_by int
+);
+
+create table users (
+        id int default nextval('ID'::regclass) not null  primary key,
+        ts timestamp without time zone default now() not null,
+        login varchar not null unique,
+        pass varchar not null,
+	disable bit(1)
+);
+    
+create table roles (
+        id int default nextval('ID'::regclass) not null  primary key,
+        ts timestamp without time zone default now() not null,
+        name varchar not null unique,
+	disable bit(1)
+);
+
+create table refs (
+        id int default nextval('ID'::regclass) not null  primary key,
+        ts timestamp without time zone default now() not null,
+        id1 int not null,
+        id2 int not null,
+        unique(id1, id2)
+);
+create index on refs (id2);
+
+

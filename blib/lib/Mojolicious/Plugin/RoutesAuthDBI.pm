@@ -1,7 +1,7 @@
 package Mojolicious::Plugin::RoutesAuthDBI;
 use Mojo::Base 'Mojolicious::Plugin::Authentication';
 
-our $VERSION = '0.110';
+our $VERSION = '0.100';
 
 my $dbh;
 #~ my $sth = {};
@@ -10,7 +10,6 @@ my $pkg = __PACKAGE__;
 my $conf ;# set on ->registrer
 
 ################################ SQL #####################################
-=pod
 sub load_user {# Mojolicious::Plugin::Authentication
   my ($c, $uid) = @_;
   #~ $c->app->log->debug($c->dumper($c));
@@ -23,7 +22,8 @@ sub validate_user { # Mojolicious::Plugin::Authentication
   my $c = shift;
   $admin->validate_user(@_);
 }
-=cut
+
+sub sql_routes {$admin->plugin_routes(@_)}
 
 
 sub user_roles {#load all roles of some user
@@ -63,10 +63,10 @@ sub register {
   $self->SUPER::register($app, $conf->{auth});
   
   $app->routes->add_condition(access => \&_access);
-  $self->apply_route($app, $_) for @{ $admin->db_routes };
+  $self->apply_route($app, $_) for @{sql_routes()};
   
   if ($conf->{admin}) {
-    $self->apply_route($app, $_) for $admin->admin_routes;
+    $self->apply_route($app, $_) for $admin->admin_routes();
   }
 
 }
@@ -75,14 +75,11 @@ sub register {
 sub admin_controller {# pseudo controller for access methods
   my ($self, $app, $conf) = @_;
   $conf->{trust} ||= $app->secrets->[0];
-  $conf->{namespace} ||= $pkg unless $conf->{controller};
-  $conf->{controller} ||= 'Admin';
-  $conf->{prefix} ||= lc($conf->{controller});
+  $conf->{namespace} ||= $pkg;
+  $conf->{prefix} ||= 'admin';
   $conf->{dbh} ||= $dbh;
-  require ($conf->{namespace} =~ s/::/\//gr)."/$conf->{controller}.pm";# нельзя use!
-  my $module = "$conf->{namespace}::$conf->{controller}";
-  $module->import( qw(load_user validate_user) );
-  return (bless $conf, $module)->init_class;
+  require ($pkg =~ s/::/\//gr).'/Admin.pm';# нельзя use!
+  return (bless $conf, $pkg.'::Admin')->init;
 }
 
 sub apply_route {
@@ -98,7 +95,7 @@ sub apply_route {
   # STEP AUTH не катит! только один over!
   #~ $nr->over(authenticated=>$r_hash->{auth});
   # STEP ACCESS
-  $nr->over(access => $r_hash);
+  $nr->over(access => $r_hash) if $r_hash->{auth};
   
   $nr->to(controller=>$r_hash->{controller}, action => $r_hash->{action},  $r_hash->{namespace} ? (namespace => $r_hash->{namespace}) : (),);
   $nr->name($r_hash->{name}) if $r_hash->{name};

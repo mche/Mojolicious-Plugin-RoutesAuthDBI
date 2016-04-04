@@ -27,9 +27,8 @@ Mojolicious::Plugin::RoutesAuthDBI - Generate routes from sql-table and make res
 
 =item * B<load_roles> - an SQL-string for select of all roles of current user. The helper B<roles> can retrivie roles as DBI selectall_hashref.
 
-=item * 
+=item * B<
 
-=back
 
 =head3 Warning
 

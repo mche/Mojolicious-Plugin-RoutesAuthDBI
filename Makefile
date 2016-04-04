@@ -197,7 +197,6 @@ TO_INST_PM = Config.pm \
 	lib/Mojolicious/Plugin/ConfigApply.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Admin.pm \
-	lib/Mojolicious/Plugin/RoutesAuthDBI/Config.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/SQL.pm \
 	test-app.pl
 
@@ -211,8 +210,6 @@ PM_TO_BLIB = Config.pm \
 	blib/lib/Mojolicious/Plugin/RoutesAuthDBI.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Admin.pm \
 	blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Admin.pm \
-	lib/Mojolicious/Plugin/RoutesAuthDBI/Config.pm \
-	blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Config.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/SQL.pm \
 	blib/lib/Mojolicious/Plugin/RoutesAuthDBI/SQL.pm \
 	test-app.pl \
@@ -898,7 +895,6 @@ pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	  lib/Mojolicious/Plugin/ConfigApply.pm blib/lib/Mojolicious/Plugin/ConfigApply.pm \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI.pm blib/lib/Mojolicious/Plugin/RoutesAuthDBI.pm \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/Admin.pm blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Admin.pm \
-	  lib/Mojolicious/Plugin/RoutesAuthDBI/Config.pm blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Config.pm \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/SQL.pm blib/lib/Mojolicious/Plugin/RoutesAuthDBI/SQL.pm \
 	  test-app.pl $(INST_LIB)/Mojolicious/Plugin/test-app.pl 
 	$(NOECHO) $(TOUCH) pm_to_blib
