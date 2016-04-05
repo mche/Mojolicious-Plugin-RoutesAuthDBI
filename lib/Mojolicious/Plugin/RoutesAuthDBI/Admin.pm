@@ -4,7 +4,7 @@ use Mojolicious::Plugin::RoutesAuthDBI::PgSQL;#  sth cache
 use Exporter 'import'; 
 our @EXPORT_OK = qw(load_user validate_user);
 
-my $dbh;
+my $dbh; # one per class
 my $pkg = __PACKAGE__;
 my $plugin_conf;
 my $sql;#sth hub
@@ -41,9 +41,13 @@ From Mojolicious routing:
 
 =item * B<controller> - default 'Admin',
 
-=item * B<admin_routes> - hashref, key I<prefix> => is prefix for admin urls of this module, key I<trust> => is a url subprefix for admin urls of this module
+Both above options determining the module which will play as manager of authentication, accessing and generate routing from DBI source.
+
+=item * B<admin_routes> - hashref: key I<prefix> => is prefix for admin urls of this module, key I<trust> => is a url subprefix for trust admin urls of this module. Optional.
 
     admin_routes = > {prefix=>'myadmin', trust => 'foooobaaar'},
+
+is admin urls like: /myadmin/foooobaaar/.....
 
 By default:
 
@@ -52,11 +56,11 @@ By default:
 
 =item * B<fail_auth_cb> = sub {my $c = shift;...}
 
-This callback invoke when you need auth route but authentication was failure.
+This callback invoke when request need auth route but authentication was failure.
 
 =item * B<fail_access_cb> = sub {my ($c, $route, $r_hash) = @_;...}
 
-This callback invoke when you need auth route but access was failure. $route - Mojolicious::Routes::Route object, $r_hash - route hash db item.
+This callback invoke when request need auth route but access was failure. $route - Mojolicious::Routes::Route object, $r_hash - route hashref db item.
 
 =back
 
@@ -64,9 +68,9 @@ This callback invoke when you need auth route but access was failure. $route - M
 
 =over 4
 
-=item * B<load_user($c, $uid)> - fetch user record from table users by COOKIES. Import for Mojolicious::Plugin::Authentication.
+=item * B<load_user($c, $uid)> - fetch user record from table users by COOKIES. Import for Mojolicious::Plugin::Authentication. Required.
 
-=item * B<validate_user($c, $login, $pass, $extradata)> - fetch user record from table users by Mojolicious::Plugin::Authentication.
+=item * B<validate_user($c, $login, $pass, $extradata)> - fetch user record from table users by Mojolicious::Plugin::Authentication. Required.
 
 =back
 
@@ -75,7 +79,9 @@ head1 METHODS NEEDS IN PLUGIN
 
 =over 4
 
-=item * B<init_class()> - make initialization of class vars: $dbh, $sql, $plugin_conf. Return $self;
+=item * B<init_class()> - make initialization of class vars: $dbh, $sql, $plugin_conf. Return $self object controller;
+
+=item * B<admin_routes()> - builtin this admin controller routes. Return array of hashrefs. Depends on conf options I<prefix> and I<trust>. Optional method.
 
 =item * B<apply_route($self, $app, $r_hash)> - insert to app->routes an hash item $r_hash. Return new Mojolicious route;
 
@@ -85,7 +91,7 @@ head1 METHODS NEEDS IN PLUGIN
 
 =item * B<access_route($self, $c, $id1, $id2)> - make check access to route by $id1 for user roles ids $id2 arrayref. Return false for deny access or true - allow access.
 
-=item * B<access_controller($self, $c, $r, $id2)> - make check access to route by special route record with request=NULL by $r->{namespace} and $r->{controller} for user roles ids $id2 arrayref. Return false for deny access or true - allow access to all actions of controller.
+=item * B<access_controller($self, $c, $r, $id2)> - make check access to route by special route record with request=NULL by $r->{namespace} and $r->{controller} for user roles ids $id2 arrayref. Return false for deny access or true - allow access to all actions of this controller.
 
 =back
 
@@ -153,7 +159,7 @@ sub table_routes {
 
 sub load_user_roles {
 	my ($self, $c, $uid) = @_;
-	$dbh->selectall_arrayref($sql->sth('user roles enbl'), { Slice => {} }, ($uid));
+	$dbh->selectall_arrayref($sql->sth('user roles'), { Slice => {} }, ($uid));
 }
 
 sub access_route {
@@ -306,7 +312,7 @@ TXT
 sub user_roles {
   my $c = shift;
   my $user = $c->stash('user') || $c->param('user');
-  my $u =  $dbh->selectrow_hashref($sql->sth('user'), undef, ($user =~ s/\D//gr || undef, $user));
+  my $u =  $dbh->selectrow_hashref($sql->sth('user'), undef, ($user =~ /\D/ ? (undef, $user) : ($user, undef,)));
   
   $c->render(format=>'txt', text=><<TXT)
 $pkg
@@ -337,7 +343,7 @@ sub new_role_user {
   
   my $role = $c->stash('role') || $c->param('role');
   # ROLE
-  my $r = $dbh->selectrow_hashref($sql->sth('role'), undef, ($role =~ s/\D//gr || undef, $role));
+  my $r = $dbh->selectrow_hashref($sql->sth('role'), undef, ($role =~ /\D/ ? (undef, $role) : ($role, undef,)));
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
@@ -348,10 +354,8 @@ TXT
     unless $r && $role =~ /\w/;
   $r ||= $dbh->selectrow_hashref($sql->sth('new_role'), undef, ($role)) ;
   
-  
-  
   my $user = $c->stash('user') || $c->param('user');
-  my $u =  $dbh->selectrow_hashref($sql->sth('user'), undef, ($user =~ s/\D//gr || undef, $user));
+  my $u =  $dbh->selectrow_hashref($sql->sth('user'), undef, ($user =~ /\D/ ? (undef, $user) : ($user, undef,)));
   
   $c->render(format=>'txt', text=><<TXT)
 $pkg
@@ -386,12 +390,89 @@ TXT
   
 }
 
+sub del_role_user {# удалить связь пользователя с ролью
+  my $c = shift;
+  
+  my $role = $c->stash('role') || $c->param('role');
+  # ROLE
+  my $r = $dbh->selectrow_hashref($sql->sth('role'), undef, ($role =~ /\D/ ? (undef, $role) : ($role, undef,)));
+  $c->render(format=>'txt', text=><<TXT)
+$pkg
+
+No such role [$role]!
+
+TXT
+    and return
+    unless $r;
+
+  my $user = $c->stash('user') || $c->param('user');
+  my $u =  $dbh->selectrow_hashref($sql->sth('user'), undef, ($user =~ /\D/ ? (undef, $user) : ($user, undef,)));
+  
+  $c->render(format=>'txt', text=><<TXT)
+$pkg
+
+No such user [$user]!
+
+TXT
+    and return
+    unless $u;
+  
+  my $ref = $dbh->selectrow_hashref($sql->sth('del ref'), undef, ($r->{id}, $u->{id}));
+  $c->render(format=>'txt', text=><<TXT)
+$pkg
+
+Success delete ref ROLE[$role]->USER[$user]!
+
+@{[$c->dumper( $ref)]}
+TXT
+    and return
+    if $ref;
+  
+  $c->render(format=>'txt', text=><<TXT)
+$pkg
+
+There is no ref ROLE[$role]->USER[$user]!
+
+TXT
+  
+}
+
+sub disable_role {
+  my $c = shift;
+  my $a = shift // 1; # 0-enable 1 - disable
+  my $k = {0=>'enable', 1=>'disable',};
+  
+  my $role = $c->stash('role') || $c->param('role');
+  # ROLE
+  my $r = $dbh->selectrow_hashref($sql->sth('dsbl/enbl role'), undef, ($a, $role =~ /\D/ ? (undef, $role) : ($role, undef,)));
+  $c->render(format=>'txt', text=><<TXT)
+$pkg
+
+No such role [$role]!
+
+TXT
+    and return
+    unless $r;
+  
+  $c->render(format=>'txt', text=><<TXT)
+$pkg
+
+Success @{[$k->{$a}]} role!
+
+@{[$c->dumper( $r)]}
+
+TXT
+}
+
+sub enable_role {shift->disable_role(0);}
+
+
 sub role_users {# все пользователи роли по запросу /myadmin/users/:role
   my $c = shift;
   
   my $role = $c->stash('role') || $c->param('role');
   # ROLE
-  my $r = $dbh->selectrow_hashref($sql->sth('role'), undef, ($role =~ s/\D//gr || undef, $role));
+  my $r = $dbh->selectrow_hashref($sql->sth('role'), undef, ($role =~ /\D/ ? (undef, $role) : ($role, undef,)));
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
@@ -416,7 +497,7 @@ sub role_routes {# все маршруты роли по запросу /myadmin
   
    my $role = $c->stash('role') || $c->param('role');
   # ROLE
-  my $r = $dbh->selectrow_hashref($sql->sth('role'), undef, ($role =~ s/\D//gr || undef, $role));
+  my $r = $dbh->selectrow_hashref($sql->sth('role'), undef, ($role =~ /\D/ ? (undef, $role) : ($role, undef,)));
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
@@ -430,7 +511,7 @@ TXT
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
-All @{[scalar @$t]} routes by role [$r->{name}]
+Total @{[scalar @$t]} routes by role [$r->{name}]
 
 @{[$c->dumper( $t)]}
 TXT
@@ -447,14 +528,21 @@ sub admin_routes {# from plugin!
   my $t = <<TABLE;
 /$prefix	$ns	admin	index	$prefix admin home	1	View main page
 /$prefix/role/new/:name	$ns	admin	new_role	$prefix create role	1	Add new role by :name
+/$prefix/role/del/:role/:user	$ns	admin	del_role_user	$prefix del ref role->user	1	Delete ref :user -> :role by user.id|user.login and role.id|role.name.
+/$prefix/role/dsbl/:role	$ns	admin	disable_role	$prefix disable role->user	1	Disable :role by role.id|role.name.
+/$prefix/role/enbl/:role	$ns	admin	enable_role	$prefix enable role->user	1	Enable :role by role.id|role.name.
 /$prefix/roles	$ns	admin	roles	$prefix view roles	1	View roles table
 /$prefix/roles/:user	$ns	admin	user_roles	$prefix roles of user	1	View roles of :user by id|login
 /$prefix/role/:role/:user	$ns	admin	new_role_user	$prefix create ref role->user	1	Assign :user to :role by user.id|user.login and role.id|role.name.
+
 
 /$prefix/route/new	$ns	admin	new_route	$prefix create route	1	Add new route by params: request,namespace, controller,....
 /$prefix/routes	$ns	admin	routes	$prefix view routes	1	View routes table
 /$prefix/routes/:role	$ns	admin	role_routes	$prefix routes of role	1	All routes of :role by id|name
 /$prefix/route/:route/:role	$ns	admin	ref	$prefix create ref route->role	1	Assign :route with :role by route.id and role.id|role.name
+
+
+
 
 /$prefix/user/new	$ns	admin	new_user	$prefix create user	1	Add new user by params: login,pass,...
 /$prefix/user/new/:login/:pass	$ns	admin	new_user	$prefix create user st	1	Add new user by :login & :pass

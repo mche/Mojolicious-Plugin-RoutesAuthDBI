@@ -7,7 +7,7 @@
 
 =head1 NAME
 
-Mojolicious::Plugin::RoutesAuthDBI - Generate routes from sql-table, make authentication and make restrict access (authorization) to route with users/roles tables. Plugin makes an auth operations throught the plugin L<Mojolicious::Plugin::Authentication> on which is based.
+Mojolicious::Plugin::RoutesAuthDBI - Generate routes from sql-table, make authentication and make restrict access to route with users/roles tables. Plugin makes an auth operations throught the plugin L<Mojolicious::Plugin::Authentication> on which is based.
 
 =head1 SYNOPSIS
 
