@@ -36,7 +36,7 @@ use Mojo::Base 'Mojolicious::Controller';
 
 =head1 Trust url for admin-user creation:
 
-$ perl test-app.pl get /<pluginconf->{admin}{admin_routes}{prefix}>/<pluginconf->{admin}{admin_routes}{trust}>/user/new/<new admin login>/<admin pass> 2>/dev/null
+$ perl test-app.pl get /<pluginconf->{access}{admin}{prefix}>/<pluginconf->{access}{admin}{trust}>/user/new/<new admin login>/<admin pass> 2>/dev/null
 
 =head1 Sign in by browser:
 
@@ -44,7 +44,7 @@ Go to http://127.0.0.1:3000/sign/in/<new admin login>/<admin pass>
 
 =head1 Admin index:
 
-Go to http://127.0.0.1:3000/<pluginconf->{admin}{admin_routes}{prefix}>
+Go to http://127.0.0.1:3000/<pluginconf->{access}{admin}{prefix}>
 
 =cut
 
@@ -80,7 +80,7 @@ $ perl test-app.pl daemon
 5. Go to trust url for admin-user creation :
 ------------
 
-$ perl test-app.pl get /<pluginconf->{admin}{admin_routes}{prefix}>/<pluginconf->{admin}{admin_routes}{trust}>/user/new/<new admin login>/<admin pass>
+$ perl test-app.pl get /<pluginconf->{access}{admin}{prefix}>/<pluginconf->{access}{admin}{trust}>/user/new/<new admin login>/<admin pass>
 
 User will be created and assigned to role 'Admin' . Role 'Admin' assigned to pseudo-route that has access to all routes of this controller!
 
@@ -91,7 +91,7 @@ User will be created and assigned to role 'Admin' . Role 'Admin' assigned to pse
 
 
 
-7. Go to http://127.0.0.1:3000/<plugiconf->{admin}{admin_routes}{prefix}>
+7. Go to http://127.0.0.1:3000/<plugiconf->{access}{admin}{prefix}>
 ------------
 
 
@@ -114,7 +114,7 @@ sub startup {
   $app->plugin('RoutesAuthDBI',
     dbh=>$app->dbh,
     auth=>{current_user_fn=>'auth_user'},
-    admin=>{namespace=>'Mojolicious::Plugin::RoutesAuthDBI', controller=>'Admin', admin_routes=>{prefix=>'myadmin', trust=>'fooobaaar',},},
+    access=>{namespace=>'Mojolicious::Plugin::RoutesAuthDBI', controller=>'Admin', admin=>{prefix=>'myadmin', trust=>'fooobaaar',},},
   );
 }
 

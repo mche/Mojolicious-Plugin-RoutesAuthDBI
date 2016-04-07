@@ -1,0 +1,2 @@
+2016/04/06 09:57:49 [error] 13759#0: *6 open() "/home/guest/api.dropboxapi.com/public/images/favicon.ico" failed (2: No such file or directory), client: 127.0.0.1, server: api.dropboxapi.com, request: "GET /public/images/favicon.ico HTTP/1.1", host: "api.dropboxapi.com"
+2016/04/06 12:50:21 [error] 22920#0: *24 open() "/home/guest/api.dropbox.com/public/images/favicon.ico" failed (2: No such file or directory), client: 127.0.0.1, server: api.dropbox.com, request: "GET /public/images/favicon.ico HTTP/1.1", host: "127.0.0.1"

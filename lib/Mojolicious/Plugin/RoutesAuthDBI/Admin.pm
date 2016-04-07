@@ -6,7 +6,7 @@ our @EXPORT_OK = qw(load_user validate_user);
 
 my $dbh; # one per class
 my $pkg = __PACKAGE__;
-my $plugin_conf;
+my $init_conf;
 my $sql;#sth hub
 
 =pod
@@ -14,26 +14,30 @@ my $sql;#sth hub
 
 =head NAME
 
-Mojolicious::Plugin::RoutesAuthDBI::Admin - is a mixed Mojolicious::Controller. It invoking from plugin module and might also using as standard Mojolicious::Controller.
+Mojolicious::Plugin::RoutesAuthDBI::Admin - is a mixed Mojolicious::Controller. It invoking from plugin module and might also using as standard Mojolicious::Controller. From plugin it controll access to routes trought sintax of ->over(...), see L<Mojolicious::Routes::Route#over>
 
 =head1 SYNOPSIS
 
-From plugin:
+In plugin:
     
-    $conf->{admin}{namespace} = 'Mojolicious::Plugin::RoutesAuthDBI';
-    $conf->{admin}{controller} = 'Admin';
-    require ($conf->{admin}{namespace} =~ s/::/\//gr)."/$conf->{admin}{controller}.pm";
-    my $module = "$conf->{admin}{namespace}::$conf->{admin}{controller}";
-    $module->import( qw(load_user validate_user) );
-    my $admin = (bless $conf->{admin}, $module)->init_class;
+    $conf->{access}{namespace} = 'Mojolicious::Plugin::RoutesAuthDBI';
+    $conf->{access}{controller} = 'Admin';
+    my $class  = join '::', $conf->{namespace}, ucfirst(lc($conf->{controller}));
+    require join '/', $conf->{access}{namespace} =~ s/::/\//gr, $conf->{access}{controller}.'.pm';# not use!
+    $class->import( qw(load_user validate_user) );
+    my $access = (bless $conf->{access}{access}, $module)->init_class;
 
-From Mojolicious routing:
+For routing:
 
     $r->get('/myadmin')->over(<access>)->to('admin#index', namespace=>'Mojolicious::Plugin::RoutesAuthDBI',);
 
-=head1 OPTIONS for plugin
+=head1 OPTIONS for access controller
 
-    $app->plugin('RoutesAuthDBI',  dbh => $app->dbh, auth => {...}, admin => {<options>},);
+    $app->plugin('RoutesAuthDBI', 
+        dbh => $app->dbh,
+        auth => {...},
+        access => {< options below >},
+    );
 
 =over 4
 
@@ -43,15 +47,19 @@ From Mojolicious routing:
 
 Both above options determining the module which will play as manager of authentication, accessing and generate routing from DBI source.
 
-=item * B<admin_routes> - hashref: key I<prefix> => is prefix for admin urls of this module, key I<trust> => is a url subprefix for trust admin urls of this module. Optional.
+=item * B<admin> - hashref: key I<prefix> => is prefix for admin urls of this module, key I<trust> => is a url subprefix for trust admin urls of this module. Optional.
 
-    admin_routes = > {prefix=>'myadmin', trust => 'foooobaaar'},
+    admin = > {prefix=>'myadmin', trust => 'foooobaaar'},
 
 is admin urls like: /myadmin/foooobaaar/.....
 
 By default:
 
-    admin_routes = > {prefix=>'admin', trust => $app->secrets->[0]},
+    admin = > {prefix=>'admin', trust => $app->secrets->[0]},
+    
+    admin = {}, # empty hashref sets defaults above
+    
+    admin => undef, # disables routing of this module
     
 
 =item * B<fail_auth_cb> = sub {my $c = shift;...}
@@ -60,7 +68,7 @@ This callback invoke when request need auth route but authentication was failure
 
 =item * B<fail_access_cb> = sub {my ($c, $route, $r_hash) = @_;...}
 
-This callback invoke when request need auth route but access was failure. $route - Mojolicious::Routes::Route object, $r_hash - route hashref db item.
+This callback invoke when request need auth route but access was failure. $route - L<Mojolicious::Routes::Route> object, $r_hash - route hashref db item.
 
 =back
 
@@ -79,9 +87,9 @@ head1 METHODS NEEDS IN PLUGIN
 
 =over 4
 
-=item * B<init_class()> - make initialization of class vars: $dbh, $sql, $plugin_conf. Return $self object controller;
+=item * B<init_class()> - make initialization of class vars: $dbh, $sql, $init_conf. Return $self object controller;
 
-=item * B<admin_routes()> - builtin this admin controller routes. Return array of hashrefs. Depends on conf options I<prefix> and I<trust>. Optional method.
+=item * B<admin_routes()> - builtin this access controller routes. Return array of hashrefs. Depends on conf options I<prefix> and I<trust>. Optional method.
 
 =item * B<apply_route($self, $app, $r_hash)> - insert to app->routes an hash item $r_hash. Return new Mojolicious route;
 
@@ -102,10 +110,10 @@ head1 METHODS NEEDS IN PLUGIN
 sub init_class {# from plugin! init Class vars
 	my $c = shift;
 	my $args = {@_};
-  $plugin_conf ||= $c;
-  if ($c->{admin_routes}) {
-    $c->{admin_routes}{prefix} =~ s/^\///;
-    $c->{admin_routes}{trust} =~ s/\W/-/g;
+  $init_conf ||= $c;
+  if ($c->{admin}) {
+    $c->{admin}{prefix} =~ s/^\///;
+    $c->{admin}{trust} =~ s/\W/-/g;
   }
 	$c->{dbh} ||= $dbh ||=  $args->{dbh};
 	$dbh ||= $c->{dbh};
@@ -258,8 +266,8 @@ sub trust_new_user {
   $ru ||= $dbh->selectrow_hashref($sql->sth('new_ref'), undef, ($rl->{id}, $u->{id}));
   
   # ROUTE
-  my $rt = $dbh->selectrow_hashref($sql->sth('route/controller'), undef, ($plugin_conf->{namespace}, $plugin_conf->{controller}));
-  $rt ||= $dbh->selectrow_hashref($sql->sth('new_route'), undef, (undef, 'admin controller', $plugin_conf->{namespace}, $plugin_conf->{controller}, undef, 1, "Access to all $plugin_conf->{namespace}\::$plugin_conf->{controller} actions", undef, undef,));
+  my $rt = $dbh->selectrow_hashref($sql->sth('route/controller'), undef, ($init_conf->{namespace}, $init_conf->{controller}));
+  $rt ||= $dbh->selectrow_hashref($sql->sth('new_route'), undef, (undef, 'admin controller', $init_conf->{namespace}, $init_conf->{controller}, undef, 1, "Access to all $init_conf->{namespace}\::$init_conf->{controller} actions", undef, undef,));
     
     #REF route->role
   my $rr = $dbh->selectrow_hashref($sql->sth('ref'), undef, ($rt->{id}, $rl->{id}));
@@ -521,9 +529,9 @@ TXT
 my @admin_routes_cols = qw(request namespace controller action name auth descr);
 sub admin_routes {# from plugin!
   my $c = shift;
-  my $prefix = $plugin_conf->{admin_routes}{prefix};
-  my $trust = $plugin_conf->{admin_routes}{trust};
-  my $ns = $plugin_conf->{namespace};
+  my $prefix = $init_conf->{admin}{prefix};
+  my $trust = $init_conf->{admin}{trust};
+  my $ns = $init_conf->{namespace};
 
   my $t = <<TABLE;
 /$prefix	$ns	admin	index	$prefix admin home	1	View main page
@@ -555,11 +563,6 @@ post /sign/in	$ns	admin	sign	signin params	0	Auth by params
 /sign/out	$ns	admin	signout	go away	1	Exit
 
 /$prefix/$trust/user/new/:login/:pass	$ns	admin	trust_new_user	$prefix/$trust !trust create user!	0	Add new user by :login & :pass and auto assign to role 'Admin' and assign to access this controller!
-
-/$prefix/schema	$ns	install	schema	$prefix sql schema	0	Postgres SQL schema
-/$prefix/schema/drop	$ns	install	schema_drop	$prefix drop schema	0	Postgres SQL schema remove
-/$prefix/schema/flush	$ns	install	schema_flush	$prefix flush schema	0	Postgres SQL schema clean
-/$prefix/install	$ns	install	manual	$prefix install	0	Manual
 
 TABLE
   

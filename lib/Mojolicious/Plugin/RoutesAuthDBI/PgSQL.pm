@@ -18,6 +18,67 @@ Mojolicious::Plugin::RoutesAuthDBI::PgSQL - is a SQL hub for L<Mojolicious::Plug
 
 A whole class DBI statement cache.
 
+=head1 SQL schema
+
+    Refs between three tables in order: route -> role -> user
+
+=over 4
+
+=item * Pg sequence for column id on all tables
+
+    create sequence ID;
+
+=item * Table of routes
+
+    create table routes(
+    id integer default nextval('ID'::regclass) not null primary key,
+    ts timestamp without time zone default now() not null,
+    request character varying null,
+    namespace character varying null,
+    controller character varying not null,
+    action character varying null,
+    name character varying not null,
+    descr text,
+    auth bit(1),
+    disable bit(1),
+    order_by int
+    );
+
+=item * Table of users
+
+    create table users(
+        id int default nextval('ID'::regclass) not null  primary key,
+        ts timestamp without time zone default now() not null,
+        login varchar not null unique,
+        pass varchar not null
+    );
+
+=item * Table of users roles
+
+    create table roles(
+        id int default nextval('ID'::regclass) not null  primary key,
+        ts timestamp without time zone default now() not null,
+        name varchar not null unique
+    );
+
+=item * Table of references between routes, users and roles
+
+    create table refs(
+        id int default nextval('ID'::regclass) not null  primary key,
+        ts timestamp without time zone default now() not null,
+        id1 int not null,
+        id2 int not null,
+        unique(id1, id2)
+    );
+    create index on refs (id2);
+
+where:
+	id1 - primary id of reference,
+	id2 - secondary id of reference
+
+
+=back
+
 =cut
 
 my $dbh;

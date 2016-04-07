@@ -6,12 +6,15 @@
 package TestApp;
 use Mojo::Base 'Mojolicious';
 
+
 use FindBin;
 use lib "$FindBin::Bin/lib";
+#~ use Mojolicious::RendererDebug;
 
 has dbh => sub { {}; };
 has sth => sub { {}; };
 
+#~ has renderer => sub { Mojolicious::RendererDebug->new };
 
 # This method will run once at server start
 sub startup {# 
@@ -21,8 +24,10 @@ sub startup {#
   $app->plugin('RoutesAuthDBI',
     dbh=>$app->dbh->{'main'},
     auth=>{current_user_fn=>'auth_user'},
-    admin=> {admin_routes=>{prefix=>'myadmin', trust=>'fooobaaar'},},
+    access=> {admin=>{prefix=>'myadmin', trust=>'fooobaaar'},},
   );
 }
+
+
 
 __PACKAGE__->new()->start();
