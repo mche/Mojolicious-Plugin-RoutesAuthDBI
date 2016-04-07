@@ -20,7 +20,7 @@ A whole class DBI statement cache.
 
 =head1 SQL schema
 
-    Refs between three tables in order: route -> role -> user
+Refs between three tables in order: route -> role -> user
 
 =over 4
 

@@ -1,7 +1,7 @@
 package Mojolicious::Plugin::RoutesAuthDBI;
 use Mojo::Base 'Mojolicious::Plugin::Authentication';
 
-our $VERSION = '0.150';
+our $VERSION = '0.151';
 
 my $dbh;
 my $access;# 
@@ -107,7 +107,7 @@ Mojolicious::Plugin::RoutesAuthDBI - Generate routes from sql-table, make authen
     # at sub startup
     # after config
     
-    $app->plugin('RoutesAuthDBI',  dbh => $app->dbh, auth => {...}, admin => {...},);
+    $app->plugin('RoutesAuthDBI',  dbh => $app->dbh, auth => {...}, access => {...},);
 
 
 =head2 OPTIONS
