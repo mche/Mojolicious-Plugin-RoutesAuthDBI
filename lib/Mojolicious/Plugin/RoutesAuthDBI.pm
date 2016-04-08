@@ -122,7 +122,7 @@ Mojolicious::Plugin::RoutesAuthDBI - Generate routes from sql-table, make authen
     # at sub startup
     # after config
     
-    $app->plugin('RoutesAuthDBI',  dbh => $app->dbh, auth => {...}, access => {...},);
+    $app->plugin('RoutesAuthDBI',  dbh => $app->dbh, auth => {...}, access => {...}, admin => {...}, );
 
 
 =head2 OPTIONS
@@ -143,10 +143,10 @@ The options:
 
 are imported from package access controller. See below.
 
-=item * B<access> - hashref options for special access controller. This controller has subs and methods for manage auth and access operations, has appling routes from sql-table. By default plugin will load the builtin controller:
+=item * B<access> - hashref options for special access module. This module has subs and methods for manage auth and access operations, has appling routes from sql-table. By default plugin will load the builtin module:
 
     access => {
-        controller => 'Admin',
+        module => 'Access',
         namespace => 'Mojolicious::Plugin::RoutesAuthDBI',
         ...,
     },
@@ -155,6 +155,25 @@ are imported from package access controller. See below.
 You might define your own controller by passing options:
 
     access => {
+        module => 'Foo',
+        namespace => 'Bar::Baz', 
+        ...,
+    },
+
+See L<Mojolicious::Plugin::RoutesAuthDBI::Access> for detail options list.
+
+=item * B<admin> - hashref options for admin controller for actions on SQL tables routes, roles, users. By default the builtin module:
+
+    admin => {
+        controller => 'Access',
+        namespace => 'Mojolicious::Plugin::RoutesAuthDBI',
+        ...,
+    },
+
+
+You might define your own controller by passing options:
+
+    admin => {
         controller => 'Foo',
         namespace => 'Bar::Baz', 
         ...,
@@ -244,6 +263,4 @@ This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
 
 =cut
-
-
 
