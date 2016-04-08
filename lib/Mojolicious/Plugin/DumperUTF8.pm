@@ -1,6 +1,6 @@
 package Mojolicious::Plugin::DumperUTF8;
 use Mojo::Base 'Mojolicious::Plugin';
-use Mojo::Util qw(decode dumper);
+use Encode qw(decode);
 use Data::Recursive::Encode;
 
 our $VERSION = '0.00001';
