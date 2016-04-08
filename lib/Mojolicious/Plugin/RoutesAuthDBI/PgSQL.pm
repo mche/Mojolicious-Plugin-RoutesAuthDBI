@@ -7,7 +7,7 @@ use Mojo::Base -strict;
 
 =head NAME
 
-Mojolicious::Plugin::RoutesAuthDBI::PgSQL - is a SQL hub for L<Mojolicious::Plugin::RoutesAuthDBI::Admin>.
+Mojolicious::Plugin::RoutesAuthDBI::PgSQL - is a SQL hub for L<Mojolicious::Plugin::RoutesAuthDBI>.
 
 =head1 SYNOPSIS
 
@@ -123,7 +123,9 @@ sub sth {
   my ($db, $st) = @{ shift() };
   my $key = shift;
   $dbh ||= $db or die "Not defined dbh DBI handle"; # init dbh once
+  warn "Initiate SQL cache $st" unless $sth;
   $sth ||= $st; # init cache once
+  $sth ||= {};
   return $sth unless $key;
   die "No such key[$key] on SQL!" unless $sql->{$key};
   $sth->{$key} ||= $dbh->prepare($sql->{$key});

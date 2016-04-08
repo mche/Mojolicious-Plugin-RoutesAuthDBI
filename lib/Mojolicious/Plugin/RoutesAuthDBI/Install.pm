@@ -36,7 +36,7 @@ use Mojo::Base 'Mojolicious::Controller';
 
 =head1 Trust url for admin-user creation:
 
-$ perl test-app.pl get /<pluginconf->{access}{admin}{prefix}>/<pluginconf->{access}{admin}{trust}>/user/new/<new admin login>/<admin pass> 2>/dev/null
+$ perl test-app.pl get /<pluginconf->{admin}{prefix}>/<pluginconf->{admin}{trust}>/user/new/<new admin login>/<admin pass> 2>/dev/null
 
 =head1 Sign in by browser:
 
@@ -44,7 +44,9 @@ Go to http://127.0.0.1:3000/sign/in/<new admin login>/<admin pass>
 
 =head1 Admin index:
 
-Go to http://127.0.0.1:3000/<pluginconf->{access}{admin}{prefix}>
+Go to http://127.0.0.1:3000/<pluginconf->{admin}{prefix}>
+
+Administration of system ready!
 
 =cut
 
@@ -80,7 +82,7 @@ $ perl test-app.pl daemon
 5. Go to trust url for admin-user creation :
 ------------
 
-$ perl test-app.pl get /<pluginconf->{access}{admin}{prefix}>/<pluginconf->{access}{admin}{trust}>/user/new/<new admin login>/<admin pass>
+$ perl test-app.pl get /<pluginconf->{admin}{prefix}>/<pluginconf->{admin}{trust}>/user/new/<new admin login>/<admin pass>
 
 User will be created and assigned to role 'Admin' . Role 'Admin' assigned to pseudo-route that has access to all routes of this controller!
 
@@ -91,7 +93,7 @@ User will be created and assigned to role 'Admin' . Role 'Admin' assigned to pse
 
 
 
-7. Go to http://127.0.0.1:3000/<plugiconf->{access}{admin}{prefix}>
+7. Go to http://127.0.0.1:3000/<plugiconf->{admin}{prefix}>
 ------------
 
 
@@ -106,7 +108,7 @@ sub test_app {
 use Mojo::Base 'Mojolicious';
 use DBI;
 
-has dbh => sub { DBI->connect("DBI:Pg:dbname=<dbname>;", ..........); };
+has dbh => sub { DBI->connect("DBI:Pg:dbname=<dbname>;", "postgres", undef); };
 
 sub startup {
   my $app = shift;
@@ -114,7 +116,8 @@ sub startup {
   $app->plugin('RoutesAuthDBI',
     dbh=>$app->dbh,
     auth=>{current_user_fn=>'auth_user'},
-    access=>{namespace=>'Mojolicious::Plugin::RoutesAuthDBI', controller=>'Admin', admin=>{prefix=>'myadmin', trust=>'fooobaaar',},},
+    # access=> {},
+    admin=>{prefix=>'myadmin', trust=>'fooobaaar',},
   );
 }
 

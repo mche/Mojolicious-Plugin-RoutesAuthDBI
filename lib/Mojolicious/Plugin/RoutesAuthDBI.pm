@@ -1,9 +1,8 @@
 package Mojolicious::Plugin::RoutesAuthDBI;
 use Mojo::Base 'Mojolicious::Plugin::Authentication';
 
-our $VERSION = '0.151';
+our $VERSION = '0.202';
 
-my $dbh;
 my $access;# 
 my $pkg = __PACKAGE__;
 my $conf ;# set on ->registrer
@@ -18,20 +17,16 @@ my $fail_access_cb = sub {shift->render(format=>'txt', text=>"You don`t have acc
 sub register {
   my ($self, $app,) = (shift, shift);
   $conf = shift; # global
-  $dbh ||= $conf->{dbh} ||= $app->dbh;
+  $conf->{dbh} ||= $app->dbh;
   die "Plugin must work with arg dbh, see SYNOPSIS" unless $conf->{dbh};
   $conf->{access} ||= {};
-  $conf->{access}{namespace} ||= $pkg unless $conf->{access}{controller};
-  $conf->{access}{controller} ||= $conf->{access}{module} ||= 'Admin';
-  if ($conf->{access}{admin}) {
-    $conf->{access}{admin}{prefix} ||= lc($conf->{controller});
-    $conf->{access}{admin}{trust} ||= $app->secrets->[0];
-  }
-  $conf->{access}{dbh} = $dbh;
+  $conf->{access}{namespace} ||= $pkg unless $conf->{access}{module};
+  $conf->{access}{module} ||= 'Access';
+  $conf->{access}{dbh} = $conf->{dbh};
   $conf->{access}{fail_auth_cb} ||= $fail_auth_cb;
   $conf->{access}{fail_access_cb} ||= $fail_access_cb;
   # class obiect
-  $access ||= $self->admin_controller($app, $conf->{access});
+  $access ||= $self->access_instance($app, $conf->{access});
   
   $conf->{auth}{stash_key} ||= $pkg;
   $conf->{auth}{current_user_fn} ||= 'auth_user';
@@ -43,20 +38,40 @@ sub register {
   $app->routes->add_condition(access => \&access);
   $access->apply_route($app, $_) for @{ $access->table_routes };
   
-  if ($conf->{access}{admin}) {
-    $access->apply_route($app, $_) for $access->admin_routes;
+  if ($conf->{admin}) {
+    $conf->{admin}{namespace} ||= $pkg;
+    $conf->{admin}{controller} ||= 'Admin';
+    $conf->{admin}{dbh} = $conf->{dbh};
+    $conf->{admin}{prefix} ||= lc($conf->{admin}{controller});
+    $conf->{admin}{trust} ||= $app->secrets->[0];
+    my $admin ||= $self->admin_controller($app, $conf->{admin});
+    $access->apply_route($app, $_) for $admin->self_routes;
   }
+  
+  #~ $app->has('access_instance', $access);
   
   return $self, $access;
 
 }
 
-sub admin_controller {# pseudo controller for auth, routes and access methods
+sub access_instance {# auth, routes and access methods
   my ($self, $app, $conf) = @_;
-  my $class  = join '::', $conf->{namespace}, ucfirst(lc($conf->{controller}));
-  require join '/', $conf->{namespace} =~ s/::/\//gr, $conf->{controller}.'.pm';# not use!
+  my $class  = _load_mod( $conf->{namespace}, $conf->{module});
   $class->import( qw(load_user validate_user) );
   return (bless $conf, $class)->init_class;
+}
+
+sub admin_controller {# web interface
+  my ($self, $app, $conf) = @_;
+  my $class  = _load_mod( $conf->{namespace}, $conf->{controller});
+  return (bless $conf, $class)->init_class;
+}
+
+sub _load_mod {
+  my ($ns, $mod) = @_;
+  my $class  = join '::', $ns, $mod;
+  require join '/', $ns =~ s/::/\//gr, $mod.'.pm';
+  return $class;
 }
 
 

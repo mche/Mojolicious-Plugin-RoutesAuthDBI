@@ -24,7 +24,8 @@ sub startup {#
   $app->plugin('RoutesAuthDBI',
     dbh=>$app->dbh->{'main'},
     auth=>{current_user_fn=>'auth_user'},
-    access=> {admin=>{prefix=>'myadmin', trust=>'fooobaaar'},},
+    access=> {},
+    admin=>{prefix=>'myadmin', trust=>'fooobaaar'},
   );
 }
 
