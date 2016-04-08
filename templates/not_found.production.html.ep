@@ -1,9 +1,0 @@
-<!DOCTYPE html>
-<html>
-  <head><title>Page not found</title></head>
-  <body>
-	<h1>Page  "<%= $self->req->url->path %>" was not found [<%= $status %>] </h1>
-        <div><%= $self->req->headers->to_string . $self->app->log->debug(Mojo::JSON->new->encode($self->req->headers->to_string))%></div>
-        <div><%= join(', ', $self->req->param) . $self->app->log->debug($self->req->params->to_string) %></div>
-  </body>
-</html>

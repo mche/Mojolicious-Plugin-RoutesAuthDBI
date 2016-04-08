@@ -83,11 +83,14 @@ sub init_class {# from plugin! init Class vars
 sub index {
   my $c = shift;
   
+  $c->app->log->debug($c->dumper( $c->auth_user));
+  
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
 You are signed as:
 @{[$c->dumper( $c->auth_user)]}
+
 
 @{[map "$_->{request}\t\t$_->{descr}\n", $c->self_routes]}
 

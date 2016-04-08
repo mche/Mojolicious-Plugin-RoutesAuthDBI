@@ -9,6 +9,7 @@ sub register {
 
   $app->mode($conf->{'mojo_mode'} || $conf->{'mojo'}{'mode'} || 'development'); # Файл лога уже не переключишь
   $app->log->level( $conf->{'mojo_log_level'} || $conf->{'mojo'}{'log_level'} || 'debug');
+  warn "Mode: ", $app->mode, "; log level: ", $app->log->level;
   
   # Плугины из конфига
   map {$app->plugin(@$_);} @{$conf->{'mojo_plugins'} || $conf->{'mojo'}{'plugins'} };

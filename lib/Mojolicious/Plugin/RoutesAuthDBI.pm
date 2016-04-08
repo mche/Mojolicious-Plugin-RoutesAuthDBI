@@ -154,7 +154,7 @@ are imported from package access module. See below.
     },
 
 
-You might define your own controller by passing options:
+You might define your own module by passing options:
 
     access => {
         module => 'Foo',
