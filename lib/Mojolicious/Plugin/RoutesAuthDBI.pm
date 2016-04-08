@@ -119,10 +119,12 @@ Mojolicious::Plugin::RoutesAuthDBI - Generate routes from sql-table, make authen
 
 =head1 SYNOPSIS
 
-    # at sub startup
-    # after config
-    
-    $app->plugin('RoutesAuthDBI',  dbh => $app->dbh, auth => {...}, access => {...}, admin => {...}, );
+    $app->plugin('RoutesAuthDBI',
+        dbh => $app->dbh,
+        auth => {...},
+        access => {...},
+        admin => {...},
+    );
 
 
 =head2 OPTIONS
@@ -141,7 +143,7 @@ The options:
     load_user => \&load_user,
     validate_user => \&validate_user,
 
-are imported from package access controller. See below.
+are imported from package access module. See below.
 
 =item * B<access> - hashref options for special access module. This module has subs and methods for manage auth and access operations, has appling routes from sql-table. By default plugin will load the builtin module:
 
@@ -239,9 +241,9 @@ It table will generate the L<Mojolicious routes|http://mojolicious.org/perldoc/M
     # GET or POST /foo/baz 
     $r->route('/foo/baz')->via('GET', 'post')->over(<access>)->to(controller => 'Foo', action => 'baz')->name('foo_baz');
 
-=head3 Warning
+=head2 Warning
 
-If you changed the routes table then kill -HUP or reload app to regenerate routes.
+If you changed the routes table then kill -HUP or reload app to regenerate routes. Changing assess not require reloading the service.
 
 =head1 SEE ALSO
 
@@ -249,7 +251,7 @@ L<Mojolicious::Plugin::Authentication>, L<Mojolicious::Plugin::Authorization>
 
 =head1 AUTHOR
 
-Михаил Че (Mikhail Che), C<< <mche [] cpan.org> >>
+Михаил Че (Mikhail Che), C<< <mche [on] cpan.org> >>
 
 =head1 BUGS / CONTRIBUTING
 
