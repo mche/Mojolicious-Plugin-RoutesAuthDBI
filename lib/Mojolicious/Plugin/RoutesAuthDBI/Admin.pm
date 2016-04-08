@@ -10,7 +10,7 @@ my $sql;#sth hub
 =pod
 =encoding utf8
 
-=head NAME
+=head1 NAME
 
 Mojolicious::Plugin::RoutesAuthDBI::Admin - is a mixed Mojolicious::Controller. It invoking from plugin module and might also using as standard Mojolicious::Controller. From plugin it controll access to routes trought sintax of ->over(...), see L<Mojolicious::Routes::Route#over>
 

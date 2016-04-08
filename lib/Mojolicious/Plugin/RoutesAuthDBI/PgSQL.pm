@@ -5,7 +5,7 @@ use Mojo::Base -strict;
 
 =encoding utf8
 
-=head NAME
+=head1 NAME
 
 Mojolicious::Plugin::RoutesAuthDBI::PgSQL - is a SQL hub for L<Mojolicious::Plugin::RoutesAuthDBI>.
 

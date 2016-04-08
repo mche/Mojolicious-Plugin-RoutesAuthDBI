@@ -1,6 +1,7 @@
 Changes
 lib/Mojolicious/Plugin/RoutesAuthDBI.pm
 lib/Mojolicious/Plugin/RoutesAuthDBI/Admin.pm
+lib/Mojolicious/Plugin/RoutesAuthDBI/Access.pm
 lib/Mojolicious/Plugin/RoutesAuthDBI/Install.pm
 lib/Mojolicious/Plugin/RoutesAuthDBI/PgSQL.pm
 README.pod

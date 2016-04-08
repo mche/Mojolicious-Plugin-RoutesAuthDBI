@@ -12,7 +12,7 @@ my $sql;#sth hub
 =pod
 =encoding utf8
 
-=head NAME
+=head1 NAME
 
 Mojolicious::Plugin::RoutesAuthDBI::Access - Generation routes, authentication and controll access to routes trought sintax of ->over(...), see L<Mojolicious::Routes::Route#over>
 

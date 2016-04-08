@@ -14,6 +14,7 @@
 
 use utf8;
 use Data::Dumper;
+use Encode qw(encode);
 $Data::Dumper::Useqq = 0;
 
 #~ { no warnings 'redefine';
@@ -26,7 +27,7 @@ $Data::Dumper::Useqq = 0;
 my $str = {1, "abc роллд xyz"};
 
 #~ binmode STDOUT, ':encoding(UTF-8)';
-print Dumper $str;
+print encode 'utf8', Dumper $str;
 
 __END__
 

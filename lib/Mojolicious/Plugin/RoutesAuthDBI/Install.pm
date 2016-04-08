@@ -36,7 +36,7 @@ use Mojo::Base 'Mojolicious::Controller';
 
 =head1 Trust url for admin-user creation:
 
-$ perl test-app.pl get /<pluginconf->{admin}{prefix}>/<pluginconf->{admin}{trust}>/user/new/<new admin login>/<admin pass> 2>/dev/null
+    $ perl test-app.pl get /<pluginconf->{admin}{prefix}>/<pluginconf->{admin}{trust}>/user/new/<new admin login>/<admin pass> 2>/dev/null
 
 =head1 Sign in by browser:
 
