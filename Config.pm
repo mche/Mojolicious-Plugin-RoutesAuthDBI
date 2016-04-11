@@ -18,7 +18,7 @@
 	mojo_plugins=>[ # map $self->plugin($_)
 			#~ ['PODRenderer'], # Documentation browser under "/perldoc"
 			[charset => { charset => 'UTF-8' }, ],
-			['DumperUTF8', helper =>'dumper'],
+			['EDumper', helper =>'dumper'],
 			#[PoweredBy => {name => "Perl $^V Web Service"}],
 			#~ [ConfigRoutes => {file=>"ConfigRoutes.pm",},],#"$FindBin::Bin/ConfigRoutes.pm",
 			 #~ ['ConfigApply'],

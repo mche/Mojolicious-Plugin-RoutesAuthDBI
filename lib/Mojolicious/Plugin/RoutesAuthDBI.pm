@@ -1,7 +1,7 @@
 package Mojolicious::Plugin::RoutesAuthDBI;
 use Mojo::Base 'Mojolicious::Plugin::Authentication';
 
-our $VERSION = '0.204';
+our $VERSION = '0.300';
 
 my $access;# 
 my $pkg = __PACKAGE__;
@@ -10,7 +10,7 @@ my $conf ;# set on ->registrer
 
 my $fail_auth = {format=>'txt', text=>"Deny at auth step. Please sign in!!!\n"};
 my $fail_auth_cb = sub {shift->render(%$fail_auth);};
-my $fail_access_cb = sub {shift->render(format=>'txt', text=>"You don`t have access on this action!!!\n");};
+my $fail_access_cb = sub {shift->render(format=>'txt', text=>"You don`t have access on this route(url)!!!\n");};
 
 
 
@@ -36,7 +36,7 @@ sub register {
   $self->SUPER::register($app, $conf->{auth});
   
   $app->routes->add_condition(access => \&access);
-  $access->apply_route($app, $_) for @{ $access->table_routes };
+  $access->apply_route($app, $_) for @{ $access->db_routes };
   
   if ($conf->{admin}) {
     $conf->{admin}{namespace} ||= $pkg;
@@ -77,13 +77,14 @@ sub _load_mod {
 
 # 
 sub access {# add_condition
-  my ($route, $c, $captures, $r_item) = @_;
+  my ($route, $c, $captures, $r_hash) = @_;
+  $c->app->log->debug($c->dumper($route->pattern->defaults));
   # 1. по паролю выставить куки
   # 2. по кукам выставить пользователя
   my $meth = $conf->{auth}{current_user_fn};
   my $u = $c->$meth;
   # 3. если не проверять доступ вернуть 1
-  return 1 unless $r_item->{auth};
+  return 1 unless $r_hash->{auth};
   # не авторизовался
   $conf->{access}{fail_auth_cb}->($c, )
     and return undef
@@ -92,19 +93,34 @@ sub access {# add_condition
   $u->{roles} ||= $access->load_user_roles($c, $u->{'id'});
   # 5. по ИДам групп и пользователя проверить доступ
   my $id2 = [$u->{id}, map($_->{id}, grep !$_->{disable},@{$u->{roles}})];
-  ($r_item->{id} && $access->access_route($c, $r_item->{id}, $id2))
-    and $c->app->log->debug("Access on [$r_item->{namespace}::$r_item->{controller}->$r_item->{action}] for user id=[$u->{id}] by request=[$r_item->{request}]")
+  
+  # Acces to route by refs: routes -> roles -> users
+  ($r_hash->{id} && $access->access_route($c, $r_hash->{id}, $id2))
+    and $c->app->log->debug("Access on [$r_hash->{namespace}::$r_hash->{controller}->$r_hash->{action}] for user id=[$u->{id}] on request=[$r_hash->{request}]")
     and return 1;
-  $access->access_controller($c, $r_item, $id2)
-    and $c->app->log->debug("Access all actions on $r_item->{namespace}::$r_item->{controller} for user id=$u->{id} by request=[$r_item->{request}]")
+  
+  # Access to route (may be not in db table) of any actions on controller
+  # Refs: controllers -> roles -> users
+  $r_hash->{controller} ||= $route->pattern->defaults->{controller};
+  $r_hash->{namespace} ||= $route->pattern->defaults->{namespace};
+  ($r_hash->{controller} && $access->access_controller($c, $r_hash, $id2))
+    and $c->app->log->debug("Access all actions on $r_hash->{namespace}::$r_hash->{controller} for user id=$u->{id} on request=[$r_hash->{request}]")
     and return 1;
-  $conf->{access}{fail_access_cb}->($c, $route, $r_item);
-  #~ $c->app->log->debug($c->dumper($r_item));
+  
+  # Access to route (not in db table) by role
+  ($r_hash->{role} && $access->access_role($c, $r_hash, $id2))
+    and $c->app->log->debug("Access by role [$r_hash->{role}] for user id=$u->{id} on request=[$r_hash->{request}]")
+    and return 1;
+  
+  $conf->{access}{fail_access_cb}->($c, $route, $r_hash);
+  #~ $c->app->log->debug($c->dumper($r_hash));
   return undef;
 }
 
 
 1;
+
+=pod
 
 =encoding utf8
 
@@ -247,7 +263,8 @@ If you changed the routes table then kill -HUP or reload app to regenerate route
 
 =head1 SEE ALSO
 
-L<Mojolicious::Plugin::Authentication>, L<Mojolicious::Plugin::Authorization>
+L<Mojolicious::Plugin::Authentication>
+L<Mojolicious::Plugin::Authorization>
 
 =head1 AUTHOR
 

@@ -1,6 +1,6 @@
 package Mojolicious::Plugin::RoutesAuthDBI::Access;
 use Mojo::Base -strict;
-use Mojolicious::Plugin::RoutesAuthDBI::PgSQL;#  sth cache
+use Mojolicious::Plugin::RoutesAuthDBI::Sth;#  sth cache
 use Exporter 'import'; 
 our @EXPORT_OK = qw(load_user validate_user);
 
@@ -10,11 +10,46 @@ my $init_conf;
 my $sql;#sth hub
 
 =pod
+
 =encoding utf8
 
 =head1 NAME
 
 Mojolicious::Plugin::RoutesAuthDBI::Access - Generation routes, authentication and controll access to routes trought sintax of ->over(...), see L<Mojolicious::Routes::Route#over>
+
+=head2 Access controll flow
+
+=over 4
+
+=item * B<routes> -> B<roles> -> B<users>
+
+=item * B<controllers> -> B<roles> -> B<users>
+
+Access to routes of any actions on controller.
+
+  $r->...->to('foo#bar')->over(access=>{auth=>1}); # check access to route by controller name Foo.pm.
+
+=item * B<roles>
+
+Access to route (which not in db) by role id|name
+
+  $r->...->over(access=>{auth=>1, role => <id|name>})->...
+
+=back
+
+=head2 Generate the routes from DBI
+
+=over 4
+
+=item * B<route> -> B<actions.action> <- B<controllers>
+
+Route to action method on controller
+
+=item * B<routes> -> B<actions.callback>
+
+Route to callback (no ref to controller, defined I<callback> column (as text "sub {...}") in db table B<actions>)
+
+=back
 
 =head1 SYNOPSIS
 
@@ -52,24 +87,54 @@ This callback invoke when request need auth route but access was failure. $route
 
 =back
 
-
-head1 METHODS NEEDS IN PLUGIN
+=head1 METHODS NEEDS IN PLUGIN
 
 =over 4
 
-=item * B<init_class()> - make initialization of class vars: $dbh, $sql, $init_conf. Return $self object controller;
+=item * B<init_class()>
 
-=item * B<apply_route($self, $app, $r_hash)> - insert to app->routes an hash item $r_hash. Return new Mojolicious route;
+Make initialization of class vars: $dbh, $sql, $init_conf. Return $self object controller;
 
-=item * B<table_routes()> - fetch records from table routes. Return arrayref of hashrefs records.
+=item * B<apply_route($self, $app, $r_hash)>
 
-=item * B<load_user_roles($self, $c, $uid)> - fetch records roles for auth user. Return hashref record.
+Insert to app->routes an hash item $r_hash. DB schema specific. Return new Mojolicious route.
 
-=item * B<access_route($self, $c, $id1, $id2)> - make check access to route by $id1 for user roles ids $id2 arrayref. Return false for deny access or true - allow access.
+=item * B<db_routes()>
 
-=item * B<access_controller($self, $c, $r, $id2)> - make check access to route by special route record with request=NULL by $r->{namespace} and $r->{controller} for user roles ids $id2 arrayref. Return false for deny access or true - allow access to all actions of this controller.
+Fetch records for apply_routes. Must return arrayref of hashrefs routes.
+
+=item * B<load_user_roles($self, $c, $uid)>
+
+Fetch records roles for session user. Must return arrayref of hashrefs roles.
+
+=item * B<access_route($self, $c, $id1, $id2)>
+
+Check access to route ($id1) by user roles ids ($id2 arrayref). Must return false for deny access or true - allow access.
+
+=item * B<access_controller($self, $c, $r, $id2)>
+
+Check access to route by $r->{namespace} and $r->{controller} for user roles ids ($id2 arrayref). Must return false for deny access or true - allow access to all actions of this controller.
+
+=item * B<access_role($self, $c, $r, $id2)>
+
+Check access to route by role id|name ($r->{role}) and user roles ids ($id2 arrayref). Must return false for deny access or true - allow access.
 
 =back
+
+=head1 AUTHOR
+
+Михаил Че (Mikhail Che), C<< <mche [on] cpan.org> >>
+
+=head1 BUGS / CONTRIBUTING
+
+Please report any bugs or feature requests at L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/issues>. Pull requests also welcome.
+
+=head1 COPYRIGHT
+
+Copyright 2016 Mikhail Che.
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
 
 =cut
 
@@ -79,21 +144,21 @@ sub init_class {# from plugin! init Class vars
   $init_conf ||= $c;
 	$c->{dbh} ||= $dbh ||=  $args->{dbh};
 	$dbh ||= $c->{dbh};
-	$c->{sql} ||= $sql ||= $args->{sql} ||= bless [$dbh, {}], $c->{namespace}.'::PgSQL';#sth cache
+	$c->{sql} ||= $sql ||= $args->{sql} ||= bless [$dbh, {}], $c->{namespace}.'::Sth';#sth cache
 	$sql ||= $c->{sql};
 	return $c;
 }
 
 sub load_user {# import for Mojolicious::Plugin::Authentication
 	my ($c, $uid) = @_;
-	my $u = $dbh->selectrow_hashref($sql->sth('user/id'), undef, ($uid));
+	my $u = $dbh->selectrow_hashref($sql->sth('user'), undef, ($uid, undef));
   $c->app->log->debug("Loading user by id=$uid ". ($u ? 'success' : 'failed'));
   return $u;
 }
 
 sub validate_user {# import for Mojolicious::Plugin::Authentication
   my ($c, $login, $pass, $extradata) = @_;
-  if (my $u = $dbh->selectrow_hashref($sql->sth('user/login'), undef, ($login))) {
+  if (my $u = $dbh->selectrow_hashref($sql->sth('user'), undef, (undef, $login))) {
     return $u->{id}
       if $u->{pass} eq $pass  && !$u->{disable};
   }
@@ -121,7 +186,7 @@ sub apply_route {# meth in Plugin
   return $nr;
 }
 
-sub table_routes {
+sub db_routes {
   my ($self, $c, ) = @_;
   $dbh->selectall_arrayref($sql->sth('all routes'), { Slice => {} },);
 }
@@ -139,6 +204,11 @@ sub access_route {
 sub access_controller {
 	my ($self, $c, $r, $id2,) = @_;
 	return scalar $dbh->selectrow_array($sql->sth('access controller'), undef, ($r->{controller}, $r->{namespace},  $id2));
+}
+
+sub access_role {
+	my ($self, $c, $r, $id2,) = @_;
+	return scalar $dbh->selectrow_array($sql->sth('access role'), undef, ($r->{role} =~ /\D/ ? (undef, $r->{role}) : ($r->{role}, undef),), $id2);
 }
 
 1;

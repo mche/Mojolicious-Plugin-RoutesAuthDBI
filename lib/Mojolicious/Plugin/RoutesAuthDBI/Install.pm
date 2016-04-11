@@ -3,6 +3,8 @@ use Mojo::Base 'Mojolicious::Controller';
 
 =pod
 
+=encoding utf8
+
 =head1 Manual
 
     $ perl -e "use Mojo::Base 'Mojolicious'; __PACKAGE__->new()->start(); sub startup {shift->routes->route('/')->to('install#manual', namespace=>'Mojolicious::Plugin::RoutesAuthDBI');}" get / 2>/dev/null
@@ -136,15 +138,27 @@ CREATE TABLE routes (
     id integer default nextval('ID'::regclass) not null primary key,
     ts timestamp without time zone default now() not null,
     request character varying null,
-    namespace character varying null,
-    controller character varying not null,
-    action character varying null,
-    name character varying not null,
+    name character varying not null unique,
     descr text,
     auth bit(1),
     disable bit(1),
     order_by int
 );
+
+create table controllers (
+      id integer default nextval('ID'::regclass) not null primary key,
+      ts timestamp without time zone default now() not null,
+      namespace character varying null,
+      controller character varying not null,
+      unique(namespace, controller)
+    );
+
+create table actions (
+      id integer default nextval('ID'::regclass) not null primary key,
+      ts timestamp without time zone default now() not null,
+      action character varying not null,
+      callback text null
+    );
 
 create table users (
         id int default nextval('ID'::regclass) not null  primary key,
@@ -182,6 +196,8 @@ drop table refs;
 drop table users;
 drop table roles;
 drop table routes;
+drop table controllers;
+drop table actions;
 drop sequence ID;
 
 TXT
@@ -196,6 +212,8 @@ delete from refs;
 delete from users;
 delete from roles;
 delete from routes;
+delete from controllers;
+delete from actions;
 
 TXT
 }

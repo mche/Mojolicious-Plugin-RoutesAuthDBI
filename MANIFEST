@@ -3,7 +3,8 @@ lib/Mojolicious/Plugin/RoutesAuthDBI.pm
 lib/Mojolicious/Plugin/RoutesAuthDBI/Admin.pm
 lib/Mojolicious/Plugin/RoutesAuthDBI/Access.pm
 lib/Mojolicious/Plugin/RoutesAuthDBI/Install.pm
-lib/Mojolicious/Plugin/RoutesAuthDBI/PgSQL.pm
+lib/Mojolicious/Plugin/RoutesAuthDBI/Sth.pm
+lib/Mojolicious/Plugin/RoutesAuthDBI/POS/Pg.pm
 README.pod
 Makefile.PL
 MANIFEST			This list of files

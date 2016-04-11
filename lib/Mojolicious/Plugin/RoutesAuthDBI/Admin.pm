@@ -1,6 +1,6 @@
 package Mojolicious::Plugin::RoutesAuthDBI::Admin;
 use Mojo::Base 'Mojolicious::Controller';
-use Mojolicious::Plugin::RoutesAuthDBI::PgSQL;#  sth cache
+use Mojolicious::Plugin::RoutesAuthDBI::Sth;#  sth cache
 
 my $dbh; # one per class
 my $pkg = __PACKAGE__;
@@ -8,6 +8,7 @@ my $init_conf;
 my $sql;#sth hub
 
 =pod
+
 =encoding utf8
 
 =head1 NAME
@@ -55,13 +56,28 @@ Both above options determining the module controller for web actions on tables r
 
 
 
-head1 METHODS NEEDS IN PLUGIN
+=head1 METHODS NEEDS IN PLUGIN
 
 =over 4
 
-=item * B<self_routes()> - builtin this access controller routes. Return array of hashrefs. Depends on conf options I<prefix> and I<trust>.
+=item * B<self_routes()> - builtin this access controller routes. Return array of hashrefs routes records for apply route on app. Depends on conf options I<prefix> and I<trust>.
 
 =back
+
+=head1 AUTHOR
+
+Михаил Че (Mikhail Che), C<< <mche [on] cpan.org> >>
+
+=head1 BUGS / CONTRIBUTING
+
+Please report any bugs or feature requests at L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/issues>. Pull requests also welcome.
+
+=head1 COPYRIGHT
+
+Copyright 2016 Mikhail Che.
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
 
 =cut
 
@@ -73,7 +89,7 @@ sub init_class {# from plugin! init Class vars
   $c->{trust} =~ s/\W/-/g;
 	$c->{dbh} ||= $dbh ||=  $args->{dbh};
 	$dbh ||= $c->{dbh};
-	$c->{sql} ||= $sql ||= $args->{sql} ||= bless [$dbh, {}], $c->{namespace}.'::PgSQL';#sth cache
+	$c->{sql} ||= $sql ||= $args->{sql} ||= bless [$dbh, {}], $c->{namespace}.'::Sth';#sth cache
 	$sql ||= $c->{sql};
     
 	return $c;
@@ -82,8 +98,6 @@ sub init_class {# from plugin! init Class vars
 
 sub index {
   my $c = shift;
-  
-  $c->app->log->debug($c->dumper( $c->auth_user));
   
   $c->render(format=>'txt', text=><<TXT)
 $pkg
@@ -127,7 +141,7 @@ sub new_user {
   my ($login, $pass) = ($c->stash('login') || $c->param('login'), $c->stash('pass') ||  $c->param('pass'));
   
   my $r;
-  ($r = $dbh->selectrow_hashref($sql->sth('user/login'), undef, ($login)))
+  ($r = $dbh->selectrow_hashref($sql->sth('user'), undef, (undef, $login)))
     and $c->render(format=>'txt', text=><<TXT)
 $pkg
 
@@ -138,7 +152,7 @@ TXT
     and ($r->{not_new} = '!')
     and return $r;
   
-  $r = $dbh->selectrow_hashref($sql->sth('new_user'), undef, ($login, $pass));
+  $r = $dbh->selectrow_hashref($sql->sth('new user'), undef, ($login, $pass));
   
   $c->render(format=>'txt', text=><<TXT);
 $pkg
@@ -158,19 +172,19 @@ sub trust_new_user {
   
   # ROLE
   my $rl = $dbh->selectrow_hashref($sql->sth('role'), undef, (undef, 'admin'));
-  $rl ||= $dbh->selectrow_hashref($sql->sth('new_role'), undef, ('admin'));
+  $rl ||= $dbh->selectrow_hashref($sql->sth('new role'), undef, ('admin'));
   
   # REF role->user
   my $ru = $dbh->selectrow_hashref($sql->sth('ref'), undef, ($rl->{id}, $u->{id}));
-  $ru ||= $dbh->selectrow_hashref($sql->sth('new_ref'), undef, ($rl->{id}, $u->{id}));
+  $ru ||= $dbh->selectrow_hashref($sql->sth('new ref'), undef, ($rl->{id}, $u->{id}));
   
   # ROUTE
   my $rt = $dbh->selectrow_hashref($sql->sth('route/controller'), undef, ($init_conf->{namespace}, $init_conf->{controller}));
-  $rt ||= $dbh->selectrow_hashref($sql->sth('new_route'), undef, (undef, 'admin controller', $init_conf->{namespace}, $init_conf->{controller}, undef, 1, "Access to all $init_conf->{namespace}\::$init_conf->{controller} actions", undef, undef,));
+  $rt ||= $dbh->selectrow_hashref($sql->sth('new route'), undef, (undef, 'admin controller', $init_conf->{namespace}, $init_conf->{controller}, undef, 1, "Access to all $init_conf->{namespace}\::$init_conf->{controller} actions", undef, undef,));
     
     #REF route->role
   my $rr = $dbh->selectrow_hashref($sql->sth('ref'), undef, ($rt->{id}, $rl->{id}));
-  $rr ||= $dbh->selectrow_hashref($sql->sth('new_ref'), undef, ($rt->{id}, $rl->{id}));
+  $rr ||= $dbh->selectrow_hashref($sql->sth('new ref'), undef, ($rt->{id}, $rl->{id}));
   
   $c->render(format=>'txt', text=><<TXT);
 $pkg
@@ -203,7 +217,7 @@ Exists role!
 TXT
 		and return $c
 		if $r;
-	$r = $dbh->selectrow_hashref($sql->sth('new_role'), undef, ($name));
+	$r = $dbh->selectrow_hashref($sql->sth('new role'), undef, ($name));
 	
 	$c->render(format=>'txt', text=><<TXT);
 $pkg
@@ -259,7 +273,7 @@ Can't create new role by only digits[$role] in name!
 TXT
     and return
     unless $r && $role =~ /\w/;
-  $r ||= $dbh->selectrow_hashref($sql->sth('new_role'), undef, ($role)) ;
+  $r ||= $dbh->selectrow_hashref($sql->sth('new role'), undef, ($role)) ;
   
   my $user = $c->stash('user') || $c->param('user');
   my $u =  $dbh->selectrow_hashref($sql->sth('user'), undef, ($user =~ /\D/ ? (undef, $user) : ($user, undef,)));
@@ -284,7 +298,7 @@ TXT
     and return
     if $ref;
   
-  $ref = $dbh->selectrow_hashref($sql->sth('new_ref'), undef, ($r->{id}, $u->{id}));
+  $ref = $dbh->selectrow_hashref($sql->sth('new ref'), undef, ($r->{id}, $u->{id}));
   
   $c->render(format=>'txt', text=><<TXT);
 $pkg
@@ -389,7 +403,7 @@ TXT
     and return
     unless $r;
   
-  my $u = $dbh->selectall_arrayref($sql->sth('role_users'), { Slice => {} }, ($r->{id}));
+  my $u = $dbh->selectall_arrayref($sql->sth('role users'), { Slice => {} }, ($r->{id}));
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
@@ -414,7 +428,7 @@ TXT
     and return
     unless $r;
   
-  my $t = $dbh->selectall_arrayref($sql->sth('role_routes'), { Slice => {} }, ($r->{id}));
+  my $t = $dbh->selectall_arrayref($sql->sth('role routes'), { Slice => {} }, ($r->{id}));
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
@@ -425,44 +439,38 @@ TXT
 }
 
 
-my @self_routes_cols = qw(request namespace controller action name auth descr);
+my @self_routes_cols = qw(request action name auth descr);
 sub self_routes {# from plugin!
   my $c = shift;
   my $prefix = $init_conf->{prefix};
   my $trust = $init_conf->{trust};
-  my $ns = $init_conf->{namespace};
-  my $cntr = $init_conf->{controller};
 
   my $t = <<TABLE;
-/$prefix	$ns	$cntr	index	$prefix admin home	1	View main page
-/$prefix/role/new/:name	$ns	$cntr	new_role	$prefix create role	1	Add new role by :name
-/$prefix/role/del/:role/:user	$ns	$cntr	del_role_user	$prefix del ref role->user	1	Delete ref :user -> :role by user.id|user.login and role.id|role.name.
-/$prefix/role/dsbl/:role	$ns	$cntr	disable_role	$prefix disable role->user	1	Disable :role by role.id|role.name.
-/$prefix/role/enbl/:role	$ns	$cntr	enable_role	$prefix enable role->user	1	Enable :role by role.id|role.name.
-/$prefix/roles	$ns	$cntr	roles	$prefix view roles	1	View roles table
-/$prefix/roles/:user	$ns	$cntr	user_roles	$prefix roles of user	1	View roles of :user by id|login
-/$prefix/role/:role/:user	$ns	$cntr	new_role_user	$prefix create ref role->user	1	Assign :user to :role by user.id|user.login and role.id|role.name.
+/$prefix	index	$prefix admin home	1	View main page
+/$prefix/role/new/:name	new_role	$prefix create role	1	Add new role by :name
+/$prefix/role/del/:role/:user	del_role_user	$prefix del ref role->user	1	Delete ref :user -> :role by user.id|user.login and role.id|role.name.
+/$prefix/role/dsbl/:role	disable_role	$prefix disable role->user	1	Disable :role by role.id|role.name.
+/$prefix/role/enbl/:role	enable_role	$prefix enable role->user	1	Enable :role by role.id|role.name.
+/$prefix/roles	roles	$prefix view roles	1	View roles table
+/$prefix/roles/:user	user_roles	$prefix roles of user	1	View roles of :user by id|login
+/$prefix/role/:role/:user	new_role_user	$prefix create ref role->user	1	Assign :user to :role by user.id|user.login and role.id|role.name.
 
+/$prefix/route/new	new_route	$prefix create route	1	Add new route by params: request,namespace, controller,....
+/$prefix/routes	routes	$prefix view routes	1	View routes table
+/$prefix/routes/:role	role_routes	$prefix routes of role	1	All routes of :role by id|name
+/$prefix/route/:route/:role	ref	$prefix create ref route->role	1	Assign :route with :role by route.id and role.id|role.name
 
-/$prefix/route/new	$ns	$cntr	new_route	$prefix create route	1	Add new route by params: request,namespace, controller,....
-/$prefix/routes	$ns	$cntr	routes	$prefix view routes	1	View routes table
-/$prefix/routes/:role	$ns	$cntr	role_routes	$prefix routes of role	1	All routes of :role by id|name
-/$prefix/route/:route/:role	$ns	$cntr	ref	$prefix create ref route->role	1	Assign :route with :role by route.id and role.id|role.name
+/$prefix/user/new	new_user	$prefix create user	1	Add new user by params: login,pass,...
+/$prefix/user/new/:login/:pass	new_user	$prefix create user st	1	Add new user by :login & :pass
+/$prefix/users	users	$prefix view users	1	View users table
+/$prefix/users/:role	role_users	$prefix users of role	1	View users of :role by id|name
 
+get foo /sign/in	sign	signin form	0	Login&pass form
+post /sign/in	sign	signin params	0	Auth by params
+/sign/in/:login/:pass	sign	signin stash	0	Auth by stash
+/sign/out	signout	go away	1	Exit
 
-
-
-/$prefix/user/new	$ns	$cntr	new_user	$prefix create user	1	Add new user by params: login,pass,...
-/$prefix/user/new/:login/:pass	$ns	$cntr	new_user	$prefix create user st	1	Add new user by :login & :pass
-/$prefix/users	$ns	$cntr	users	$prefix view users	1	View users table
-/$prefix/users/:role	$ns	$cntr	role_users	$prefix users of role	1	View users of :role by id|name
-
-get foo /sign/in	$ns	$cntr	sign	signin form	0	Login&pass form
-post /sign/in	$ns	$cntr	sign	signin params	0	Auth by params
-/sign/in/:login/:pass	$ns	$cntr	sign	signin stash	0	Auth by stash
-/sign/out	$ns	$cntr	signout	go away	1	Exit
-
-/$prefix/$trust/user/new/:login/:pass	$ns	$cntr	trust_new_user	$prefix/$trust !trust create user!	0	Add new user by :login & :pass and auto assign to role 'Admin' and assign to access this controller!
+/$prefix/$trust/user/new/:login/:pass	trust_new_user	$prefix/$trust !trust create user!	0	Add new user by :login & :pass and auto assign to role 'Admin' and assign to access this controller!
 
 TABLE
   
@@ -471,6 +479,8 @@ TABLE
   for my $line (grep /\S+/, split /\n/, $t) {
     my $r = {};
     @$r{@self_routes_cols} = map($_ eq '' ? undef : $_, split /\t/, $line);
+    $r->{namespace} = $init_conf->{namespace};
+    $r->{controller} = $init_conf->{controller};
     push @r, $r;
   }
   
