@@ -127,7 +127,7 @@ Check access to route by role id|name ($r->{role}) and user roles ids ($id2 arra
 
 =head1 BUGS / CONTRIBUTING
 
-Please report any bugs or feature requests at L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/issues>. Pull requests also welcome.
+Please report any bugs or feature requests at L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/issues>. Pull requests welcome also.
 
 =head1 COPYRIGHT
 
@@ -168,8 +168,15 @@ sub validate_user {# import for Mojolicious::Plugin::Authentication
 sub apply_route {# meth in Plugin
   my ($self, $app, $r_hash) = @_;
   my $r = $app->routes;
-  return if $r_hash->{disable};
-  return unless $r_hash->{request};
+  
+  $app->log->debug("Skip disabled route id=[$r_hash->{id}] [$r_hash->{request}]")
+    and return undef
+    if $r_hash->{disable};
+  
+  $app->log->debug("Skip route id=[$r_hash->{id}] empty request")
+    and return undef
+    unless $r_hash->{request};
+  
   my @request = grep /\S/, split /\s+/, $r_hash->{request}
     or return;
   my $nr = $r->route(pop @request);
@@ -180,7 +187,16 @@ sub apply_route {# meth in Plugin
   # STEP ACCESS
   $nr->over(access => $r_hash);
   
-  $nr->to(controller=>$r_hash->{controller}, action => $r_hash->{action},  $r_hash->{namespace} ? (namespace => $r_hash->{namespace}) : (),);
+  if ($r_hash->{controller}) {
+    $nr->to(controller=>$r_hash->{controller}, action => $r_hash->{action},  $r_hash->{namespace} ? (namespace => $r_hash->{namespace}) : (),);
+  } elsif ($r_hash->{callback}) {
+    my $cb = eval $r_hash->{callback};
+    die "Compile error on callback: [$@]", $app->dumper($r_hash)
+      if $@;
+    $nr->to(cb => $cb);
+  } else {
+    die "No defaults for route: ", $app->dumper($r_hash);
+  }
   $nr->name($r_hash->{name}) if $r_hash->{name};
   #~ $app->log->debug("$pkg generate the route from data row [@{[$app->dumper($r_hash) =~ s/\n/ /gr]}]");
   return $nr;
@@ -188,7 +204,7 @@ sub apply_route {# meth in Plugin
 
 sub db_routes {
   my ($self, $c, ) = @_;
-  $dbh->selectall_arrayref($sql->sth('all routes'), { Slice => {} },);
+  $dbh->selectall_arrayref($sql->sth('apply routes'), { Slice => {} },);
 }
 
 sub load_user_roles {

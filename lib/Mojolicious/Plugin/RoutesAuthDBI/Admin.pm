@@ -105,6 +105,7 @@ $pkg
 You are signed as:
 @{[$c->dumper( $c->auth_user)]}
 
+@{[$c->access_instance]}
 
 @{[map "$_->{request}\t\t$_->{descr}\n", $c->self_routes]}
 
@@ -178,13 +179,13 @@ sub trust_new_user {
   my $ru = $dbh->selectrow_hashref($sql->sth('ref'), undef, ($rl->{id}, $u->{id}));
   $ru ||= $dbh->selectrow_hashref($sql->sth('new ref'), undef, ($rl->{id}, $u->{id}));
   
-  # ROUTE
-  my $rt = $dbh->selectrow_hashref($sql->sth('route/controller'), undef, ($init_conf->{namespace}, $init_conf->{controller}));
-  $rt ||= $dbh->selectrow_hashref($sql->sth('new route'), undef, (undef, 'admin controller', $init_conf->{namespace}, $init_conf->{controller}, undef, 1, "Access to all $init_conf->{namespace}\::$init_conf->{controller} actions", undef, undef,));
+  # CONTROLLER
+  my $cc = $dbh->selectrow_hashref($sql->sth('controller'), undef, ($init_conf->{namespace}, $init_conf->{controller}));
+  $cc ||= $dbh->selectrow_hashref($sql->sth('new controller'), undef, ($init_conf->{namespace}, $init_conf->{controller},));
     
-    #REF route->role
-  my $rr = $dbh->selectrow_hashref($sql->sth('ref'), undef, ($rt->{id}, $rl->{id}));
-  $rr ||= $dbh->selectrow_hashref($sql->sth('new ref'), undef, ($rt->{id}, $rl->{id}));
+    #REF controller->role
+  my $cr = $dbh->selectrow_hashref($sql->sth('ref'), undef, ($cc->{id}, $rl->{id}));
+  $cr ||= $dbh->selectrow_hashref($sql->sth('new ref'), undef, ($cc->{id}, $rl->{id}));
   
   $c->render(format=>'txt', text=><<TXT);
 $pkg
@@ -197,8 +198,8 @@ USER:
 ROLE:
 @{[$c->dumper( $rl)]}
 
-ROUTE:
-@{[$c->dumper( $rt)]}
+CONTROLLER:
+@{[$c->dumper( $cc)]}
 
 TXT
 }
@@ -470,7 +471,7 @@ post /sign/in	sign	signin params	0	Auth by params
 /sign/in/:login/:pass	sign	signin stash	0	Auth by stash
 /sign/out	signout	go away	1	Exit
 
-/$prefix/$trust/user/new/:login/:pass	trust_new_user	$prefix/$trust !trust create user!	0	Add new user by :login & :pass and auto assign to role 'Admin' and assign to access this controller!
+/$prefix/$trust/admin/new/:login/:pass	trust_new_user	$prefix/$trust !trust create user!	0	Add new user by :login & :pass and auto assign to role 'Admin' and assign to access this controller!
 
 TABLE
   

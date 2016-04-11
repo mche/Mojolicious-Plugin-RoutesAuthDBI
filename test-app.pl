@@ -28,7 +28,7 @@ sub startup {#
     admin=>{prefix=>'myadmin', trust=>'fooobaaar'},
   );
   my $r = $app->routes;
-  $r->route('/myadmin/foo')->over(access=>{auth=>1, role=>'admin'})->to(sub {shift->renderer(format=>'txt', text=>'You have assess!')})->name('foo');#'install#manual', namespace000=>'Mojolicious::Plugin::RoutesAuthDBI',
+  $r->route('/fooadmin')->over(access=>{auth=>1, role=>'admin0'})->to(cb => sub {shift->render(format=>'txt', text=>'You have assess!')})->name('foo');#'install#manual', namespace000=>'Mojolicious::Plugin::RoutesAuthDBI',
 }
 
 

@@ -48,7 +48,7 @@ sub register {
     $access->apply_route($app, $_) for $admin->self_routes;
   }
   
-  #~ $app->has('access_instance', $access);
+  $app->helper('access_instance', sub {$access});
   
   return $self, $access;
 
@@ -78,7 +78,7 @@ sub _load_mod {
 # 
 sub access {# add_condition
   my ($route, $c, $captures, $r_hash) = @_;
-  $c->app->log->debug($c->dumper($route->pattern->defaults));
+  #~ $c->app->log->debug($c->dumper($r_hash));#$route->pattern->defaults
   # 1. по паролю выставить куки
   # 2. по кукам выставить пользователя
   my $meth = $conf->{auth}{current_user_fn};
@@ -96,7 +96,7 @@ sub access {# add_condition
   
   # Acces to route by refs: routes -> roles -> users
   ($r_hash->{id} && $access->access_route($c, $r_hash->{id}, $id2))
-    and $c->app->log->debug("Access on [$r_hash->{namespace}::$r_hash->{controller}->$r_hash->{action}] for user id=[$u->{id}] on request=[$r_hash->{request}]")
+    and $c->app->log->debug(sprintf "Access on [%s%s%s%s] for user id=[%s] on request=[%s]", $r_hash->{namespace} ? "$r_hash->{namespace}::" : "", $r_hash->{controller} ? "$r_hash->{controller}->" : "", $r_hash->{action} ? $r_hash->{action} : "", $r_hash->{callback} ? " cb => sub {...}" : "", $u->{id}, $r_hash->{request})
     and return 1;
   
   # Access to route (may be not in db table) of any actions on controller
@@ -104,12 +104,12 @@ sub access {# add_condition
   $r_hash->{controller} ||= $route->pattern->defaults->{controller};
   $r_hash->{namespace} ||= $route->pattern->defaults->{namespace};
   ($r_hash->{controller} && $access->access_controller($c, $r_hash, $id2))
-    and $c->app->log->debug("Access all actions on $r_hash->{namespace}::$r_hash->{controller} for user id=$u->{id} on request=[$r_hash->{request}]")
+    and $c->app->log->debug(sprintf "Access all actions on [%s%s] for user id=[%s] on request=[%s]", $r_hash->{namespace} ? "$r_hash->{namespace}::" : "", $r_hash->{controller} ? "$r_hash->{controller}" : "",$u->{id}, $r_hash->{request})
     and return 1;
   
   # Access to route (not in db table) by role
   ($r_hash->{role} && $access->access_role($c, $r_hash, $id2))
-    and $c->app->log->debug("Access by role [$r_hash->{role}] for user id=$u->{id} on request=[$r_hash->{request}]")
+    and $c->app->log->debug(sprintf "Access by role [%s] for user id=[%s] on request=[%s]", $r_hash->{role}, $u->{id}, $r_hash->{request})
     and return 1;
   
   $conf->{access}{fail_access_cb}->($c, $route, $r_hash);

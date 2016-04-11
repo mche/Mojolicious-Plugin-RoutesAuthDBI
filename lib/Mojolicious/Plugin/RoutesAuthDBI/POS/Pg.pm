@@ -41,21 +41,28 @@ L<DBIx::POS>
 
 =item * --------------------------------------------------------------------- 
 
-=name all routes
+=name apply routes
 
-=desc 
+=desc Генерация маршрутов приложения
 
 =sql
 
-  select *
-  from routes
-  order by order_by, ts;
+  select r.*, ac.controller, ac.namespace, ac.action, ac.callback, ac.id as action_id
+  from routes r
+    join refs rf on r.id=rf.id1
+    join 
+    (select a.*, c.controller, c.namespace
+      from actions a 
+      left join refs r on a.id=r.id2
+      left join controllers c on c.id=r.id1
+    ) ac on rf.id2=ac.id
+  order by r.order_by, r.ts;
 
 =item * --------------------------------------------------------------------- 
 
 =name user roles
 
-=desc 
+=desc Роли пользователя
 
 =sql
 
@@ -86,17 +93,16 @@ L<DBIx::POS>
 
 =sql
 
-  select count(r.*)
+  select count(c.*)
   from 
-    routes r
-    join refs s on r.id=s.id1
+    controllers c
+    join refs r on c.id=r.id1
+    join roles o on r.id2=o.id
   where
-    lower(r.controller)=lower(?)
-    and r.namespace=?
-    and r.request is null
-    and r.action is null
-    and s.id2=any(?)
-    and coalesce(r.disable, 0::bit) <> 1::bit
+    lower(c.controller)=lower(?)
+    and c.namespace=?
+    and r.id2=any(?)
+    and coalesce(o.disable, 0::bit) <> 1::bit
   ;
 
 =item * ----------------------------------------------------------------------
@@ -202,19 +208,29 @@ L<DBIx::POS>
 
 =item * --------------------------------------------------------------------- 
 
-=name route/controller
+=name controller
 
 =desc
 
 =sql
 
   select *
-  from routes
+  from controllers
   where
     namespace=?
-    and lower(controller)=?
-    and request is null
-    and action is null
+    and lower(controller)=lower(?)
+
+=item * --------------------------------------------------------------------- 
+
+=name new controller
+
+=desc
+
+=sql
+
+  insert into controllers (namespace, controller)
+  values (?,?)
+  returning *;
 
 =item * --------------------------------------------------------------------- 
 
