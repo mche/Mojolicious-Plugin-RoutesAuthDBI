@@ -1,3 +1,5 @@
+=pod
+
 =encoding utf8
 
 Доброго всем
@@ -8,6 +10,10 @@
 =head1 NAME
 
 Mojolicious::Plugin::RoutesAuthDBI - Generate routes from sql-table, make authentication and make restrict access (authorization) to route with users/roles tables. Plugin makes an auth operations throught the plugin L<Mojolicious::Plugin::Authentication> on which is based.
+
+=head1 DIAGRAM DB DESIGN
+
+See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagram.svg>
 
 =head1 SYNOPSIS
 
@@ -23,7 +29,7 @@ Mojolicious::Plugin::RoutesAuthDBI - Generate routes from sql-table, make authen
 
 =over 4
 
-=item * B<dbh> - handler DBI connection where are tables: routes, users, roles, refs.
+=item * B<dbh> - handler DBI connection where are tables: controllers, actions, routes, users, roles, refs.
 
 =item * B<auth> - hashref options pass to base plugin L<Mojolicious::Plugin::Authentication>.
 By default the option:
@@ -83,10 +89,6 @@ See L<Mojolicious::Plugin::RoutesAuthDBI::Admin> for detail options list.
 See L<Mojolicious::Plugin::RoutesAuthDBI::Install>.
 
 
-=head1 SQL schema (Postgresql)
-
-See L<Mojolicious::Plugin::RoutesAuthDBI::PgSQL>.
-
 =head2 Example routing table records
 
     Request
@@ -137,10 +139,11 @@ It table will generate the L<Mojolicious routes|http://mojolicious.org/perldoc/M
 
 If you changed the routes table then kill -HUP or reload app to regenerate routes. Changing assess not require reloading the service.
 
-
 =head1 SEE ALSO
 
-L<Mojolicious::Plugin::Authentication>, L<Mojolicious::Plugin::Authorization>
+L<Mojolicious::Plugin::Authentication>
+
+L<Mojolicious::Plugin::Authorization>
 
 =head1 AUTHOR
 
@@ -158,4 +161,3 @@ This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
 
 =cut
-

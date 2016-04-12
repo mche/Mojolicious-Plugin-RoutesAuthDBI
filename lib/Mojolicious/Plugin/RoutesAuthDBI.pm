@@ -264,6 +264,7 @@ If you changed the routes table then kill -HUP or reload app to regenerate route
 =head1 SEE ALSO
 
 L<Mojolicious::Plugin::Authentication>
+
 L<Mojolicious::Plugin::Authorization>
 
 =head1 AUTHOR
