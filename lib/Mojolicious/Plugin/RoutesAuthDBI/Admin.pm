@@ -5,7 +5,7 @@ use Mojolicious::Plugin::RoutesAuthDBI::Sth;#  sth cache
 my $dbh; # one per class
 my $pkg = __PACKAGE__;
 my $init_conf;
-my $sql;#sth hub
+my $sth;#sth hub
 
 =pod
 
@@ -83,14 +83,15 @@ it under the same terms as Perl itself.
 
 sub init_class {# from plugin! init Class vars
 	my $c = shift;
-	my $args = {@_};
+	my %args = @_;
   $init_conf ||= $c;
   $c->{prefix} =~ s/^\///;
   $c->{trust} =~ s/\W/-/g;
-	$c->{dbh} ||= $dbh ||=  $args->{dbh};
+	$c->{dbh} ||= $dbh ||=  $args{dbh};
 	$dbh ||= $c->{dbh};
-	$c->{sql} ||= $sql ||= $args->{sql} ||= bless [$dbh, {}], $c->{namespace}.'::Sth';#sth cache
-	$sql ||= $c->{sql};
+  $c->{pos} ||= $args{pos} || $c->{namespace}.'::POS::Pg';
+	$c->{sth} ||= $sth ||= $args{sth} ||= (bless [$dbh, {}], $c->{namespace}.'::Sth')->init(pos => $c->{pos});#sth cache
+	$sth ||= $c->{sth};
     
 	return $c;
 }
@@ -106,6 +107,9 @@ You are signed as:
 @{[$c->dumper( $c->auth_user)]}
 
 @{[$c->access_instance]}
+
+ADMIN ROUTES
+===
 
 @{[map "$_->{request}\t\t$_->{descr}\n", $c->self_routes]}
 
@@ -142,7 +146,7 @@ sub new_user {
   my ($login, $pass) = ($c->stash('login') || $c->param('login'), $c->stash('pass') ||  $c->param('pass'));
   
   my $r;
-  ($r = $dbh->selectrow_hashref($sql->sth('user'), undef, (undef, $login)))
+  ($r = $dbh->selectrow_hashref($sth->sth('user'), undef, (undef, $login)))
     and $c->render(format=>'txt', text=><<TXT)
 $pkg
 
@@ -153,7 +157,7 @@ TXT
     and ($r->{not_new} = '!')
     and return $r;
   
-  $r = $dbh->selectrow_hashref($sql->sth('new user'), undef, ($login, $pass));
+  $r = $dbh->selectrow_hashref($sth->sth('new user'), undef, ($login, $pass));
   
   $c->render(format=>'txt', text=><<TXT);
 $pkg
@@ -172,20 +176,20 @@ sub trust_new_user {
   #~ return if $u->{not_new};
   
   # ROLE
-  my $rl = $dbh->selectrow_hashref($sql->sth('role'), undef, (undef, 'admin'));
-  $rl ||= $dbh->selectrow_hashref($sql->sth('new role'), undef, ('admin'));
+  my $rl = $dbh->selectrow_hashref($sth->sth('role'), undef, (undef, 'admin'));
+  $rl ||= $dbh->selectrow_hashref($sth->sth('new role'), undef, ('admin'));
   
   # REF role->user
-  my $ru = $dbh->selectrow_hashref($sql->sth('ref'), undef, ($rl->{id}, $u->{id}));
-  $ru ||= $dbh->selectrow_hashref($sql->sth('new ref'), undef, ($rl->{id}, $u->{id}));
+  my $ru = $dbh->selectrow_hashref($sth->sth('ref'), undef, ($rl->{id}, $u->{id}));
+  $ru ||= $dbh->selectrow_hashref($sth->sth('new ref'), undef, ($rl->{id}, $u->{id}));
   
   # CONTROLLER
-  my $cc = $dbh->selectrow_hashref($sql->sth('controller'), undef, ($init_conf->{namespace}, $init_conf->{controller}));
-  $cc ||= $dbh->selectrow_hashref($sql->sth('new controller'), undef, ($init_conf->{namespace}, $init_conf->{controller},));
+  my $cc = $dbh->selectrow_hashref($sth->sth('controller'), undef, ($init_conf->{namespace}, $init_conf->{controller}));
+  $cc ||= $dbh->selectrow_hashref($sth->sth('new controller'), undef, ($init_conf->{namespace}, $init_conf->{controller},));
     
     #REF controller->role
-  my $cr = $dbh->selectrow_hashref($sql->sth('ref'), undef, ($cc->{id}, $rl->{id}));
-  $cr ||= $dbh->selectrow_hashref($sql->sth('new ref'), undef, ($cc->{id}, $rl->{id}));
+  my $cr = $dbh->selectrow_hashref($sth->sth('ref'), undef, ($cc->{id}, $rl->{id}));
+  $cr ||= $dbh->selectrow_hashref($sth->sth('new ref'), undef, ($cc->{id}, $rl->{id}));
   
   $c->render(format=>'txt', text=><<TXT);
 $pkg
@@ -207,7 +211,7 @@ TXT
 sub new_role {
 	my $c = shift;
 	my $name = $c->stash('name');
-	my $r = $dbh->selectrow_hashref($sql->sth('role'), undef, (undef, $name));
+	my $r = $dbh->selectrow_hashref($sth->sth('role'), undef, (undef, $name));
 	$c->render(format=>'txt', text=><<TXT)
 $pkg
 
@@ -218,7 +222,7 @@ Exists role!
 TXT
 		and return $c
 		if $r;
-	$r = $dbh->selectrow_hashref($sql->sth('new role'), undef, ($name));
+	$r = $dbh->selectrow_hashref($sth->sth('new role'), undef, ($name));
 	
 	$c->render(format=>'txt', text=><<TXT);
 $pkg
@@ -234,7 +238,7 @@ TXT
 sub user_roles {
   my $c = shift;
   my $user = $c->stash('user') || $c->param('user');
-  my $u =  $dbh->selectrow_hashref($sql->sth('user'), undef, ($user =~ /\D/ ? (undef, $user) : ($user, undef,)));
+  my $u =  $dbh->selectrow_hashref($sth->sth('user'), undef, ($user =~ /\D/ ? (undef, $user) : ($user, undef,)));
   
   $c->render(format=>'txt', text=><<TXT)
 $pkg
@@ -245,7 +249,7 @@ TXT
     and return
     unless $u;
   
-  my $r = $dbh->selectall_arrayref($sql->sth('user roles'), { Slice => {} }, ($u->{id}));
+  my $r = $dbh->selectall_arrayref($sth->sth('user roles'), { Slice => {} }, ($u->{id}));
   
   $c->render(format=>'txt', text=><<TXT);
 $pkg
@@ -265,7 +269,7 @@ sub new_role_user {
   
   my $role = $c->stash('role') || $c->param('role');
   # ROLE
-  my $r = $dbh->selectrow_hashref($sql->sth('role'), undef, ($role =~ /\D/ ? (undef, $role) : ($role, undef,)));
+  my $r = $dbh->selectrow_hashref($sth->sth('role'), undef, ($role =~ /\D/ ? (undef, $role) : ($role, undef,)));
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
@@ -274,10 +278,10 @@ Can't create new role by only digits[$role] in name!
 TXT
     and return
     unless $r && $role =~ /\w/;
-  $r ||= $dbh->selectrow_hashref($sql->sth('new role'), undef, ($role)) ;
+  $r ||= $dbh->selectrow_hashref($sth->sth('new role'), undef, ($role)) ;
   
   my $user = $c->stash('user') || $c->param('user');
-  my $u =  $dbh->selectrow_hashref($sql->sth('user'), undef, ($user =~ /\D/ ? (undef, $user) : ($user, undef,)));
+  my $u =  $dbh->selectrow_hashref($sth->sth('user'), undef, ($user =~ /\D/ ? (undef, $user) : ($user, undef,)));
   
   $c->render(format=>'txt', text=><<TXT)
 $pkg
@@ -288,7 +292,7 @@ TXT
     and return
     unless $u;
   
-  my $ref = $dbh->selectrow_hashref($sql->sth('ref'), undef, ($r->{id}, $u->{id}));
+  my $ref = $dbh->selectrow_hashref($sth->sth('ref'), undef, ($r->{id}, $u->{id}));
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
@@ -299,7 +303,7 @@ TXT
     and return
     if $ref;
   
-  $ref = $dbh->selectrow_hashref($sql->sth('new ref'), undef, ($r->{id}, $u->{id}));
+  $ref = $dbh->selectrow_hashref($sth->sth('new ref'), undef, ($r->{id}, $u->{id}));
   
   $c->render(format=>'txt', text=><<TXT);
 $pkg
@@ -317,7 +321,7 @@ sub del_role_user {# удалить связь пользователя с ро�
   
   my $role = $c->stash('role') || $c->param('role');
   # ROLE
-  my $r = $dbh->selectrow_hashref($sql->sth('role'), undef, ($role =~ /\D/ ? (undef, $role) : ($role, undef,)));
+  my $r = $dbh->selectrow_hashref($sth->sth('role'), undef, ($role =~ /\D/ ? (undef, $role) : ($role, undef,)));
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
@@ -328,7 +332,7 @@ TXT
     unless $r;
 
   my $user = $c->stash('user') || $c->param('user');
-  my $u =  $dbh->selectrow_hashref($sql->sth('user'), undef, ($user =~ /\D/ ? (undef, $user) : ($user, undef,)));
+  my $u =  $dbh->selectrow_hashref($sth->sth('user'), undef, ($user =~ /\D/ ? (undef, $user) : ($user, undef,)));
   
   $c->render(format=>'txt', text=><<TXT)
 $pkg
@@ -339,7 +343,7 @@ TXT
     and return
     unless $u;
   
-  my $ref = $dbh->selectrow_hashref($sql->sth('del ref'), undef, ($r->{id}, $u->{id}));
+  my $ref = $dbh->selectrow_hashref($sth->sth('del ref'), undef, ($r->{id}, $u->{id}));
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
@@ -366,7 +370,7 @@ sub disable_role {
   
   my $role = $c->stash('role') || $c->param('role');
   # ROLE
-  my $r = $dbh->selectrow_hashref($sql->sth('dsbl/enbl role'), undef, ($a, $role =~ /\D/ ? (undef, $role) : ($role, undef,)));
+  my $r = $dbh->selectrow_hashref($sth->sth('dsbl/enbl role'), undef, ($a, $role =~ /\D/ ? (undef, $role) : ($role, undef,)));
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
@@ -394,7 +398,7 @@ sub role_users {# все пользователи роли по запросу /
   
   my $role = $c->stash('role') || $c->param('role');
   # ROLE
-  my $r = $dbh->selectrow_hashref($sql->sth('role'), undef, ($role =~ /\D/ ? (undef, $role) : ($role, undef,)));
+  my $r = $dbh->selectrow_hashref($sth->sth('role'), undef, ($role =~ /\D/ ? (undef, $role) : ($role, undef,)));
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
@@ -404,7 +408,7 @@ TXT
     and return
     unless $r;
   
-  my $u = $dbh->selectall_arrayref($sql->sth('role users'), { Slice => {} }, ($r->{id}));
+  my $u = $dbh->selectall_arrayref($sth->sth('role users'), { Slice => {} }, ($r->{id}));
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
@@ -419,7 +423,7 @@ sub role_routes {# все маршруты роли по запросу /myadmin
   
    my $role = $c->stash('role') || $c->param('role');
   # ROLE
-  my $r = $dbh->selectrow_hashref($sql->sth('role'), undef, ($role =~ /\D/ ? (undef, $role) : ($role, undef,)));
+  my $r = $dbh->selectrow_hashref($sth->sth('role'), undef, ($role =~ /\D/ ? (undef, $role) : ($role, undef,)));
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
@@ -429,13 +433,78 @@ TXT
     and return
     unless $r;
   
-  my $t = $dbh->selectall_arrayref($sql->sth('role routes'), { Slice => {} }, ($r->{id}));
+  my $t = $dbh->selectall_arrayref($sth->sth('role routes'), { Slice => {} }, ($r->{id}));
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
 Total @{[scalar @$t]} routes by role [$r->{name}]
 
 @{[$c->dumper( $t)]}
+TXT
+}
+
+sub controllers {
+  my $c = shift;
+  my $list = $dbh->selectall_arrayref($sth->sth('controllers'), { Slice => {} }, );
+  $c->render(format=>'txt', text=><<TXT);
+$pkg
+
+CONTROLLERS TABLE
+===
+
+@{[$c->dumper( $list)]}
+TXT
+}
+
+sub new_controller {
+  my $c = shift;
+  my $ns = $c->stash('ns') || $c->param('ns');
+  my $mod = $c->stash('module') || $c->param('module');
+  my $r = $dbh->selectrow_hashref($sth->sth('controller'), undef, ($ns, $mod));
+  $c->render(format=>'txt', text=><<TXT)
+$pkg
+
+Controller already exists
+===
+
+@{[$c->dumper( $r)]}
+TXT
+  and return
+  if $r;
+  $r = $dbh->selectrow_hashref($sth->sth('new controller'), undef, ($ns, $mod));
+  $c->render(format=>'txt', text=><<TXT);
+$pkg
+
+Success create new controller
+===
+
+@{[$c->dumper( $r)]}
+TXT
+}
+
+sub actions {
+  my $c = shift;
+  my $list = $dbh->selectall_arrayref($sth->sth('actions'), { Slice => {} }, );
+  $c->render(format=>'txt', text=><<TXT);
+$pkg
+
+Actions list
+===
+
+@{[$c->dumper( $list )]}
+TXT
+}
+
+sub routes {
+  my $c = shift;
+  my $list = $dbh->selectall_arrayref($sth->sth('apply routes'), { Slice => {} }, );
+  $c->render(format=>'txt', text=><<TXT);
+$pkg
+
+Routes list
+===
+
+@{[$c->dumper( $list )]}
 TXT
 }
 
@@ -447,7 +516,12 @@ sub self_routes {# from plugin!
   my $trust = $init_conf->{trust};
 
   my $t = <<TABLE;
-/$prefix	index	$prefix admin home	1	View main page
+/$prefix	index	admin home	1	View main page
+
+/$prefix/controllers	controllers	$prefix controllers	1	Controllers list
+/$prefix/controller/new/:ns/:module	new_controller	$prefix new_controller	1	Add new controller by :ns and :module
+/$prefix/actions	actions	$prefix actions	1	Actions list
+
 /$prefix/role/new/:name	new_role	$prefix create role	1	Add new role by :name
 /$prefix/role/del/:role/:user	del_role_user	$prefix del ref role->user	1	Delete ref :user -> :role by user.id|user.login and role.id|role.name.
 /$prefix/role/dsbl/:role	disable_role	$prefix disable role->user	1	Disable :role by role.id|role.name.
@@ -457,7 +531,7 @@ sub self_routes {# from plugin!
 /$prefix/role/:role/:user	new_role_user	$prefix create ref role->user	1	Assign :user to :role by user.id|user.login and role.id|role.name.
 
 /$prefix/route/new	new_route	$prefix create route	1	Add new route by params: request,namespace, controller,....
-/$prefix/routes	routes	$prefix view routes	1	View routes table
+/$prefix/routes	routes	$prefix view routes	1	View routes list
 /$prefix/routes/:role	role_routes	$prefix routes of role	1	All routes of :role by id|name
 /$prefix/route/:route/:role	ref	$prefix create ref route->role	1	Assign :route with :role by route.id and role.id|role.name
 
@@ -486,6 +560,15 @@ TABLE
   }
   
   return @r;
+}
+
+sub render000 {
+  my $c = shift;
+  $c->SUPER::render(format=>'txt', text=><<TXT);
+$pkg
+
+TXT
+  
 }
 
 

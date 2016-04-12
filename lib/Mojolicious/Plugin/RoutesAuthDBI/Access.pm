@@ -7,7 +7,7 @@ our @EXPORT_OK = qw(load_user validate_user);
 my $dbh; # one per class
 my $pkg = __PACKAGE__;
 my $init_conf;
-my $sql;#sth hub
+my $sth;#sth hub
 
 =pod
 
@@ -93,7 +93,7 @@ This callback invoke when request need auth route but access was failure. $route
 
 =item * B<init_class()>
 
-Make initialization of class vars: $dbh, $sql, $init_conf. Return $self object controller;
+Make initialization of class vars: $dbh, $sth, $init_conf. Return $self object controller;
 
 =item * B<apply_route($self, $app, $r_hash)>
 
@@ -140,25 +140,27 @@ it under the same terms as Perl itself.
 
 sub init_class {# from plugin! init Class vars
 	my $c = shift;
-	my $args = {@_};
+	my %args = @_;
   $init_conf ||= $c;
-	$c->{dbh} ||= $dbh ||=  $args->{dbh};
+	$c->{dbh} ||= $dbh ||=  $args{dbh};
 	$dbh ||= $c->{dbh};
-	$c->{sql} ||= $sql ||= $args->{sql} ||= bless [$dbh, {}], $c->{namespace}.'::Sth';#sth cache
-	$sql ||= $c->{sql};
+  $c->{pos} ||= $args{pos} || $c->{namespace}.'::POS::Pg';
+	$c->{sth} ||= $sth ||= $args{sth} ||=( bless [$dbh, {}], $c->{namespace}.'::Sth' )->init(pos=>$c->{pos});#sth cache
+	$sth ||= $c->{sth};
 	return $c;
 }
 
 sub load_user {# import for Mojolicious::Plugin::Authentication
 	my ($c, $uid) = @_;
-	my $u = $dbh->selectrow_hashref($sql->sth('user'), undef, ($uid, undef));
+	my $u = $dbh->selectrow_hashref($sth->sth('user'), undef, ($uid, undef));
   $c->app->log->debug("Loading user by id=$uid ". ($u ? 'success' : 'failed'));
+  $u->{pass} = '**********************' if $u;
   return $u;
 }
 
 sub validate_user {# import for Mojolicious::Plugin::Authentication
   my ($c, $login, $pass, $extradata) = @_;
-  if (my $u = $dbh->selectrow_hashref($sql->sth('user'), undef, (undef, $login))) {
+  if (my $u = $dbh->selectrow_hashref($sth->sth('user'), undef, (undef, $login))) {
     return $u->{id}
       if $u->{pass} eq $pass  && !$u->{disable};
   }
@@ -204,27 +206,27 @@ sub apply_route {# meth in Plugin
 
 sub db_routes {
   my ($self, $c, ) = @_;
-  $dbh->selectall_arrayref($sql->sth('apply routes'), { Slice => {} },);
+  $dbh->selectall_arrayref($sth->sth('apply routes'), { Slice => {} },);
 }
 
 sub load_user_roles {
 	my ($self, $c, $uid) = @_;
-	$dbh->selectall_arrayref($sql->sth('user roles'), { Slice => {} }, ($uid));
+	$dbh->selectall_arrayref($sth->sth('user roles'), { Slice => {} }, ($uid));
 }
 
 sub access_route {
 	my ($self, $c, $id1, $id2,) = @_;
-	return scalar $dbh->selectrow_array($sql->sth('cnt refs'), undef, ($id1, $id2));
+	return scalar $dbh->selectrow_array($sth->sth('cnt refs'), undef, ($id1, $id2));
 }
 
 sub access_controller {
 	my ($self, $c, $r, $id2,) = @_;
-	return scalar $dbh->selectrow_array($sql->sth('access controller'), undef, ($r->{controller}, $r->{namespace},  $id2));
+	return scalar $dbh->selectrow_array($sth->sth('access controller'), undef, ($r->{controller}, $r->{namespace},  $id2));
 }
 
 sub access_role {
 	my ($self, $c, $r, $id2,) = @_;
-	return scalar $dbh->selectrow_array($sql->sth('access role'), undef, ($r->{role} =~ /\D/ ? (undef, $r->{role}) : ($r->{role}, undef),), $id2);
+	return scalar $dbh->selectrow_array($sth->sth('access role'), undef, ($r->{role} =~ /\D/ ? (undef, $r->{role}) : ($r->{role}, undef),), $id2);
 }
 
 1;

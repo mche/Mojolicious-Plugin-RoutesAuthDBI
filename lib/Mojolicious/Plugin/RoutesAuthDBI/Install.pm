@@ -137,12 +137,12 @@ CREATE SEQUENCE ID;-- one sequence for all tables id
 CREATE TABLE routes (
     id integer default nextval('ID'::regclass) not null primary key,
     ts timestamp without time zone default now() not null,
-    request character varying null,
+    request character varying not null,
     name character varying not null unique,
-    descr text,
-    auth bit(1),
-    disable bit(1),
-    order_by int
+    descr text null,
+    auth bit(1) null,
+    disable bit(1) null,
+    order_by int null
 );
 
 create table controllers (
@@ -150,6 +150,7 @@ create table controllers (
       ts timestamp without time zone default now() not null,
       namespace character varying null,
       controller character varying not null,
+      descr text null,
       unique(namespace, controller)
     );
 
@@ -157,7 +158,8 @@ create table actions (
       id integer default nextval('ID'::regclass) not null primary key,
       ts timestamp without time zone default now() not null,
       action character varying not null,
-      callback text null
+      callback text null,
+      descr text null
     );
 
 create table users (

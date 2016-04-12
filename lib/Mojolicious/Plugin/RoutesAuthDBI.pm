@@ -147,7 +147,7 @@ Mojolicious::Plugin::RoutesAuthDBI - Generate routes from sql-table, make authen
 
 =over 4
 
-=item * B<dbh> - handler DBI connection where are tables: routes, users, roles, refs.
+=item * B<dbh> - handler DBI connection where are tables: controllers, actions, routes, users, roles, refs.
 
 =item * B<auth> - hashref options pass to base plugin L<Mojolicious::Plugin::Authentication>.
 By default the option:

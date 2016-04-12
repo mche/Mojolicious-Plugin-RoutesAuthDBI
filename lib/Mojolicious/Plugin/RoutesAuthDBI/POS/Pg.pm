@@ -272,6 +272,52 @@ L<DBIx::POS>
     join refs r on t.id=r.id1
   where r.id2=?;
 
+
+=item * --------------------------------------------------------------------- 
+
+=name controllers
+
+=desc Список таблицы
+
+=sql
+
+  select * from controllers;
+
+=item * --------------------------------------------------------------------- 
+
+=name controller
+
+=desc
+
+=sql
+
+  select * from controllers where namespace = ? and controller = ?;
+
+=item * --------------------------------------------------------------------- 
+
+=name new controller
+
+=desc
+
+=sql
+
+  insert into controllers (namespace, controller) values (?,?)
+  returning *;
+
+
+=item * --------------------------------------------------------------------- 
+
+=name actions
+
+=desc Список
+
+=sql
+
+  select a.*, c.namespace, c.controller
+  from actions a
+    left join refs r on a.id=r.id2
+    left join controllers c on c.id=r.id1
+
 =item * --------------------------------------------------------------------- 
 
 =name

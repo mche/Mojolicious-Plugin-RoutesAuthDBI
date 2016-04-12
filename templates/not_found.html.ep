@@ -7,5 +7,6 @@
         <div><%= $self->app->log->debug(dumper $self->req->headers)  %></div>
         <div style="white-space: pre;"><%= dumper $self->req->param %></div>
         <div><%= $self->app->log->debug(dumper $self->req->params)  %></div>
+        <div style="white-space: pre;"><%= dumper stash %></div>
   </body>
 </html>
