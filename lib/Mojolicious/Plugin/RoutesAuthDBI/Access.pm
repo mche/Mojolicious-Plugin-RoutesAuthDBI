@@ -17,6 +17,10 @@ my $sth;#sth hub
 
 Mojolicious::Plugin::RoutesAuthDBI::Access - Generation routes, authentication and controll access to routes trought sintax of ->over(...), see L<Mojolicious::Routes::Route#over>
 
+=head1 DIAGRAM DB DESIGN
+
+See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagram.svg>
+
 =head2 Access controll flow
 
 =over 4
@@ -50,6 +54,7 @@ Route to action method on controller
 Route to callback (no ref to controller, defined I<callback> column (as text "sub {...}") in db table B<actions>)
 
 =back
+
 
 =head1 SYNOPSIS
 

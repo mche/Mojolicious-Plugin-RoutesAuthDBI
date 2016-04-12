@@ -10,6 +10,10 @@ __PACKAGE__->instance (__FILE__);
 
 Mojolicious::Plugin::RoutesAuthDBI::POS::Pg - POS for PostgreSQL.
 
+=head1 DIAGRAM DB DESIGN
+
+See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagram.svg>
+
 =head1 SYNOPSIS
 
     use Mojolicious::Plugin::RoutesAuthDBI::POS::Pg;
