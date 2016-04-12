@@ -13,7 +13,7 @@ my $sth;#sth hub
 
 =head1 NAME
 
-Mojolicious::Plugin::RoutesAuthDBI::Admin - is a mixed Mojolicious::Controller. It invoking from plugin module and might also using as standard Mojolicious::Controller. From plugin it controll access to routes trought sintax of ->over(...), see L<Mojolicious::Routes::Route#over>
+Mojolicious::Plugin::RoutesAuthDBI::Admin - is a Mojolicious::Controller for manage admin operations on DBI tables: controllers, actions, routes, roles, users.
 
 =head1 SYNOPSIS
 
@@ -44,7 +44,7 @@ Both above options determining the module controller for web actions on tables r
     admin = > {
         namespace => 'Mojolicious::Plugin::RoutesAuthDBI',
         module => 'Admin',
-        prefix => 'admin',
+        prefix => 'admin', # lc(<module>)
         trust => $app->secrets->[0],
     },
     
@@ -106,7 +106,6 @@ $pkg
 You are signed as:
 @{[$c->dumper( $c->auth_user)]}
 
-@{[$c->access_instance]}
 
 ADMIN ROUTES
 ===
@@ -124,7 +123,8 @@ sub sign {
   my $c = shift;
   
   $c->authenticate($c->stash('login') || $c->param('login'), $c->stash('pass') || $c->param('pass'))
-    and $c->render(format=>'txt', text=>__PACKAGE__ . "\n\nSuccessfull signed! ".$c->dumper( $c->auth_user))
+    and $c->redirect_to("admin home")
+    #~ and $c->render(format=>'txt', text=>__PACKAGE__ . "\n\nSuccessfull signed! ".$c->dumper( $c->auth_user))
     and return;
     
   
@@ -150,7 +150,8 @@ sub new_user {
     and $c->render(format=>'txt', text=><<TXT)
 $pkg
 
-User already exists!
+User already exists
+===
 
 @{[$c->dumper( $r)]}
 TXT
@@ -162,7 +163,8 @@ TXT
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
-Success sign up new user!
+Success sign up new user
+===
 
 @{[$c->dumper( $r)]}
 TXT
@@ -194,7 +196,8 @@ sub trust_new_user {
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
-Success sign up new trust-user!
+Success sign up new trust-admin-user
+===
 
 USER:
 @{[$c->dumper( $u)]}
@@ -215,7 +218,8 @@ sub new_role {
 	$c->render(format=>'txt', text=><<TXT)
 $pkg
 
-Exists role!
+Role exists
+===
 
 @{[$c->dumper( $r)]}
 
@@ -227,7 +231,8 @@ TXT
 	$c->render(format=>'txt', text=><<TXT);
 $pkg
 
-Success created role!
+Success created role
+===
 
 @{[$c->dumper( $r)]}
 
@@ -243,7 +248,8 @@ sub user_roles {
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
-No such user [$user]!
+No such user [$user]
+===
 
 TXT
     and return
@@ -253,6 +259,9 @@ TXT
   
   $c->render(format=>'txt', text=><<TXT);
 $pkg
+
+List of user roles (@{[scalar @$r]})
+===
 
 USER
 @{[$c->dumper( $u)]}
@@ -273,7 +282,8 @@ sub new_role_user {
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
-Can't create new role by only digits[$role] in name!
+Can't create new role by only digits[$role] in name
+===
 
 TXT
     and return
@@ -286,7 +296,8 @@ TXT
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
-No such user [$user]!
+No such user [$user]
+===
 
 TXT
     and return
@@ -296,7 +307,8 @@ TXT
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
-Allready ref ROLE->USER!
+Allready ref ROLE -> USER
+===
 
 @{[$c->dumper( $ref)]}
 TXT
@@ -308,7 +320,8 @@ TXT
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
-Success create ref ROLE->USER!
+Success create ref ROLE -> USER
+===
 
 @{[$c->dumper( $ref)]}
 TXT
@@ -325,7 +338,8 @@ sub del_role_user {# удалить связь пользователя с ро�
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
-No such role [$role]!
+No such role [$role]
+===
 
 TXT
     and return
@@ -337,7 +351,8 @@ TXT
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
-No such user [$user]!
+No such user [$user]
+===
 
 TXT
     and return
@@ -347,7 +362,8 @@ TXT
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
-Success delete ref ROLE[$role]->USER[$user]!
+Success delete ref ROLE[$role] -> USER[$user]
+===
 
 @{[$c->dumper( $ref)]}
 TXT
@@ -357,7 +373,7 @@ TXT
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
-There is no ref ROLE[$role]->USER[$user]!
+There is no ref ROLE[$role] -> USER[$user]
 
 TXT
   
@@ -374,7 +390,8 @@ sub disable_role {
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
-No such role [$role]!
+No such role [$role]
+===
 
 TXT
     and return
@@ -383,7 +400,8 @@ TXT
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
-Success @{[$k->{$a}]} role!
+Success @{[$k->{$a}]} role
+===
 
 @{[$c->dumper( $r)]}
 
@@ -402,7 +420,8 @@ sub role_users {# все пользователи роли по запросу /
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
-No such role [$role]!
+No such role [$role]
+===
 
 TXT
     and return
@@ -413,6 +432,7 @@ TXT
 $pkg
 
 All @{[scalar @$u]} users by role [$r->{name}]
+===
 
 @{[$c->dumper( $u)]}
 TXT
@@ -449,7 +469,7 @@ sub controllers {
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
-CONTROLLERS TABLE
+CONTROLLERS TABLE (@{[scalar @$list]})
 ===
 
 @{[$c->dumper( $list)]}
@@ -488,7 +508,7 @@ sub actions {
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
-Actions list
+ACTIONS list (@{[scalar @$list]})
 ===
 
 @{[$c->dumper( $list )]}
@@ -501,7 +521,7 @@ sub routes {
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
-Routes list
+ROUTES list (@{[scalar @$list]})
 ===
 
 @{[$c->dumper( $list )]}

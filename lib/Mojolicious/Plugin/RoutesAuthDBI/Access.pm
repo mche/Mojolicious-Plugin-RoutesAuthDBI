@@ -93,7 +93,7 @@ This callback invoke when request need auth route but access was failure. $route
 
 =item * B<init_class()>
 
-Make initialization of class vars: $dbh, $sth, $init_conf. Return $self object controller;
+Make initialization of class vars: $dbh, $sth, $init_conf. Return $self object.
 
 =item * B<apply_route($self, $app, $r_hash)>
 

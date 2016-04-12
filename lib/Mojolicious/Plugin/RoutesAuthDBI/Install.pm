@@ -5,6 +5,10 @@ use Mojo::Base 'Mojolicious::Controller';
 
 =encoding utf8
 
+=head1 NAME
+
+Mojolicious::Plugin::RoutesAuthDBI::Install - is a Mojolicious::Controller for installation instructions. DB schema (PostgreSQL) and sample app.
+
 =head1 Manual
 
     $ perl -e "use Mojo::Base 'Mojolicious'; __PACKAGE__->new()->start(); sub startup {shift->routes->route('/')->to('install#manual', namespace=>'Mojolicious::Plugin::RoutesAuthDBI');}" get / 2>/dev/null

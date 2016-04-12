@@ -1,7 +1,7 @@
 package Mojolicious::Plugin::RoutesAuthDBI;
 use Mojo::Base 'Mojolicious::Plugin::Authentication';
 
-our $VERSION = '0.300';
+our $VERSION = '0.301';
 
 my $access;# 
 my $pkg = __PACKAGE__;
@@ -206,10 +206,6 @@ See L<Mojolicious::Plugin::RoutesAuthDBI::Admin> for detail options list.
 
 See L<Mojolicious::Plugin::RoutesAuthDBI::Install>.
 
-
-=head1 SQL schema (Postgresql)
-
-See L<Mojolicious::Plugin::RoutesAuthDBI::PgSQL>.
 
 =head2 Example routing table records
 

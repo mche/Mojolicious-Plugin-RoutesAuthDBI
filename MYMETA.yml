@@ -1,0 +1,26 @@
+---
+abstract: 'Generate routes from sql-table, make authentication and make restrict access (authorization) to route with users/roles tables. Plugin makes an auth operations throught the plugin L<Mojolicious::Plugin::Authentication> on which is based.'
+author:
+  - 'Mikhail Che <mche@cpan.org>'
+build_requires:
+  Test::More: '0'
+configure_requires:
+  ExtUtils::MakeMaker: '0'
+dynamic_config: 0
+generated_by: 'ExtUtils::MakeMaker version 7.1, CPAN::Meta::Converter version 2.150005'
+license: unknown
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: '1.4'
+name: Mojolicious-Plugin-RoutesAuthDBI
+no_index:
+  directory:
+    - t
+    - inc
+requires:
+  DBI: '1.6'
+  Mojolicious: '6'
+  Mojolicious::Plugin::Authentication: '1.29'
+  perl: '5.014'
+version: '0.301'
+x_serialization_backend: 'CPAN::Meta::YAML version 0.018'

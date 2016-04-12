@@ -3,10 +3,10 @@
   <head><title>Page not found</title></head>
   <body>
 	<h1>Page  "<%= $self->req->url->path %>" was not found [<%= $status %>] </h1>
-        <div style="white-space: pre;"><%= dumper $self->req->headers %></div>
-        <div><%= $self->app->log->debug(dumper $self->req->headers)  %></div>
-        <div style="white-space: pre;"><%= dumper $self->req->param %></div>
-        <div><%= $self->app->log->debug(dumper $self->req->params)  %></div>
-        <div style="white-space: pre;"><%= dumper stash %></div>
+        <div style="white-space: pre;"><%#= dumper $self->req->headers %></div>
+<%# $self->app->log->debug($self->dumper($self->req->headers));  %>
+        <div style="white-space: pre;"><%= dumper $self->req %></div>
+<% $self->app->log->debug($self->dumper($self->req));  %>
+
   </body>
 </html>
