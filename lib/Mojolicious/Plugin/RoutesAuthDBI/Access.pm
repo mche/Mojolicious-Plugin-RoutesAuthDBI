@@ -13,6 +13,8 @@ my $sth;#sth hub
 
 =encoding utf8
 
+=head1 Mojolicious::Plugin::RoutesAuthDBI::Access
+
 =head1 NAME
 
 Mojolicious::Plugin::RoutesAuthDBI::Access - Generation routes, authentication and controll access to routes trought sintax of ->over(...), see L<Mojolicious::Routes::Route#over>

@@ -5,9 +5,11 @@ use Mojo::Base -strict;
 
 =encoding utf8
 
+=head1 Mojolicious::Plugin::RoutesAuthDBI::Sth
+
 =head1 NAME
 
-Mojolicious::Plugin::RoutesAuthDBI::Sth - is a STH hub for L<Mojolicious::Plugin::RoutesAuthDBI> classes.
+Mojolicious::Plugin::RoutesAuthDBI::Sth - is a DBI statements hub for L<Mojolicious::Plugin::RoutesAuthDBI> classes.
 
 =head1 SYNOPSIS
 
@@ -17,7 +19,7 @@ Mojolicious::Plugin::RoutesAuthDBI::Sth - is a STH hub for L<Mojolicious::Plugin
 
 =head1 DESCRIPTION
 
-Dictionary of DBI statements.
+Singleton dictionary of DBI statements.
 
 =head1 SEE ALSO
 

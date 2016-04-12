@@ -128,6 +128,7 @@ sub access {# add_condition
 
 ¡ ¡ ¡ ALL GLORY TO GLORIA ! ! !
 
+=head1 Mojolicious::Plugin::RoutesAuthDBI
 
 =head1 NAME
 

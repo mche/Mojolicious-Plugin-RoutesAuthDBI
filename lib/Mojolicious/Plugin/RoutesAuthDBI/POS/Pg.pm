@@ -6,6 +6,8 @@ __PACKAGE__->instance (__FILE__);
 
 =encoding utf8
 
+=head1 Mojolicious::Plugin::RoutesAuthDBI::POS::Pg
+
 =head1 NAME
 
 Mojolicious::Plugin::RoutesAuthDBI::POS::Pg - POS for PostgreSQL.
