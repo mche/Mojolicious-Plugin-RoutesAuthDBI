@@ -1,7 +1,7 @@
 package Mojolicious::Plugin::RoutesAuthDBI;
 use Mojo::Base 'Mojolicious::Plugin::Authentication';
 
-our $VERSION = '0.301';
+our $VERSION = '0.302';
 
 my $access;# 
 my $pkg = __PACKAGE__;
@@ -61,7 +61,7 @@ sub access_instance {# auth, routes and access methods
   return (bless $conf, $class)->init_class;
 }
 
-sub admin_controller {# web interface
+sub admin_controller {# web interface :)
   my ($self, $app, $conf) = @_;
   my $class  = _load_mod( $conf->{namespace}, $conf->{controller});
   return (bless $conf, $class)->init_class;
