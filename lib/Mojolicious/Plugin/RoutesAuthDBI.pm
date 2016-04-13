@@ -134,7 +134,7 @@ sub access {# add_condition
 
 Mojolicious::Plugin::RoutesAuthDBI - Generate routes from sql-table, make authentication and make restrict access (authorization) to route with users/roles tables. Plugin makes an auth operations throught the plugin L<Mojolicious::Plugin::Authentication> on which is based.
 
-=head1 DIAGRAM DB DESIGN
+=head1 DB DESIGN DIAGRAM
 
 See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagram.svg>
 

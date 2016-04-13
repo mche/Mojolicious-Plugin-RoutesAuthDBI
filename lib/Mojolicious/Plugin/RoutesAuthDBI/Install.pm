@@ -9,7 +9,7 @@ use Mojo::Base 'Mojolicious::Controller';
 
 Mojolicious::Plugin::RoutesAuthDBI::Install - is a Mojolicious::Controller for installation instructions. DB schema (PostgreSQL) and sample app.
 
-=head1 DIAGRAM DB DESIGN
+=head1 DB DESIGN DIAGRAM
 
 See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagram.svg>
 

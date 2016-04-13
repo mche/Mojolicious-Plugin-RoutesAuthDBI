@@ -1,0 +1,27 @@
+=pod
+
+=encoding utf8
+
+Доброго всем
+
+¡ ¡ ¡ ALL GLORY TO GLORIA ! ! !
+
+=head1 Mojolicious::Plugin::RoutesAuthDBI
+
+=head1 DESCRIPTION
+
+Generate routes from sql-table, make authentication and make restrict access (authorization) to route with users/roles tables. Plugin makes an auth operations throught the plugin L<Mojolicious::Plugin::Authentication> on which is based.
+
+=head1 DB DESIGN DIAGRAM
+
+See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagram.svg>
+
+
+=head1 COPYRIGHT
+
+Copyright 2016 Mikhail Che (Михаил Че).
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=cut

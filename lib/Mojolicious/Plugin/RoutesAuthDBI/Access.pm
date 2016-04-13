@@ -19,7 +19,7 @@ my $sth;#sth hub
 
 Mojolicious::Plugin::RoutesAuthDBI::Access - Generation routes, authentication and controll access to routes trought sintax of ->over(...), see L<Mojolicious::Routes::Route#over>
 
-=head1 DIAGRAM DB DESIGN
+=head1 DB DESIGN DIAGRAM
 
 See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagram.svg>
 

@@ -17,7 +17,7 @@ my $sth;#sth hub
 
 Mojolicious::Plugin::RoutesAuthDBI::Admin - is a Mojolicious::Controller for manage admin operations on DBI tables: controllers, actions, routes, roles, users.
 
-=head1 DIAGRAM DB DESIGN
+=head1 DB DESIGN DIAGRAM
 
 See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagram.svg>
 
