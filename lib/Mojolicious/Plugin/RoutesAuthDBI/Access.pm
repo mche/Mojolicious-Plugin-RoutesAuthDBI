@@ -114,17 +114,25 @@ Fetch records for apply_routes. Must return arrayref of hashrefs routes.
 
 Fetch records roles for session user. Must return arrayref of hashrefs roles.
 
-=item * B<access_route($self, $c, $id1, $id2)>
+=item * B<access_explicit($self, $c, $id1, $id2)>
 
-Check access to route ($id1) by user roles ids ($id2 arrayref). Must return false for deny access or true - allow access.
+Check access to route ($id1 - either route id or action id or controller id or namespace id) by roles ids ($id2 arrayref). Must return false for deny access or true - allow access.
 
-=item * B<access_controller($self, $c, $r, $id2)>
+=item * B<access_namespace($self, $c, $namespaces, $id2)>
 
-Check access to route by $r->{namespace} and $r->{controller} for user roles ids ($id2 arrayref). Must return false for deny access or true - allow access to all actions of this controller.
+Check implicit access to route by $namespace for user roles ids ($id2 arrayref). Must return false for deny access or true - allow access to all actions of this namespace.
 
-=item * B<access_role($self, $c, $r, $id2)>
+=item * B<access_controller($self, $c, $namespaces, $controller, $id2)>
 
-Check access to route by role id|name ($r->{role}) and user roles ids ($id2 arrayref). Must return false for deny access or true - allow access.
+Check implicit access to route by $namespace and $controller for user roles ids ($id2 arrayref). Must return false for deny access or true - allow access to all actions of this controller.
+
+=item * B<access_action($self, $c, $namespaces, $controller, $action, $id2)>
+
+Check implicit access to route by $namespace and $controller and $action for user roles ids ($id2 arrayref). Must return false for deny access or true - allow access to this action.
+
+=item * B<access_role($self, $c, $role, $id2)>
+
+Check implicit access to route by $role (id|name) and user roles ids ($id2 arrayref). Must return false for deny access or true - allow access.
 
 =back
 
@@ -146,20 +154,20 @@ it under the same terms as Perl itself.
 =cut
 
 sub init_class {# from plugin! init Class vars
-	my $c = shift;
-	my %args = @_;
+  my $c = shift;
+  my %args = @_;
   $init_conf ||= $c;
-	$c->{dbh} ||= $dbh ||=  $args{dbh};
-	$dbh ||= $c->{dbh};
+  $c->{dbh} ||= $dbh ||=  $args{dbh};
+  $dbh ||= $c->{dbh};
   $c->{pos} ||= $args{pos} || $c->{namespace}.'::POS::Pg';
-	$c->{sth} ||= $sth ||= $args{sth} ||=( bless [$dbh, {}], $c->{namespace}.'::Sth' )->init(pos=>$c->{pos});#sth cache
-	$sth ||= $c->{sth};
-	return $c;
+  $c->{sth} ||= $sth ||= $args{sth} ||=( bless [$dbh, {}], $c->{namespace}.'::Sth' )->init(pos=>$c->{pos});#sth cache
+  $sth ||= $c->{sth};
+  return $c;
 }
 
 sub load_user {# import for Mojolicious::Plugin::Authentication
-	my ($c, $uid) = @_;
-	my $u = $dbh->selectrow_hashref($sth->sth('user'), undef, ($uid, undef));
+  my ($c, $uid) = @_;
+  my $u = $dbh->selectrow_hashref($sth->sth('user'), undef, ($uid, undef));
   $c->app->log->debug("Loading user by id=$uid ". ($u ? 'success' : 'failed'));
   $u->{pass} = '**********************' if $u;
   return $u;
@@ -217,23 +225,34 @@ sub db_routes {
 }
 
 sub load_user_roles {
-	my ($self, $c, $uid) = @_;
-	$dbh->selectall_arrayref($sth->sth('user roles'), { Slice => {} }, ($uid));
+  my ($self, $c, $user) = @_;
+  $user->{roles} ||= $dbh->selectall_arrayref($sth->sth('user roles'), { Slice => {} }, ($user->{id}));
 }
 
-sub access_route {
-	my ($self, $c, $id1, $id2,) = @_;
-	return scalar $dbh->selectrow_array($sth->sth('cnt refs'), undef, ($id1, $id2));
+sub access_explicit {# i.e. by refs table
+  my ($self, $c, $id1, $id2,) = @_;
+  return scalar $dbh->selectrow_array($sth->sth('cnt refs'), undef, ($id1, $id2));
 }
 
-sub access_controller {
-	my ($self, $c, $r, $id2,) = @_;
-	return scalar $dbh->selectrow_array($sth->sth('access controller'), undef, ($r->{controller}, $r->{namespace},  $id2));
+
+sub access_namespace {#implicit
+  my ($self, $c, $namespaces, $id2,) = @_;
+  return scalar $dbh->selectrow_array($sth->sth('access namespace'), undef, ($namespaces, $id2));
 }
 
-sub access_role {
-	my ($self, $c, $r, $id2,) = @_;
-	return scalar $dbh->selectrow_array($sth->sth('access role'), undef, ($r->{role} =~ /\D/ ? (undef, $r->{role}) : ($r->{role}, undef),), $id2);
+sub access_controller {#implicit
+  my ($self, $c, $namespaces, $controller, $id2,) = @_;
+  return scalar $dbh->selectrow_array($sth->sth('access controller'), undef, ($namespaces, $controller, $id2));
+}
+
+sub access_action {#implicit
+  my ($self, $c, $namespaces, $controller, $action, $id2,) = @_;
+  return scalar $dbh->selectrow_array($sth->sth('access action'), undef, ($namespaces, $controller, $action, $id2));
+}
+
+sub access_role {#implicit
+  my ($self, $c, $role, $id2,) = @_;
+  return scalar $dbh->selectrow_array($sth->sth('access role'), undef, ($role =~ /\D/ ? (undef, $role) : ($role, undef),), $id2);
 }
 
 1;

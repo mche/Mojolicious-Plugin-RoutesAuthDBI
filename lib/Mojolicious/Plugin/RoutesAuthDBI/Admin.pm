@@ -181,7 +181,6 @@ sub trust_new_user {
   my $c = shift;
   
   my $u = $c->new_user;
-  #~ return if $u->{not_new};
   
   # ROLE
   my $rl = $dbh->selectrow_hashref($sth->sth('role'), undef, (undef, 'admin'));
@@ -192,17 +191,25 @@ sub trust_new_user {
   $ru ||= $dbh->selectrow_hashref($sth->sth('new ref'), undef, ($rl->{id}, $u->{id}));
   
   # CONTROLLER
-  my $cc = $dbh->selectrow_hashref($sth->sth('controller'), undef, ($init_conf->{namespace}, $init_conf->{controller}));
-  $cc ||= $dbh->selectrow_hashref($sth->sth('new controller'), undef, ($init_conf->{namespace}, $init_conf->{controller},));
-    
-    #REF controller->role
-  my $cr = $dbh->selectrow_hashref($sth->sth('ref'), undef, ($cc->{id}, $rl->{id}));
-  $cr ||= $dbh->selectrow_hashref($sth->sth('new ref'), undef, ($cc->{id}, $rl->{id}));
+  my $cc = $dbh->selectrow_hashref($sth->sth('controller'), undef, (([$init_conf->{namespace}]) x 2, $init_conf->{controller}));
+  $cc ||= $dbh->selectrow_hashref($sth->sth('new controller'), undef, ($init_conf->{controller}, 'admin actions'));
+  
+  #Namespace
+  my $ns = $dbh->selectrow_hashref($sth->sth('namespace'), undef, ($init_conf->{namespace},));
+  $ns ||= $dbh->selectrow_hashref($sth->sth('new namespace'), undef, ($init_conf->{namespace}, 'plugin ns!'));
+  
+  #ref namespace -> controller
+  my $nc = $dbh->selectrow_hashref($sth->sth('ref'), undef, ($ns->{id}, $cc->{id}));
+  $nc ||= $dbh->selectrow_hashref($sth->sth('new ref'), undef, ($ns->{id}, $cc->{id}));
+  
+  #REF namespace->role
+  my $cr = $dbh->selectrow_hashref($sth->sth('ref'), undef, ($ns->{id}, $rl->{id}));
+  $cr ||= $dbh->selectrow_hashref($sth->sth('new ref'), undef, ($ns->{id}, $rl->{id}));
   
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
-Success sign up new trust-admin-user
+Success sign up new trust-admin-user with whole access to namespace=[$init_conf->{namespace}]
 ===
 
 USER:
@@ -213,6 +220,9 @@ ROLE:
 
 CONTROLLER:
 @{[$c->dumper( $cc)]}
+
+NAMESPACE:
+@{[$c->dumper( $ns)]}
 
 TXT
 }

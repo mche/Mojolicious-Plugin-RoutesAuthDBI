@@ -1,7 +1,7 @@
 package Mojolicious::Plugin::RoutesAuthDBI;
 use Mojo::Base 'Mojolicious::Plugin::Authentication';
 
-our $VERSION = '0.302';
+our $VERSION = '0.400';
 
 my $access;# 
 my $pkg = __PACKAGE__;
@@ -36,6 +36,7 @@ sub register {
   $self->SUPER::register($app, $conf->{auth});
   
   $app->routes->add_condition(access => \&access);
+  $access->{routes} = $app->routes;
   $access->apply_route($app, $_) for @{ $access->db_routes };
   
   if ($conf->{admin}) {
@@ -78,7 +79,7 @@ sub _load_mod {
 # 
 sub access {# add_condition
   my ($route, $c, $captures, $r_hash) = @_;
-  #~ $c->app->log->debug($c->dumper($r_hash));#$route->pattern->defaults
+  #~ $c->app->log->debug($c->dumper($route));#$route->pattern->defaults
   # 1. по паролю выставить куки
   # 2. по кукам выставить пользователя
   my $meth = $conf->{auth}{current_user_fn};
@@ -89,28 +90,69 @@ sub access {# add_condition
   $conf->{access}{fail_auth_cb}->($c, )
     and return undef
     unless $u;
-  # 4. получить все группы пользователя
-  $u->{roles} ||= $access->load_user_roles($c, $u->{'id'});
-  # 5. по ИДам групп и пользователя проверить доступ
+  #  получить все группы пользователя
+  $access->load_user_roles($c, $u);
+
   my $id2 = [$u->{id}, map($_->{id}, grep !$_->{disable},@{$u->{roles}})];
   
-  # Acces to route by refs: routes -> roles -> users
-  ($r_hash->{id} && $access->access_route($c, $r_hash->{id}, $id2))
-    and $c->app->log->debug(sprintf "Access on [%s%s%s%s] for user id=[%s] on request=[%s]", $r_hash->{namespace} ? "$r_hash->{namespace}::" : "", $r_hash->{controller} ? "$r_hash->{controller}->" : "", $r_hash->{action} ? $r_hash->{action} : "", $r_hash->{callback} ? " cb => sub {...}" : "", $u->{id}, $r_hash->{request})
+  # explicit acces to route by routes id
+  $r_hash->{id}
+    && $access->access_explicit($c, $r_hash->{id}, $id2)
+    && $c->app->log->debug(sprintf "Access [%s%s%s%s] for user id=[%s] for request=[%s] by routes id=[%s]", $r_hash->{namespace} ? "$r_hash->{namespace}::" : "", $r_hash->{controller} ? "$r_hash->{controller}->" : "", $r_hash->{action} ? $r_hash->{action} : "", $r_hash->{callback} ? " cb => sub {...}" : "", $u->{id}, $r_hash->{request}, $r_hash->{id})
+    && return 1;
+  
+  # explicit access to route by actions id
+  $r_hash->{action_id}
+    && $access->access_explicit($c, $r_hash->{action_id}, $id2)
+    && $c->app->log->debug(sprintf "Access [%s%s%s%s] for user id=[%s] for request=[%s] by actions id=[%s]", $r_hash->{namespace} ? "$r_hash->{namespace}::" : "", $r_hash->{controller} ? "$r_hash->{controller}->" : "", $r_hash->{action} ? $r_hash->{action} : "", $r_hash->{callback} ? " cb => sub {...}" : "", $u->{id}, $r_hash->{request}, $r_hash->{action_id})
+    && return 1;
+    
+  # explicit access to route by controller id
+  $r_hash->{controller_id}
+    && $access->access_explicit($c, $r_hash->{controller_id}, $id2)
+    && $c->app->log->debug(sprintf "Access [%s%s%s%s] for user id=[%s] for request=[%s] by controller id=[%s]", $r_hash->{namespace} ? "$r_hash->{namespace}::" : "", $r_hash->{controller} ? "$r_hash->{controller}->" : "", $r_hash->{action} ? $r_hash->{action} : "", $r_hash->{callback} ? " cb => sub {...}" : "", $u->{id}, $r_hash->{request}, $r_hash->{controller_id})
+    && return 1;
+  
+  # explicit access to route by namespace id
+  $r_hash->{namespace_id}
+    && $access->access_explicit($c, $r_hash->{namespace_id}, $id2)
+    && $c->app->log->debug(sprintf "Access [%s%s%s%s] for user id=[%s] for request=[%s] by namespace id=[%s]", $r_hash->{namespace} ? "$r_hash->{namespace}::" : "", $r_hash->{controller} ? "$r_hash->{controller}->" : "", $r_hash->{action} ? $r_hash->{action} : "", $r_hash->{callback} ? " cb => sub {...}" : "", $u->{id}, $r_hash->{request}, $r_hash->{namespace_id})
+    && return 1;
+  
+  # Stop flow for db route
+  $conf->{access}{fail_access_cb}->($c, $route, $r_hash);
+    and return undef
+    if $r_hash->{id}; 
+  
+  # Access to non db route by role
+  ($r_hash->{role} && $access->access_role($c, $r_hash->{role}, $id2))
+    and $c->app->log->debug(sprintf "Access by role [%s] for user id=[%s] on request=[%s]", $r_hash->{role}, $u->{id}, $route->pattern->unparsed)
     and return 1;
   
-  # Access to route (may be not in db table) of any actions on controller
-  # Refs: controllers -> roles -> users
-  $r_hash->{controller} ||= $route->pattern->defaults->{controller};
-  $r_hash->{namespace} ||= $route->pattern->defaults->{namespace};
-  ($r_hash->{controller} && $access->access_controller($c, $r_hash, $id2))
-    and $c->app->log->debug(sprintf "Access all actions on [%s%s] for user id=[%s] on request=[%s]", $r_hash->{namespace} ? "$r_hash->{namespace}::" : "", $r_hash->{controller} ? "$r_hash->{controller}" : "",$u->{id}, $r_hash->{request})
-    and return 1;
+  # implicit access to non db routes
+  my $controller = ucfirst(lc($route->pattern->defaults->{controller}));
   
-  # Access to route (not in db table) by role
-  ($r_hash->{role} && $access->access_role($c, $r_hash, $id2))
-    and $c->app->log->debug(sprintf "Access by role [%s] for user id=[%s] on request=[%s]", $r_hash->{role}, $u->{id}, $r_hash->{request})
-    and return 1;
+  $conf->{access}{fail_access_cb}->($c, $route, $r_hash)
+    and return undef
+    unless $controller;
+  
+  my $namespaces = $route->pattern->defaults->{namespace} ? [$route->pattern->defaults->{namespace}] : $access->{routes}->namespaces;
+  $access->access_namespace($c, $namespaces, $id2)
+    && $c->app->log->debug(sprintf "Access %s for user id=[%s] for request=[%s] by namespaces=%s", $c->dumper($route->pattern->defaults) =~ s/\s+//gr, $u->{id}, $route->pattern->unparsed, $c->dumper($namespaces) =~ s/\s+//gr,)
+    && return 1;
+  
+  
+  $access->access_controller($c, $namespaces, $controller, $id2)
+    && $c->app->log->debug(sprintf "Access %s for user id=[%s] for request=[%s] by namespaces=%s and controller=%s", $c->dumper($route->pattern->defaults) =~ s/\s+//gr, $u->{id}, $route->pattern->unparsed, $c->dumper($namespaces) =~ s/\s+//gr, $controller)
+    && return 1;
+  
+  my $action = $route->pattern->defaults->{action};
+  $action
+    && $access->access_action($c, $namespaces, $controller, $action, $id2)
+    && $c->app->log->debug(sprintf "Access %s for user id=[%s] for request=[%s] by namespaces=%s and controller=[%s] and action=[%s]", $c->dumper($route->pattern->defaults) =~ s/\s+//gr, $u->{id}, $route->pattern->unparsed, $c->dumper($namespaces) =~ s/\s+//gr, $controller, $action)
+    && return 1;
+  
+  
   
   $conf->{access}{fail_access_cb}->($c, $route, $r_hash);
   #~ $c->app->log->debug($c->dumper($r_hash));

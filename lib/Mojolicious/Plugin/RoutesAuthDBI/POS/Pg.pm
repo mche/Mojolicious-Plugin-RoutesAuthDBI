@@ -33,7 +33,7 @@ L<DBIx::POS>
 
 =over 4
 
-=item * --------------------------------------------------------------------- 
+=item * B<user> 
 
 =name user
 
@@ -45,7 +45,7 @@ L<DBIx::POS>
   from users
   where id = ? or login=?
 
-=item * --------------------------------------------------------------------- 
+=item * B<apply routes> 
 
 =name apply routes
 
@@ -53,18 +53,20 @@ L<DBIx::POS>
 
 =sql
 
-  select r.*, ac.controller, ac.namespace, ac.action, ac.callback, ac.id as action_id
+  select r.*, ac.controller, ac.namespace, ac.action, ac.callback, ac.id as action_id, ac.controller_id, ac.namespace_id
   from routes r
     join refs rf on r.id=rf.id1
     join 
-    (select a.*, c.controller, c.namespace
+    (select a.*, c.controller, c.id as controller_id, n.namespace, n.id as namespace_id
       from actions a 
       left join refs r on a.id=r.id2
       left join controllers c on c.id=r.id1
+      left join refs r2 on c.id=r2.id2
+      left join namespaces n on n.id=r2.id1
     ) ac on rf.id2=ac.id
   order by r.order_by, r.ts;
 
-=item * --------------------------------------------------------------------- 
+=item * B<user roles> 
 
 =name user roles
 
@@ -79,7 +81,7 @@ L<DBIx::POS>
   where r.id2=?;
   --and coalesce(g.disable, 0::bit) <> 1::bit
 
-=item * --------------------------------------------------------------------- 
+=item * B<cnt refs> 
 
 =name cnt refs
 
@@ -91,27 +93,74 @@ L<DBIx::POS>
   from refs
   where id1 = ? and id2 = ANY(?);
 
-=item * ----------------------------------------------------------------------
+=item * B<access action>
 
-=name access controller
+=name access action
 
-=desc доступ ко всем действиям по имени контроллера
+=desc доступ к действию
 
 =sql
 
-  select count(c.*)
-  from 
-    controllers c
-    join refs r on c.id=r.id1
-    join roles o on r.id2=o.id
+  select count(r.*)
+  from
+    namespaces n
+    join refs rn on n.id=rn.id1
+    join controllers c on c.id=rn.id2
+    join refs rc on c.id=rc.id1
+    join actions a on a.id=rc.id2
+    join refs r on a.id=r.id1
+    join roles o on o.id=r.id2
   where
-    lower(c.controller)=lower(?)
-    and c.namespace=?
+    n.namespace=any(?)
+    and c.controller=?
+    and a.action=?
     and r.id2=any(?)
     and coalesce(o.disable, 0::bit) <> 1::bit
   ;
 
-=item * ----------------------------------------------------------------------
+
+=item * B<access controller>
+
+=name access controller
+
+=desc доступ ко всем действиям по имени контроллера и пути
+
+=sql
+
+  select count(r.*)
+  from
+    namespaces n
+    join refs rc on n.id=rc.id1
+    join controllers c on c.id=rc.id2
+    join refs r on c.id=r.id1
+    join roles o on o.id=r.id2
+  where
+    n.namespace=any(?)
+    and c.controller=?
+    and r.id2=any(?)
+    and coalesce(o.disable, 0::bit) <> 1::bit
+  ;
+
+=item * B<access namespace>
+
+=name access namespace
+
+=desc доступ ко всем действиям по имени пути
+
+=sql
+
+  select count(n.*)
+  from 
+    namespaces n
+    join refs r on n.id=r.id1
+    join roles o on r.id2=o.id
+  where
+    n.namespace=any(?)
+    and r.id2=any(?)
+    and coalesce(o.disable, 0::bit) <> 1::bit
+  ;
+
+=item * B<access role>
 
 =name access role
 
@@ -131,7 +180,7 @@ L<DBIx::POS>
 
 =over 4
 
-=item * --------------------------------------------------------------------- 
+=item * B<new user> 
 
 =name new user
 
@@ -142,7 +191,7 @@ L<DBIx::POS>
   insert into users (login, pass) values (?,?)
   returning *;
 
-=item * --------------------------------------------------------------------- 
+=item * B<role> 
 
 =name role
 
@@ -154,7 +203,7 @@ L<DBIx::POS>
   from roles
   where id=? or lower(name)=?
 
-=item * --------------------------------------------------------------------- 
+=item * B<new role> 
 
 =name new role
 
@@ -165,7 +214,7 @@ L<DBIx::POS>
   insert into roles (name) values (?)
   returning *;
 
-=item * --------------------------------------------------------------------- 
+=item * B<dsbl/enbl role> 
 
 =name dsbl/enbl role
 
@@ -176,7 +225,7 @@ L<DBIx::POS>
   update roles set disable=?::bit where id=? or lower(name)=?
   returning *;
 
-=item * --------------------------------------------------------------------- 
+=item * B<ref> 
 
 =name ref
 
@@ -188,7 +237,7 @@ L<DBIx::POS>
   from refs
   where id1=? and id2=?;
 
-=item * --------------------------------------------------------------------- 
+=item * B<new ref> 
 
 =name new ref
 
@@ -200,7 +249,7 @@ L<DBIx::POS>
   returning *;
 
 
-=item * --------------------------------------------------------------------- 
+=item * B<del ref> 
 
 =name del ref
 
@@ -212,21 +261,25 @@ L<DBIx::POS>
   where id1=? and id2=?
   returning *;
 
-=item * --------------------------------------------------------------------- 
+=item * B<controller>
 
 =name controller
 
-=desc
+=desc Не пустой массив namespace - четко привязанный контроллер, пустой - обязательно не привязанный контроллер
 
 =sql
 
-  select *
-  from controllers
+  select c.*
+  from
+    controllers c
+    left join refs r on c.id=r.id2
+    left join namespaces n on n.id=r.id1
+  
   where
-    namespace=?
-    and lower(controller)=lower(?)
+    (n.namespace=any(?) or (array_length(?::varchar[], 1) is null and n.id is null))
+    and c.controller=?
 
-=item * --------------------------------------------------------------------- 
+=item * B<new controller> 
 
 =name new controller
 
@@ -234,11 +287,11 @@ L<DBIx::POS>
 
 =sql
 
-  insert into controllers (namespace, controller)
+  insert into controllers (controller, descr)
   values (?,?)
   returning *;
 
-=item * --------------------------------------------------------------------- 
+=item * B<new route> 
 
 =name new route
 
@@ -250,7 +303,7 @@ L<DBIx::POS>
   values (?,?,?,?,?,?,?,?,?)
   returning *;
 
-=item * --------------------------------------------------------------------- 
+=item * B<role users> 
 
 =name role users
 
@@ -264,7 +317,7 @@ L<DBIx::POS>
     join refs r on u.id=r.id2
   where r.id1=?;
 
-=item * --------------------------------------------------------------------- 
+=item * B<role routes> 
 
 =name role routes
 
@@ -279,7 +332,7 @@ L<DBIx::POS>
   where r.id2=?;
 
 
-=item * --------------------------------------------------------------------- 
+=item * B<controllers> 
 
 =name controllers
 
@@ -289,29 +342,42 @@ L<DBIx::POS>
 
   select * from controllers;
 
-=item * --------------------------------------------------------------------- 
+=item * B<namespaces>
 
-=name controller
-
-=desc
-
-=sql
-
-  select * from controllers where namespace = ? and controller = ?;
-
-=item * --------------------------------------------------------------------- 
-
-=name new controller
+=name namespaces
 
 =desc
 
 =sql
 
-  insert into controllers (namespace, controller) values (?,?)
+  select *
+  from namespaces;
+
+=item * B<namespace>
+
+=name namespace
+
+=desc
+
+=sql
+
+  select *
+  from namespaces
+  where namespace = ?;
+
+=item * B<new namespace>
+
+=name new namespace
+
+=desc
+
+=sql
+
+  insert into namespaces (namespace, descr) values (?,?)
   returning *;
 
 
-=item * --------------------------------------------------------------------- 
+=item * B<actions>
 
 =name actions
 
@@ -324,7 +390,7 @@ L<DBIx::POS>
     left join refs r on a.id=r.id2
     left join controllers c on c.id=r.id1
 
-=item * --------------------------------------------------------------------- 
+=item * B<> 
 
 =name
 

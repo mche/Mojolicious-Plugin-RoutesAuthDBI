@@ -153,44 +153,49 @@ CREATE TABLE routes (
     order_by int null
 );
 
+create table namespaces (
+    id integer default nextval('ID'::regclass) not null primary key,
+    ts timestamp without time zone default now() not null,
+    namespace character varying not null unique,
+    descr text null
+);
+
 create table controllers (
-      id integer default nextval('ID'::regclass) not null primary key,
-      ts timestamp without time zone default now() not null,
-      namespace character varying null,
-      controller character varying not null,
-      descr text null,
-      unique(namespace, controller)
-    );
+    id integer default nextval('ID'::regclass) not null primary key,
+    ts timestamp without time zone default now() not null,
+    controller character varying not null,
+    descr text null
+);
 
 create table actions (
-      id integer default nextval('ID'::regclass) not null primary key,
-      ts timestamp without time zone default now() not null,
-      action character varying not null,
-      callback text null,
-      descr text null
-    );
+    id integer default nextval('ID'::regclass) not null primary key,
+    ts timestamp without time zone default now() not null,
+    action character varying not null,
+    callback text null,
+    descr text null
+);
 
 create table users (
-        id int default nextval('ID'::regclass) not null  primary key,
-        ts timestamp without time zone default now() not null,
-        login varchar not null unique,
-        pass varchar not null,
-	disable bit(1)
+    id int default nextval('ID'::regclass) not null  primary key,
+    ts timestamp without time zone default now() not null,
+    login varchar not null unique,
+    pass varchar not null,
+    disable bit(1)
 );
     
 create table roles (
-        id int default nextval('ID'::regclass) not null  primary key,
-        ts timestamp without time zone default now() not null,
-        name varchar not null unique,
-	disable bit(1)
+    id int default nextval('ID'::regclass) not null  primary key,
+    ts timestamp without time zone default now() not null,
+    name varchar not null unique,
+    disable bit(1)
 );
 
 create table refs (
-        id int default nextval('ID'::regclass) not null  primary key,
-        ts timestamp without time zone default now() not null,
-        id1 int not null,
-        id2 int not null,
-        unique(id1, id2)
+    id int default nextval('ID'::regclass) not null  primary key,
+    ts timestamp without time zone default now() not null,
+    id1 int not null,
+    id2 int not null,
+    unique(id1, id2)
 );
 create index on refs (id2);
 
@@ -208,6 +213,7 @@ drop table roles;
 drop table routes;
 drop table controllers;
 drop table actions;
+drop table namespaces;
 drop sequence ID;
 
 TXT
@@ -223,6 +229,7 @@ delete from users;
 delete from roles;
 delete from routes;
 delete from controllers;
+delete from namespaces;
 delete from actions;
 
 TXT
