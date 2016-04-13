@@ -11,7 +11,12 @@ my $conf ;# set on ->registrer
 
 my $fail_auth = {format=>'txt', text=>"Deny at auth step. Please sign in!!!\n"};
 my $fail_auth_cb = sub {shift->render(%$fail_auth);};
-my $fail_access_cb = sub {shift->render(format=>'txt', text=>"You don`t have access on this route(url)!!!\n");};
+my $fail_access_cb = sub {
+  my ($c, $route, $r_hash, $u) = @_;
+  $c->app->log->debug(sprintf "Deny route defaults=[%s] for user id=[%s] for request=[%s], db_route=[%s]", $c->dumper($route->pattern->defaults) =~ s/\s+//gr, $u->{id}, $route->pattern->unparsed, $c->dumper($r_hash) =~ s/\s+//gr,);
+  $c->render(format=>'txt', text=>"You don`t have access on this route(url)!!!\n");
+  
+};
 
 
 
@@ -121,7 +126,7 @@ sub access {# add_condition
     && return 1;
   
   # Stop access flow for db route
-  $conf->{access}{fail_access_cb}->($c, $route, $r_hash)
+  $conf->{access}{fail_access_cb}->($c, $route, $r_hash, $u)
     and return undef
     if $r_hash->{id}; 
   
@@ -134,14 +139,14 @@ sub access {# add_condition
   # implicit access to non db routes
   my $controller = ucfirst(lc($route->pattern->defaults->{controller}));
   
-  $conf->{access}{fail_access_cb}->($c, $route, $r_hash)
+  $conf->{access}{fail_access_cb}->($c, $route, $r_hash, $u)
     and return undef
     unless $controller;
 
   my $namespace = $route->pattern->defaults->{namespace};# ? [$route->pattern->defaults->{namespace}] : $access->{'app.routes'}->namespaces;
   unless ($namespace) {(load_class($_.'::'.$controller) or ($namespace = $_) and last) for @{ $access->{'app.routes'}->namespaces };}
   
-  $conf->{access}{fail_access_cb}->($c, $route, $r_hash)
+  $conf->{access}{fail_access_cb}->($c, $route, $r_hash, $u)
     and return undef
     unless $namespace;
   
@@ -163,7 +168,7 @@ sub access {# add_condition
   
   
   
-  $conf->{access}{fail_access_cb}->($c, $route, $r_hash);
+  $conf->{access}{fail_access_cb}->($c, $route, $r_hash, $u);
   #~ $c->app->log->debug($c->dumper($r_hash));
   return undef;
 }

@@ -78,9 +78,9 @@ Both above options determining the module which will play as manager of authenti
 
 This callback invoke when request need auth route but authentication was failure.
 
-=item * B<fail_access_cb> = sub {my ($c, $route, $r_hash) = @_;...}
+=item * B<fail_access_cb> = sub {my ($c, $route, $r_hash, $u) = @_;...}
 
-This callback invoke when request need auth route but access was failure. $route - L<Mojolicious::Routes::Route> object, $r_hash - route hashref db item.
+This callback invoke when request need auth route but access was failure. $route - L<Mojolicious::Routes::Route> object, $r_hash - route hashref db item, $u - useer hashref.
 
 =back
 
