@@ -1,5 +1,6 @@
 package Mojolicious::Plugin::RoutesAuthDBI;
 use Mojo::Base 'Mojolicious::Plugin::Authentication';
+use Mojo::Loader qw(load_class);
 
 our $VERSION = '0.400';
 
@@ -36,7 +37,7 @@ sub register {
   $self->SUPER::register($app, $conf->{auth});
   
   $app->routes->add_condition(access => \&access);
-  $access->{routes} = $app->routes;
+  $access->{'app.routes'} = $app->routes;
   $access->apply_route($app, $_) for @{ $access->db_routes };
   
   if ($conf->{admin}) {
@@ -119,15 +120,16 @@ sub access {# add_condition
     && $c->app->log->debug(sprintf "Access [%s%s%s%s] for user id=[%s] for request=[%s] by namespace id=[%s]", $r_hash->{namespace} ? "$r_hash->{namespace}::" : "", $r_hash->{controller} ? "$r_hash->{controller}->" : "", $r_hash->{action} ? $r_hash->{action} : "", $r_hash->{callback} ? " cb => sub {...}" : "", $u->{id}, $r_hash->{request}, $r_hash->{namespace_id})
     && return 1;
   
-  # Stop flow for db route
-  $conf->{access}{fail_access_cb}->($c, $route, $r_hash);
+  # Stop access flow for db route
+  $conf->{access}{fail_access_cb}->($c, $route, $r_hash)
     and return undef
     if $r_hash->{id}; 
   
   # Access to non db route by role
-  ($r_hash->{role} && $access->access_role($c, $r_hash->{role}, $id2))
-    and $c->app->log->debug(sprintf "Access by role [%s] for user id=[%s] on request=[%s]", $r_hash->{role}, $u->{id}, $route->pattern->unparsed)
-    and return 1;
+  $r_hash->{role}
+    && $access->access_role($c, $r_hash->{role}, $id2)
+    && $c->app->log->debug(sprintf "Access by role [%s] for user id=[%s] on request=[%s]", $r_hash->{role}, $u->{id}, $route->pattern->unparsed)
+    && return 1;
   
   # implicit access to non db routes
   my $controller = ucfirst(lc($route->pattern->defaults->{controller}));
@@ -135,21 +137,28 @@ sub access {# add_condition
   $conf->{access}{fail_access_cb}->($c, $route, $r_hash)
     and return undef
     unless $controller;
+
+  my $namespace = $route->pattern->defaults->{namespace};# ? [$route->pattern->defaults->{namespace}] : $access->{'app.routes'}->namespaces;
+  unless ($namespace) {(load_class($_.'::'.$controller) or ($namespace = $_) and last) for @{ $access->{'app.routes'}->namespaces };}
   
-  my $namespaces = $route->pattern->defaults->{namespace} ? [$route->pattern->defaults->{namespace}] : $access->{routes}->namespaces;
-  $access->access_namespace($c, $namespaces, $id2)
-    && $c->app->log->debug(sprintf "Access %s for user id=[%s] for request=[%s] by namespaces=%s", $c->dumper($route->pattern->defaults) =~ s/\s+//gr, $u->{id}, $route->pattern->unparsed, $c->dumper($namespaces) =~ s/\s+//gr,)
+  $conf->{access}{fail_access_cb}->($c, $route, $r_hash)
+    and return undef
+    unless $namespace;
+  
+  
+  $access->access_namespace($c,   $namespace, $id2)
+    && $c->app->log->debug(sprintf "Access %s for user id=[%s] for request=[%s] by namespace=[%s]", $c->dumper($route->pattern->defaults) =~ s/\s+//gr, $u->{id}, $route->pattern->unparsed, $namespace,)
     && return 1;
   
   
-  $access->access_controller($c, $namespaces, $controller, $id2)
-    && $c->app->log->debug(sprintf "Access %s for user id=[%s] for request=[%s] by namespaces=%s and controller=%s", $c->dumper($route->pattern->defaults) =~ s/\s+//gr, $u->{id}, $route->pattern->unparsed, $c->dumper($namespaces) =~ s/\s+//gr, $controller)
+  $access->access_controller($c,   $namespace, $controller, $id2)
+    && $c->app->log->debug(sprintf "Access %s for user id=[%s] for request=[%s] by namespace=[%s] and controller=[%s]", $c->dumper($route->pattern->defaults) =~ s/\s+//gr, $u->{id}, $route->pattern->unparsed, $namespace, $controller)
     && return 1;
   
   my $action = $route->pattern->defaults->{action};
   $action
-    && $access->access_action($c, $namespaces, $controller, $action, $id2)
-    && $c->app->log->debug(sprintf "Access %s for user id=[%s] for request=[%s] by namespaces=%s and controller=[%s] and action=[%s]", $c->dumper($route->pattern->defaults) =~ s/\s+//gr, $u->{id}, $route->pattern->unparsed, $c->dumper($namespaces) =~ s/\s+//gr, $controller, $action)
+    && $access->access_action($c,   $namespace, $controller, $action, $id2)
+    && $c->app->log->debug(sprintf "Access %s for user id=[%s] for request=[%s] by namespace=[%s] and controller=[%s] and action=[%s]", $c->dumper($route->pattern->defaults) =~ s/\s+//gr, $u->{id}, $route->pattern->unparsed, $namespace , $controller, $action)
     && return 1;
   
   

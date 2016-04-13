@@ -118,15 +118,15 @@ Fetch records roles for session user. Must return arrayref of hashrefs roles.
 
 Check access to route ($id1 - either route id or action id or controller id or namespace id) by roles ids ($id2 arrayref). Must return false for deny access or true - allow access.
 
-=item * B<access_namespace($self, $c, $namespaces, $id2)>
+=item * B<access_namespace($self, $c, $namespace, $id2)>
 
 Check implicit access to route by $namespace for user roles ids ($id2 arrayref). Must return false for deny access or true - allow access to all actions of this namespace.
 
-=item * B<access_controller($self, $c, $namespaces, $controller, $id2)>
+=item * B<access_controller($self, $c, $namespace, $controller, $id2)>
 
 Check implicit access to route by $namespace and $controller for user roles ids ($id2 arrayref). Must return false for deny access or true - allow access to all actions of this controller.
 
-=item * B<access_action($self, $c, $namespaces, $controller, $action, $id2)>
+=item * B<access_action($self, $c, $namespace, $controller, $action, $id2)>
 
 Check implicit access to route by $namespace and $controller and $action for user roles ids ($id2 arrayref). Must return false for deny access or true - allow access to this action.
 
@@ -236,18 +236,18 @@ sub access_explicit {# i.e. by refs table
 
 
 sub access_namespace {#implicit
-  my ($self, $c, $namespaces, $id2,) = @_;
-  return scalar $dbh->selectrow_array($sth->sth('access namespace'), undef, ($namespaces, $id2));
+  my ($self, $c, $namespace, $id2,) = @_;
+  return scalar $dbh->selectrow_array($sth->sth('access namespace'), undef, ($namespace, $id2));
 }
 
 sub access_controller {#implicit
-  my ($self, $c, $namespaces, $controller, $id2,) = @_;
-  return scalar $dbh->selectrow_array($sth->sth('access controller'), undef, ($namespaces, $controller, $id2));
+  my ($self, $c,  $namespace, $controller, $id2,) = @_;
+  return scalar $dbh->selectrow_array($sth->sth('access controller'), undef, ( $namespace, $controller, $id2));
 }
 
 sub access_action {#implicit
-  my ($self, $c, $namespaces, $controller, $action, $id2,) = @_;
-  return scalar $dbh->selectrow_array($sth->sth('access action'), undef, ($namespaces, $controller, $action, $id2));
+  my ($self, $c,  $namespace, $controller, $action, $id2,) = @_;
+  return scalar $dbh->selectrow_array($sth->sth('access action'), undef, ( $namespace, $controller, $action, $id2));
 }
 
 sub access_role {#implicit

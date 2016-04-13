@@ -111,7 +111,7 @@ L<DBIx::POS>
     join refs r on a.id=r.id1
     join roles o on o.id=r.id2
   where
-    n.namespace=any(?)
+    n.namespace=?
     and c.controller=?
     and a.action=?
     and r.id2=any(?)
@@ -135,7 +135,7 @@ L<DBIx::POS>
     join refs r on c.id=r.id1
     join roles o on o.id=r.id2
   where
-    n.namespace=any(?)
+    n.namespace=?
     and c.controller=?
     and r.id2=any(?)
     and coalesce(o.disable, 0::bit) <> 1::bit
@@ -155,7 +155,7 @@ L<DBIx::POS>
     join refs r on n.id=r.id1
     join roles o on r.id2=o.id
   where
-    n.namespace=any(?)
+    n.namespace=?
     and r.id2=any(?)
     and coalesce(o.disable, 0::bit) <> 1::bit
   ;
@@ -172,6 +172,7 @@ L<DBIx::POS>
   from roles
   where (id = ? or name = ?)
     and id = any(?)
+    and coalesce(disable, 0::bit) <> 1::bit
   ;
 
 =back
@@ -265,7 +266,7 @@ L<DBIx::POS>
 
 =name controller
 
-=desc Не пустой массив namespace - четко привязанный контроллер, пустой - обязательно не привязанный контроллер
+=desc Не пустой namespace - четко привязанный контроллер, пустой - обязательно не привязанный контроллер
 
 =sql
 
@@ -276,7 +277,7 @@ L<DBIx::POS>
     left join namespaces n on n.id=r.id1
   
   where
-    (n.namespace=any(?) or (array_length(?::varchar[], 1) is null and n.id is null))
+    (n.namespace=? or (? is null and n.id is null))
     and c.controller=?
 
 =item * B<new controller> 
