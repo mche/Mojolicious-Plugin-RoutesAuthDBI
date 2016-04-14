@@ -244,7 +244,7 @@ L<DBIx::POS>
 
 =sql
 
-  select c.*
+  select c.*, n.namespace, n.id as namespace_id, n.descr as namespace_descr
   from
     controllers c
     left join refs r on c.id=r.id2
@@ -252,7 +252,7 @@ L<DBIx::POS>
   
   where
     c.controller=?
-    and (n.namespace=? or (? is null and n.id is null))
+    and (n.namespace=? or (?::varchar is null and n.id is null))
     
 
 =item * B<new controller> 
@@ -316,7 +316,11 @@ L<DBIx::POS>
 
 =sql
 
-  select * from controllers;
+  select c.*, n.namespace, n.id as namespace_id, n.descr as namespace_descr
+    from controllers c
+    left join refs r on c.id=r.id2
+    left join namespaces n on n.id=r.id1
+    ;
 
 =item * B<namespaces>
 

@@ -220,12 +220,12 @@ sub apply_route {# meth in Plugin
 }
 
 sub db_routes {
-  my ($self, $c, ) = @_;
+  my ($self,) = @_;
   $dbh->selectall_arrayref($sth->sth('apply routes'), { Slice => {} },);
 }
 
 sub load_user_roles {
-  my ($self, $c, $user) = @_;
+  my ($self, $user) = @_;
   $user->{roles} ||= $dbh->selectall_arrayref($sth->sth('user roles'), { Slice => {} }, ($user->{id}));
 }
 

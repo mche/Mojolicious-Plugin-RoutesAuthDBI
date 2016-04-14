@@ -219,7 +219,7 @@ Mojolicious::Plugin::RoutesAuthDBI - Generate routes from sql-table, make authen
 
 =head1 DB DESIGN DIAGRAM
 
-See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagram.svg>
+First of all see L<SVG|https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagram.svg>  or L<PNG|http://i.imgur.com/sXHF4pU.png>
 
 =head1 SYNOPSIS
 

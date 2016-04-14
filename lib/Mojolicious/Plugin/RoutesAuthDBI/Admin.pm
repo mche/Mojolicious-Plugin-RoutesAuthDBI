@@ -13,6 +13,10 @@ my $sth;#sth hub
 
 =head1 Mojolicious::Plugin::RoutesAuthDBI::Admin
 
+=head1 WARN
+
+Still incomplete!
+
 =head1 NAME
 
 Mojolicious::Plugin::RoutesAuthDBI::Admin - is a Mojolicious::Controller for manage admin operations on DBI tables: controllers, actions, routes, roles, users.
@@ -494,28 +498,63 @@ TXT
 
 sub new_controller {
   my $c = shift;
-  my $ns = $c->stash('ns') || $c->param('ns');
+  my $ns = $c->stash('ns') || $c->param('ns') ||  $c->stash('namespace') || $c->param('namespace');
+  $ns = undef if $ns eq 'undef';
   my $mod = $c->stash('module') || $c->param('module');
-  my $r = $dbh->selectrow_hashref($sth->sth('controller'), undef, ($mod, ($ns) x 2,));
+  my $cn = $dbh->selectrow_hashref($sth->sth('controller'), undef, ($mod, ($ns) x 2,));
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
 Controller already exists
 ===
 
-@{[$c->dumper( $r)]}
+@{[$c->dumper( $cn)]}
 TXT
   and return
-  if $r;
-  $r = $dbh->selectrow_hashref($sth->sth('new controller'), undef, ($ns, $mod));
+  if $cn;
+  my $n = $c->new_namespace($ns) if $ns;
+  $cn = $dbh->selectrow_hashref($sth->sth('new controller'), undef, ($mod, undef));
+  $dbh->selectrow_hashref($sth->sth('new ref'), undef, ($n->{id}, $cn->{id}))
+    if $n;
+  
+  $cn = $dbh->selectrow_hashref($sth->sth('controller'), undef, ($mod, ($ns) x 2,));
+  
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
 Success create new controller
 ===
 
-@{[$c->dumper( $r)]}
+@{[$c->dumper( $cn)]}
 TXT
+  return $cn;
+}
+
+sub new_namespace {
+  my $c = shift;
+  my $ns = shift ||  $c->stash('ns') || $c->param('ns') ||  $c->stash('namespace') || $c->param('namespace');
+  my $n = $dbh->selectrow_hashref($sth->sth('namespace'), undef, ($ns));
+  $c->render(format=>'txt', text=><<TXT)
+$pkg
+
+Namespace already exists
+===
+
+@{[$c->dumper( $n)]}
+TXT
+  and return $n
+  if $n;
+  $n = $dbh->selectrow_hashref($sth->sth('new namespace'), undef, ($ns, undef));
+  $c->render(format=>'txt', text=><<TXT);
+$pkg
+
+Success create new namespace
+===
+
+@{[$c->dumper( $n)]}
+TXT
+  return $n;
+  
 }
 
 sub actions {
