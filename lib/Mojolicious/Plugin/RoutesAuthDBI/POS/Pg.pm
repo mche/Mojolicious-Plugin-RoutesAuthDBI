@@ -85,13 +85,13 @@ L<DBIx::POS>
 
 =name cnt refs
 
-=desc check if ref between id1 and [IDs2] exists
+=desc check if ref between [IDs1] and [IDs2] exists
 
 =sql
 
   select count(*)
   from refs
-  where id1 = ? and id2 = ANY(?);
+  where id1 = any(?) and id2 = ANY(?);
 
 =item * B<access action>
 

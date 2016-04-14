@@ -116,7 +116,7 @@ Fetch records roles for session user. Must return arrayref of hashrefs roles.
 
 =item * B<access_explicit($self, $c, $id1, $id2)>
 
-Check access to route ($id1 - either route id or action id or controller id or namespace id) by roles ids ($id2 arrayref). Must return false for deny access or true - allow access.
+Check access to route ($id1 arrayref - either route id or action id or controller id or namespace id) by roles ids ($id2 arrayref). Must return false for deny access or true - allow access.
 
 =item * B<access_namespace($self, $c, $namespace, $id2)>
 
