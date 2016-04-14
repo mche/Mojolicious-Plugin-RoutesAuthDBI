@@ -25,10 +25,12 @@ sub startup {#
     admin=>{prefix=>'myadmin', trust=>'fooobaaar'},
   );
   my $r = $app->routes;
-  $r->route('/callback')->over(access=>{auth=>1, role=>'admin00'})->to(cb => sub {shift->render(format=>'txt', text=>'You have access!')})->name('foo');#'install#manual', namespace000=>'Mojolicious::Plugin::RoutesAuthDBI',
+  push @{ $r->namespaces() }, 'Mojolicious::Plugin::RoutesAuthDBI', 'Mojolicious::Plugin::RoutesAuthDBI::Test',;
+  
+  $r->route('/callback')->over(access=>{auth=>1, role=>'admin'})->to(cb => sub {shift->render(format=>'txt', text=>'You have access!')})->name('foo');#'install#manual', namespace000=>'Mojolicious::Plugin::RoutesAuthDBI',
   $r->route('/routes')->to(cb=>sub {my $c =shift; $c->render(format=>'txt', text=>$c->dumper($c->match->endpoint));});
   $r->route('/manual')->over(access=>{auth=>1,})->to('install#manual', namespace0=>0,)->name('man');#
-  $r->route('/тест1')->over(access=>{auth=>1,})->to('test#test1', namespace0=>'вася',);
+  $r->route('/test1')->over(access=>{auth=>1,})->to('test#test1', namespace0=>0,);
   
 }
 

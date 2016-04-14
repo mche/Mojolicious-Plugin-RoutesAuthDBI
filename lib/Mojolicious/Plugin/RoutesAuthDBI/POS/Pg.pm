@@ -103,43 +103,17 @@ L<DBIx::POS>
 
   select count(r.*)
   from
-    namespaces n
-    join refs rn on n.id=rn.id1
-    join controllers c on c.id=rn.id2
-    join refs rc on c.id=rc.id1
+    refs rc 
     join actions a on a.id=rc.id2
     join refs r on a.id=r.id1
-    join roles o on o.id=r.id2
+    ---join roles o on o.id=r.id2
   where
-    n.namespace=?
-    and c.controller=?
+    rc.id1=? ---controller id
     and a.action=?
-    and r.id2=any(?)
-    and coalesce(o.disable, 0::bit) <> 1::bit
+    and r.id2=any(?) --- roles ids
+    ---and coalesce(o.disable, 0::bit) <> 1::bit
   ;
 
-
-=item * B<access controller>
-
-=name access controller
-
-=desc доступ ко всем действиям по имени контроллера и пути
-
-=sql
-
-  select count(r.*)
-  from
-    namespaces n
-    join refs rc on n.id=rc.id1
-    join controllers c on c.id=rc.id2
-    join refs r on c.id=r.id1
-    join roles o on o.id=r.id2
-  where
-    n.namespace=?
-    and c.controller=?
-    and r.id2=any(?)
-    and coalesce(o.disable, 0::bit) <> 1::bit
-  ;
 
 =item * B<access namespace>
 
@@ -153,11 +127,11 @@ L<DBIx::POS>
   from 
     namespaces n
     join refs r on n.id=r.id1
-    join roles o on r.id2=o.id
+    ---join roles o on r.id2=o.id
   where
     n.namespace=?
-    and r.id2=any(?)
-    and coalesce(o.disable, 0::bit) <> 1::bit
+    and r.id2=any(?) --- roles ids
+    ---and coalesce(o.disable, 0::bit) <> 1::bit
   ;
 
 =item * B<access role>
@@ -277,8 +251,9 @@ L<DBIx::POS>
     left join namespaces n on n.id=r.id1
   
   where
-    (n.namespace=? or (? is null and n.id is null))
-    and c.controller=?
+    c.controller=?
+    and (n.namespace=? or (? is null and n.id is null))
+    
 
 =item * B<new controller> 
 

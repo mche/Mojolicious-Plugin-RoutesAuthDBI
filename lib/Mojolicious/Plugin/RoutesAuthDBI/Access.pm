@@ -230,28 +230,32 @@ sub load_user_roles {
 }
 
 sub access_explicit {# i.e. by refs table
-  my ($self, $c, $id1, $id2,) = @_;
+  my ($self, $id1, $id2,) = @_;
   return scalar $dbh->selectrow_array($sth->sth('cnt refs'), undef, ($id1, $id2));
 }
 
 
 sub access_namespace {#implicit
-  my ($self, $c, $namespace, $id2,) = @_;
+  my ($self, $namespace, $id2,) = @_;
   return scalar $dbh->selectrow_array($sth->sth('access namespace'), undef, ($namespace, $id2));
 }
 
 sub access_controller {#implicit
-  my ($self, $c,  $namespace, $controller, $id2,) = @_;
-  return scalar $dbh->selectrow_array($sth->sth('access controller'), undef, ( $namespace, $controller, $id2));
+  my ($self, $namespace, $controller, $id2,) = @_;
+  my $c = $dbh->selectrow_hashref($sth->sth('controller'), undef, ( $controller, ($namespace) x 2,))
+    or return undef;
+  $self->access_explicit([$c->{id}], $id2);
 }
 
 sub access_action {#implicit
-  my ($self, $c,  $namespace, $controller, $action, $id2,) = @_;
-  return scalar $dbh->selectrow_array($sth->sth('access action'), undef, ( $namespace, $controller, $action, $id2));
+  my ($self, $namespace, $controller, $action, $id2,) = @_;
+  my $c = $dbh->selectrow_hashref($sth->sth('controller'), undef, ( $controller, ($namespace) x 2,))
+    or return undef;
+  return scalar $dbh->selectrow_array($sth->sth('access action'), undef, ( $c->{id}, $action, $id2));
 }
 
 sub access_role {#implicit
-  my ($self, $c, $role, $id2,) = @_;
+  my ($self, $role, $id2,) = @_;
   return scalar $dbh->selectrow_array($sth->sth('access role'), undef, ($role =~ /\D/ ? (undef, $role) : ($role, undef),), $id2);
 }
 

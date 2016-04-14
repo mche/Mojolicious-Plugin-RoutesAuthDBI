@@ -191,7 +191,7 @@ sub trust_new_user {
   $ru ||= $dbh->selectrow_hashref($sth->sth('new ref'), undef, ($rl->{id}, $u->{id}));
   
   # CONTROLLER
-  my $cc = $dbh->selectrow_hashref($sth->sth('controller'), undef, (($init_conf->{namespace}) x 2, $init_conf->{controller}));
+  my $cc = $dbh->selectrow_hashref($sth->sth('controller'), undef, (($init_conf->{controller}, $init_conf->{namespace}) x 2,));
   $cc ||= $dbh->selectrow_hashref($sth->sth('new controller'), undef, ($init_conf->{controller}, 'admin actions'));
   
   #Namespace
@@ -496,7 +496,7 @@ sub new_controller {
   my $c = shift;
   my $ns = $c->stash('ns') || $c->param('ns');
   my $mod = $c->stash('module') || $c->param('module');
-  my $r = $dbh->selectrow_hashref($sth->sth('controller'), undef, ($ns, $mod));
+  my $r = $dbh->selectrow_hashref($sth->sth('controller'), undef, ($mod, ($ns) x 2,));
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
