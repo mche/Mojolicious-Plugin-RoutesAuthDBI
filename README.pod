@@ -4,9 +4,9 @@
 
 Доброго всем
 
-¡ ¡ ¡ ALL GLORY TO GLORIA ! ! !
-
 =head1 Mojolicious::Plugin::RoutesAuthDBI
+
+¡ ¡ ¡ ALL GLORY TO GLORIA ! ! !
 
 =head1 DESCRIPTION
 

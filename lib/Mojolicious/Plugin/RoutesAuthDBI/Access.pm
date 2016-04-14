@@ -15,6 +15,8 @@ my $sth;#sth hub
 
 =head1 Mojolicious::Plugin::RoutesAuthDBI::Access
 
+¡ ¡ ¡ ALL GLORY TO GLORIA ! ! !
+
 =head1 NAME
 
 Mojolicious::Plugin::RoutesAuthDBI::Access - Generation routes, authentication and controll access to routes trought sintax of ->over(...), see L<Mojolicious::Routes::Route#over>
@@ -23,37 +25,39 @@ Mojolicious::Plugin::RoutesAuthDBI::Access - Generation routes, authentication a
 
 See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagram.svg>
 
-=head2 Access controll flow
+=head1 Generate the routes from DB
 
 =over 4
 
-=item * B<routes> -> B<roles> -> B<users>
+=item * B<route> -> B<actions.action> <- B<controllers> [ <- B<namespaces>]
 
-=item * B<controllers> -> B<roles> -> B<users>
-
-Access to routes of any actions on controller.
-
-  $r->...->to('foo#bar')->over(access=>{auth=>1}); # check access to route by controller name Foo.pm.
-
-=item * B<roles>
-
-Access to route (which not in db) by role id|name
-
-  $r->...->over(access=>{auth=>1, role => <id|name>})->...
-
-=back
-
-=head2 Generate the routes from DBI
-
-=over 4
-
-=item * B<route> -> B<actions.action> <- B<controllers>
-
-Route to action method on controller
+Route to action method on controller. If no ref from namespace to controller then controller will find on $app->routes->namespaces as usual.
 
 =item * B<routes> -> B<actions.callback>
 
 Route to callback (no ref to controller, defined I<callback> column (as text "sub {...}") in db table B<actions>)
+
+=back
+
+=head2 Access controll flow
+
+There are two ways of flow: explicit and implicit.
+
+=over 4
+
+=item * Explicit access
+
+Check by tables ids: routes, actions, controllers, namespaces. Check refs to user roles ids.
+
+=item * Implicit access
+
+Access to routes by names: action, controller, namespace, role. This way used for db route to access namespace and for non db routes by syntax:
+
+  $r->...->to('foo#bar')->over(access=>{auth=>1}); 
+
+or
+
+  $r->...->over(access=>{auth=>1, role => <id|name>})->...; # access to route by role id|name
 
 =back
 
@@ -102,7 +106,7 @@ This callback invoke when request need auth route but access was failure. $route
 
 Make initialization of class vars: $dbh, $sth, $init_conf. Return $self object.
 
-=item * B<apply_route($self, $app, $r_hash)>
+=item * B<apply_route($app, $r_hash)>
 
 Insert to app->routes an hash item $r_hash. DB schema specific. Return new Mojolicious route.
 
@@ -110,27 +114,27 @@ Insert to app->routes an hash item $r_hash. DB schema specific. Return new Mojol
 
 Fetch records for apply_routes. Must return arrayref of hashrefs routes.
 
-=item * B<load_user_roles($self, $c, $uid)>
+=item * B<load_user_roles($user)>
 
-Fetch records roles for session user. Must return arrayref of hashrefs roles.
+Fetch records roles for session user.
 
-=item * B<access_explicit($self, $c, $id1, $id2)>
+=item * B<access_explicit($id1, $id2)>
 
 Check access to route ($id1 arrayref - either route id or action id or controller id or namespace id) by roles ids ($id2 arrayref). Must return false for deny access or true - allow access.
 
-=item * B<access_namespace($self, $c, $namespace, $id2)>
+=item * B<access_namespace($namespace, $id2)>
 
 Check implicit access to route by $namespace for user roles ids ($id2 arrayref). Must return false for deny access or true - allow access to all actions of this namespace.
 
-=item * B<access_controller($self, $c, $namespace, $controller, $id2)>
+=item * B<access_controller($namespace, $controller, $id2)>
 
 Check implicit access to route by $namespace and $controller for user roles ids ($id2 arrayref). Must return false for deny access or true - allow access to all actions of this controller.
 
-=item * B<access_action($self, $c, $namespace, $controller, $action, $id2)>
+=item * B<access_action($namespace, $controller, $action, $id2)>
 
 Check implicit access to route by $namespace and $controller and $action for user roles ids ($id2 arrayref). Must return false for deny access or true - allow access to this action.
 
-=item * B<access_role($self, $c, $role, $id2)>
+=item * B<access_role($role, $id2)>
 
 Check implicit access to route by $role (id|name) and user roles ids ($id2 arrayref). Must return false for deny access or true - allow access.
 

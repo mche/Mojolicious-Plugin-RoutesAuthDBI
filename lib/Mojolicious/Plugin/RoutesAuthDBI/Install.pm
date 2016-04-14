@@ -12,6 +12,10 @@ my $sql = DBIx::POS->instance(__FILE__);
 
 B<POD ERRORS> here is normal because DBIx::POS used.
 
+=head1 Mojolicious::Plugin::RoutesAuthDBI::Install
+
+¡ ¡ ¡ ALL GLORY TO GLORIA ! ! !
+
 =head1 NAME
 
 Mojolicious::Plugin::RoutesAuthDBI::Install - is a Mojolicious::Controller for installation instructions. DB schema (PostgreSQL) and sample app.

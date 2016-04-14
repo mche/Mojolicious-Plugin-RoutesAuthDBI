@@ -13,6 +13,8 @@ my $sth;#sth hub
 
 =head1 Mojolicious::Plugin::RoutesAuthDBI::Admin
 
+¡ ¡ ¡ ALL GLORY TO GLORIA ! ! !
+
 =head1 WARN
 
 Still incomplete!

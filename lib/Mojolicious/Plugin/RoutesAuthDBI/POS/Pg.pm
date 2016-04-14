@@ -6,7 +6,13 @@ __PACKAGE__->instance (__FILE__);
 
 =encoding utf8
 
+=head3 Warn
+
+B<POD ERRORS> here is normal because DBIx::POS used.
+
 =head1 Mojolicious::Plugin::RoutesAuthDBI::POS::Pg
+
+¡ ¡ ¡ ALL GLORY TO GLORIA ! ! !
 
 =head1 NAME
 

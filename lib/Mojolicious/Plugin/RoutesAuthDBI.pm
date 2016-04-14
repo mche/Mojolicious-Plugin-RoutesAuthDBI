@@ -2,7 +2,7 @@ package Mojolicious::Plugin::RoutesAuthDBI;
 use Mojo::Base 'Mojolicious::Plugin::Authentication';
 use Mojo::Loader qw(load_class);
 
-our $VERSION = '0.400';
+our $VERSION = '0.401';
 
 my $access;# 
 my $pkg = __PACKAGE__;
@@ -209,9 +209,9 @@ sub access {# add_condition
 
 Доброго всем
 
-¡ ¡ ¡ ALL GLORY TO GLORIA ! ! !
-
 =head1 Mojolicious::Plugin::RoutesAuthDBI
+
+¡ ¡ ¡ ALL GLORY TO GLORIA ! ! !
 
 =head1 NAME
 

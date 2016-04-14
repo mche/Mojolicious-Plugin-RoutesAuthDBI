@@ -7,6 +7,8 @@ use Mojo::Base -strict;
 
 =head1 Mojolicious::Plugin::RoutesAuthDBI::Sth
 
+¡ ¡ ¡ ALL GLORY TO GLORIA ! ! !
+
 =head1 NAME
 
 Mojolicious::Plugin::RoutesAuthDBI::Sth - is a DBI statements hub for L<Mojolicious::Plugin::RoutesAuthDBI> classes.
