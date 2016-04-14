@@ -14,7 +14,7 @@ Generate routes from sql-table, make authentication and make restrict access (au
 
 =head1 DB DESIGN DIAGRAM
 
-See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagram.svg>
+First of all see L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagram.svg> or L<PNG|http://i.imgur.com/CwqiB4f.png>
 
 
 =head1 COPYRIGHT

@@ -1,9 +1,16 @@
 package Mojolicious::Plugin::RoutesAuthDBI::Install;
 use Mojo::Base 'Mojolicious::Controller';
+use DBIx::POS;
+
+my $sql = DBIx::POS->instance(__FILE__);
 
 =pod
 
 =encoding utf8
+
+=head3 Warn
+
+B<POD ERRORS> here is normal because DBIx::POS used.
 
 =head1 NAME
 
@@ -135,14 +142,31 @@ __PACKAGE__->new()->start();
 TXT
 }
 
-sub schema {
-  my $c = shift;
-  #~ $c->render(format=>'txt', text => join '', <Mojolicious::Plugin::RoutesAuthDBI::Install::DATA>);
-  $c->render(format=>'txt', text => <<TXT);
+=pod
 
-CREATE SEQUENCE ID;-- one sequence for all tables id
+=head1 DB design
 
-CREATE TABLE routes (
+=over 4
+
+=item * B<Sequence>
+
+=name schema.sequence
+
+=desc
+
+=sql
+
+  CREATE SEQUENCE ID;-- one sequence for all tables id
+
+=item * B<Routes>
+
+=name schema.routes
+
+=desc
+
+=sql
+
+  CREATE TABLE routes (
     id integer default nextval('ID'::regclass) not null primary key,
     ts timestamp without time zone default now() not null,
     request character varying not null,
@@ -151,53 +175,142 @@ CREATE TABLE routes (
     auth bit(1) null,
     disable bit(1) null,
     order_by int null
-);
+  );
 
-create table namespaces (
+=item * B<Namespaces>
+
+=name schema.namespaces
+
+=desc
+
+=sql
+
+  create table namespaces (
     id integer default nextval('ID'::regclass) not null primary key,
     ts timestamp without time zone default now() not null,
     namespace character varying not null unique,
     descr text null
-);
+  );
 
-create table controllers (
+=item * B<Controllers>
+
+=name schema.controllers
+
+=desc
+
+=sql
+
+  create table controllers (
     id integer default nextval('ID'::regclass) not null primary key,
     ts timestamp without time zone default now() not null,
     controller character varying not null,
     descr text null
-);
+  );
 
-create table actions (
+=item * B<Actions>
+
+=name schema.actions
+
+=desc
+
+=sql
+
+  create table actions (
     id integer default nextval('ID'::regclass) not null primary key,
     ts timestamp without time zone default now() not null,
     action character varying not null,
     callback text null,
     descr text null
-);
+  );
 
-create table users (
+=item * B<Users>
+
+=name schema.users
+
+=desc
+
+=sql
+
+  create table users (
     id int default nextval('ID'::regclass) not null  primary key,
     ts timestamp without time zone default now() not null,
     login varchar not null unique,
     pass varchar not null,
     disable bit(1)
-);
-    
-create table roles (
+  );
+
+=item * B<Roles>
+
+=name schema.roles
+
+=desc
+
+=sql
+
+  create table roles (
     id int default nextval('ID'::regclass) not null  primary key,
     ts timestamp without time zone default now() not null,
     name varchar not null unique,
     disable bit(1)
-);
+  );
 
-create table refs (
+=item * B<Refs>
+
+=name schema.refs
+
+=desc
+
+=sql
+
+  create table refs (
     id int default nextval('ID'::regclass) not null  primary key,
     ts timestamp without time zone default now() not null,
     id1 int not null,
     id2 int not null,
     unique(id1, id2)
-);
-create index on refs (id2);
+  );
+  create index on refs (id2);
+
+=back
+
+=head1 Drop schema
+
+=name schema.drop
+
+=desc
+
+=sql
+
+    drop table refs;
+    drop table users;
+    drop table roles;
+    drop table routes;
+    drop table controllers;
+    drop table actions;
+    drop table namespaces;
+    drop sequence ID;
+
+=cut
+
+sub schema {
+  my $c = shift;
+  #~ $c->render(format=>'txt', text => join '', <Mojolicious::Plugin::RoutesAuthDBI::Install::DATA>);
+  $c->render(format=>'txt', text => <<TXT);
+$sql->{'schema.sequence'}
+
+$sql->{'schema.routes'}
+
+$sql->{'schema.namespaces'}
+
+$sql->{'schema.controllers'}
+
+$sql->{'schema.actions'}
+
+$sql->{'schema.users'}
+
+$sql->{'schema.roles'}
+
+$sql->{'schema.refs'}
 
 TXT
 }
@@ -206,15 +319,7 @@ sub schema_drop {
   my $c = shift;
   
   $c->render(format=>'txt', text => <<TXT);
-
-drop table refs;
-drop table users;
-drop table roles;
-drop table routes;
-drop table controllers;
-drop table actions;
-drop table namespaces;
-drop sequence ID;
+$sql->{'schema.drop'}
 
 TXT
 }

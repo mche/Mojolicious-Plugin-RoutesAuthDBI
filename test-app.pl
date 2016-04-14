@@ -29,7 +29,8 @@ sub startup {#
   
   $r->route('/callback')->over(access=>{auth=>1, role=>'admin'})->to(cb => sub {shift->render(format=>'txt', text=>'You have access!')})->name('foo');#'install#manual', namespace000=>'Mojolicious::Plugin::RoutesAuthDBI',
   $r->route('/routes')->to(cb=>sub {my $c =shift; $c->render(format=>'txt', text=>$c->dumper($c->match->endpoint));});
-  $r->route('/manual')->over(access=>{auth=>1,})->to('install#manual', namespace0=>0,)->name('man');#
+  $r->route('/man')->over(access=>{auth=>0,})->to('install#manual', namespace=>'Mojolicious::Plugin::RoutesAuthDBI',);#
+  $r->route('/schema')->over(access=>{auth=>0,})->to('install#schema', namespace=>'Mojolicious::Plugin::RoutesAuthDBI',);#
   $r->route('/test1')->over(access=>{auth=>1,})->to('test#test1', );
   
 }
