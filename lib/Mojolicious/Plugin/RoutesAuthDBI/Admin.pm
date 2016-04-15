@@ -101,8 +101,7 @@ sub init_class {# from plugin! init Class vars
   $c->{trust} =~ s/\W/-/g;
 	$c->{dbh} ||= $dbh ||=  $args{dbh};
 	$dbh ||= $c->{dbh};
-  $c->{pos} ||= $args{pos} || $c->{namespace}.'::POS::Pg';
-	$c->{sth} ||= $sth ||= $args{sth} ||= (bless [$dbh, {}], $c->{namespace}.'::Sth')->init(pos => $c->{pos});#sth cache
+	$c->{sth} ||= $sth ||= $args{sth} ||= (bless [$dbh, {}], $c->{namespace}.'::Sth')->init(pos => $c->{pos} || 'Pg.pm');#sth cache
 	$sth ||= $c->{sth};
     
 	return $c;

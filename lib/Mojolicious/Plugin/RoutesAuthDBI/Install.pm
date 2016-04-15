@@ -2,7 +2,7 @@ package Mojolicious::Plugin::RoutesAuthDBI::Install;
 use Mojo::Base 'Mojolicious::Controller';
 use DBIx::POS;
 
-my $sql = DBIx::POS->instance(__FILE__);
+my $sql = DBIx::POS->new1(__FILE__, 'utf8');
 
 =pod
 
@@ -156,7 +156,7 @@ TXT
 
 =name schema.sequence
 
-=desc
+=desc последовательность
 
 =sql
 
@@ -277,29 +277,19 @@ TXT
 
 =back
 
-=head1 Drop schema
-
-=name schema.drop
-
-=desc
-
-=sql
-
-    drop table refs;
-    drop table users;
-    drop table roles;
-    drop table routes;
-    drop table controllers;
-    drop table actions;
-    drop table namespaces;
-    drop sequence ID;
-
 =cut
+
 
 sub schema {
   my $c = shift;
   #~ $c->render(format=>'txt', text => join '', <Mojolicious::Plugin::RoutesAuthDBI::Install::DATA>);
   $c->render(format=>'txt', text => <<TXT);
+@{[ $c->dumper($sql)]}
+
+
+@{[map($_, grep($_ eq  'схема', keys %$sql))]}
+$sql->{'схема'}
+
 $sql->{'schema.sequence'}
 
 $sql->{'schema.routes'}
@@ -318,6 +308,35 @@ $sql->{'schema.refs'}
 
 TXT
 }
+
+=pod
+
+=head1 Drop schema
+
+=name schema.drop
+
+=desc
+
+=sql
+
+    drop table refs;
+    drop table users;
+    drop table roles;
+    drop table routes;
+    drop table controllers;
+    drop table actions;
+    drop table namespaces;
+    drop sequence ID;
+
+=name схема
+
+=desc
+
+=sql
+
+    123
+
+=cut
 
 sub schema_drop {
   my $c = shift;

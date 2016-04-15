@@ -10,11 +10,11 @@
 
 =head1 DESCRIPTION
 
-Generate routes from sql-table, make authentication and make restrict access (authorization) to route with users/roles tables. Plugin makes an auth operations throught the plugin L<Mojolicious::Plugin::Authentication> on which is based.
+From DBI sql-tables does generate routes, make authentication and make restrict access (authorization) to request. Plugin makes an auth operations throught the plugin L<Mojolicious::Plugin::Authentication> on which is based.
 
 =head1 DB DESIGN DIAGRAM
 
-First of all see L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagram.svg> or L<PNG|http://i.imgur.com/CwqiB4f.png>
+First of all you will see L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagram.svg> or L<PNG|http://i.imgur.com/CwqiB4f.png>
 
 
 =head1 COPYRIGHT

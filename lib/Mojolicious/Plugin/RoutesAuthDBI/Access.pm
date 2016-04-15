@@ -53,7 +53,7 @@ Check by tables ids: routes, actions, controllers, namespaces. Check refs to use
 
 Access to routes by names: action, controller, namespace, role. This way used for db route to access namespace and for non db routes by syntax:
 
-  $r->...->to('foo#bar')->over(access=>{auth=>1}); 
+  $r->route('/foo')->...->to('foo#bar')->over(access=>{auth=>1})->...; 
 
 or
 
@@ -163,8 +163,7 @@ sub init_class {# from plugin! init Class vars
   $init_conf ||= $c;
   $c->{dbh} ||= $dbh ||=  $args{dbh};
   $dbh ||= $c->{dbh};
-  $c->{pos} ||= $args{pos} || $c->{namespace}.'::POS::Pg';
-  $c->{sth} ||= $sth ||= $args{sth} ||=( bless [$dbh, {}], $c->{namespace}.'::Sth' )->init(pos=>$c->{pos});#sth cache
+  $c->{sth} ||= $sth ||= $args{sth} ||=( bless [$dbh, {}], $c->{namespace}.'::Sth' )->init(pos=>$c->{pos} || $args{pos} || 'Pg.pm');#sth cache
   $sth ||= $c->{sth};
   return $c;
 }

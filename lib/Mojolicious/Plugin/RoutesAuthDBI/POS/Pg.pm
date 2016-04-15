@@ -1,6 +1,8 @@
 package Mojolicious::Plugin::RoutesAuthDBI::POS::Pg;
 use Mojo::Base 'DBIx::POS';
-__PACKAGE__->instance (__FILE__);
+#~ use Mojo::Util qw(dumper);
+#~ warn dumper(
+#~ __PACKAGE__->instance (__FILE__);
 
 =pod
 
@@ -378,12 +380,13 @@ L<DBIx::POS>
 
 =item * B<> 
 
-=name
+=name тест
 
 =desc
 
 =sql
 
+  ыудусе * акщь тест!ж
 
 =back
 

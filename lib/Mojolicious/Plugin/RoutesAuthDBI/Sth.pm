@@ -1,5 +1,6 @@
 package Mojolicious::Plugin::RoutesAuthDBI::Sth;
 use Mojo::Base -strict;
+use DBIx::POS;
 
 =pod
 
@@ -33,14 +34,14 @@ my $dbh;
 my $sth;
 
 our $sql;# = Mojolicious::Plugin::RoutesAuthDBI::POS::Pg->instance;
+my @path = split(/\//, __FILE__ );
 
 sub init {
   my $self = shift;
   my %arg = @_;
-  if ($arg{pos}) {
-    require ($arg{pos} =~ s/::/\//gr) . '.pm';
-    $sql = $arg{pos}->instance;
-  }
+  $sql = DBIx::POS->new1(join('/', @path[0 .. $#path -1], 'POS', '').$arg{pos}, 'utf8') #$arg{pos} =~ s/::/\//gr . '.pm'
+    if $arg{pos};
+  #~ $sql = Mojolicious::Plugin::RoutesAuthDBI::POS::Pg->instance;
   return $self;
 }
 

@@ -54,6 +54,7 @@ sub register {
     $conf->{admin}{namespace} ||= $pkg;
     $conf->{admin}{controller} ||= 'Admin';
     $conf->{admin}{dbh} = $conf->{dbh};
+    $conf->{admin}{sth} = $access->{sth};
     $conf->{admin}{prefix} ||= lc($conf->{admin}{controller});
     $conf->{admin}{trust} ||= $app->secrets->[0];
     my $admin ||= $self->admin_controller($app, $conf->{admin});
@@ -215,11 +216,11 @@ sub access {# add_condition
 
 =head1 NAME
 
-Mojolicious::Plugin::RoutesAuthDBI - Generate routes from sql-table, make authentication and make restrict access (authorization) to route with users/roles tables. Plugin makes an auth operations throught the plugin L<Mojolicious::Plugin::Authentication> on which is based.
+Mojolicious::Plugin::RoutesAuthDBI - from DBI sql-tables does generate routes, make authentication and make restrict access (authorization) to request. Plugin makes an auth operations throught the plugin L<Mojolicious::Plugin::Authentication> on which is based.
 
 =head1 DB DESIGN DIAGRAM
 
-First of all see L<SVG|https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagram.svg>  or L<PNG|http://i.imgur.com/CwqiB4f.png>
+First of all you will see L<SVG|https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagram.svg>  or L<PNG|http://i.imgur.com/CwqiB4f.png>
 
 =head1 SYNOPSIS
 
