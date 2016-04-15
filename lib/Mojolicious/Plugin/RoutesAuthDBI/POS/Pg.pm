@@ -1,5 +1,5 @@
 package Mojolicious::Plugin::RoutesAuthDBI::POS::Pg;
-use Mojo::Base 'DBIx::POS';
+#~ use Mojo::Base 'DBIx::POS';
 #~ use Mojo::Util qw(dumper);
 #~ warn dumper(
 #~ __PACKAGE__->instance (__FILE__);

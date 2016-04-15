@@ -2,7 +2,7 @@ package Mojolicious::Plugin::RoutesAuthDBI::Install;
 use Mojo::Base 'Mojolicious::Controller';
 use DBIx::POS;
 
-my $sql = DBIx::POS->new1(__FILE__, 'utf8');
+my $sql = DBIx::POS->process(__FILE__, 'utf8');
 
 =pod
 
@@ -284,11 +284,7 @@ sub schema {
   my $c = shift;
   #~ $c->render(format=>'txt', text => join '', <Mojolicious::Plugin::RoutesAuthDBI::Install::DATA>);
   $c->render(format=>'txt', text => <<TXT);
-@{[ $c->dumper($sql)]}
-
-
-@{[map($_, grep($_ eq  'схема', keys %$sql))]}
-$sql->{'схема'}
+---@{[$sql->template('схема', 'foo'=>'bar',)]}
 
 $sql->{'schema.sequence'}
 

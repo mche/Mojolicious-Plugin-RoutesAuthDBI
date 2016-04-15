@@ -39,7 +39,7 @@ my @path = split(/\//, __FILE__ );
 sub init {
   my $self = shift;
   my %arg = @_;
-  $sql = DBIx::POS->new1(join('/', @path[0 .. $#path -1], 'POS', '').$arg{pos}, 'utf8') #$arg{pos} =~ s/::/\//gr . '.pm'
+  $sql = DBIx::POS->process(join('/', @path[0 .. $#path -1], 'POS', '').$arg{pos}, 'utf8') #$arg{pos} =~ s/::/\//gr . '.pm'
     if $arg{pos};
   #~ $sql = Mojolicious::Plugin::RoutesAuthDBI::POS::Pg->instance;
   return $self;
@@ -49,7 +49,7 @@ sub sth {
   my ($db, $st) = @{ shift() };
   my $name = shift;
   $dbh ||= $db or die "Not defined dbh a DBI handle"; # init dbh once
-  warn "Initiate SQL cache $st" unless $sth;
+  #~ warn "Initiate Sth cache $st" unless $sth;
   $sth ||= $st; # init cache once
   $sth ||= {};
   return $sth unless $name;

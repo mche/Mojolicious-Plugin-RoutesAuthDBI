@@ -18,7 +18,7 @@ my %sql;
 # What command we're looking at
 my $state;
 
-sub new1 {
+sub process {
     #~ use utf8::all;
     my $class = shift;
     my $file = shift;
@@ -32,6 +32,12 @@ sub new1 {
     my $new = { %sql };
     %sql = ();
     bless $new, $class;
+}
+
+sub template {
+    my ($self, $key, %arg) = @_;
+    return %arg;
+    
 }
 
 # Does the work of creating a new instance
