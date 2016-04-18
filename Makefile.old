@@ -19,7 +19,7 @@
 #     MIN_PERL_VERSION => q[5.014]
 #     NAME => q[Mojolicious::Plugin::RoutesAuthDBI]
 #     PL_FILES => {  }
-#     PREREQ_PM => { DBI=>q[1.6], DBIx::POS=>q[0.03], Mojolicious=>q[6], Mojolicious::Plugin::Authentication=>q[1.29], Test::More=>q[0] }
+#     PREREQ_PM => { DBI=>q[1.6], DBIx::POS::Template=>q[0.00002], Mojolicious=>q[6], Mojolicious::Plugin::Authentication=>q[1.29], Test::More=>q[0] }
 #     TEST_REQUIRES => {  }
 #     VERSION_FROM => q[lib/Mojolicious/Plugin/RoutesAuthDBI.pm]
 #     dist => { COMPRESS=>q[gzip -9f], SUFFIX=>q[gz] }
@@ -61,11 +61,11 @@ DIRFILESEP = /
 DFSEP = $(DIRFILESEP)
 NAME = Mojolicious::Plugin::RoutesAuthDBI
 NAME_SYM = Mojolicious_Plugin_RoutesAuthDBI
-VERSION = 0.401
+VERSION = 0.410
 VERSION_MACRO = VERSION
-VERSION_SYM = 0_401
+VERSION_SYM = 0_410
 DEFINE_VERSION = -D$(VERSION_MACRO)=\"$(VERSION)\"
-XS_VERSION = 0.401
+XS_VERSION = 0.410
 XS_VERSION_MACRO = XS_VERSION
 XS_DEFINE_VERSION = -D$(XS_VERSION_MACRO)=\"$(XS_VERSION)\"
 INST_ARCHLIB = blib/arch
@@ -167,13 +167,15 @@ H_FILES  =
 MAN1PODS = 
 MAN3PODS = Config.pm \
 	README.pod \
+	lib/DBIx/POS/Template.pm \
 	lib/Mojolicious/Plugin/EDumper.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Access.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Admin.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Install.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/POS/Pg.pm \
-	lib/Mojolicious/Plugin/RoutesAuthDBI/Sth.pm
+	lib/Mojolicious/Plugin/RoutesAuthDBI/Sth.pm \
+	test-pod.pl
 
 # Where is the Config information that we are using/depend on
 CONFIGDEP = $(PERL_ARCHLIBDEP)$(DFSEP)Config.pm $(PERL_INCDEP)$(DFSEP)config.h
@@ -198,7 +200,7 @@ PERL_ARCHIVE_AFTER =
 
 TO_INST_PM = Config.pm \
 	README.pod \
-	Template.pm \
+	lib/DBIx/POS/Template.pm \
 	lib/Mojolicious/Plugin/ConfigApply.pm \
 	lib/Mojolicious/Plugin/EDumper.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI.pm \
@@ -209,14 +211,14 @@ TO_INST_PM = Config.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Sth.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Test/Test.pm \
 	test-app.pl \
-	test-pos.pl
+	test-pod.pl
 
 PM_TO_BLIB = Config.pm \
 	$(INST_LIB)/Mojolicious/Plugin/Config.pm \
 	README.pod \
 	$(INST_LIB)/Mojolicious/Plugin/README.pod \
-	Template.pm \
-	$(INST_LIB)/Mojolicious/Plugin/Template.pm \
+	lib/DBIx/POS/Template.pm \
+	blib/lib/DBIx/POS/Template.pm \
 	lib/Mojolicious/Plugin/ConfigApply.pm \
 	blib/lib/Mojolicious/Plugin/ConfigApply.pm \
 	lib/Mojolicious/Plugin/EDumper.pm \
@@ -237,8 +239,8 @@ PM_TO_BLIB = Config.pm \
 	blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Test/Test.pm \
 	test-app.pl \
 	$(INST_LIB)/Mojolicious/Plugin/test-app.pl \
-	test-pos.pl \
-	$(INST_LIB)/Mojolicious/Plugin/test-pos.pl
+	test-pod.pl \
+	$(INST_LIB)/Mojolicious/Plugin/test-pod.pl
 
 
 # --- MakeMaker platform_constants section:
@@ -308,7 +310,7 @@ RCS_LABEL = rcs -Nv$(VERSION_SYM): -q
 DIST_CP = best
 DIST_DEFAULT = tardist
 DISTNAME = Mojolicious-Plugin-RoutesAuthDBI
-DISTVNAME = Mojolicious-Plugin-RoutesAuthDBI-0.401
+DISTVNAME = Mojolicious-Plugin-RoutesAuthDBI-0.410
 
 
 # --- MakeMaker macro section:
@@ -464,23 +466,27 @@ POD2MAN = $(POD2MAN_EXE)
 manifypods : pure_all  \
 	Config.pm \
 	README.pod \
+	lib/DBIx/POS/Template.pm \
 	lib/Mojolicious/Plugin/EDumper.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Access.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Admin.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Install.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/POS/Pg.pm \
-	lib/Mojolicious/Plugin/RoutesAuthDBI/Sth.pm
+	lib/Mojolicious/Plugin/RoutesAuthDBI/Sth.pm \
+	test-pod.pl
 	$(NOECHO) $(POD2MAN) --section=3 --perm_rw=$(PERM_RW) -u \
 	  Config.pm $(INST_MAN3DIR)/Mojolicious::Plugin::Config.$(MAN3EXT) \
 	  README.pod $(INST_MAN3DIR)/Mojolicious::Plugin::README.$(MAN3EXT) \
+	  lib/DBIx/POS/Template.pm $(INST_MAN3DIR)/DBIx::POS::Template.$(MAN3EXT) \
 	  lib/Mojolicious/Plugin/EDumper.pm $(INST_MAN3DIR)/Mojolicious::Plugin::EDumper.$(MAN3EXT) \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI.pm $(INST_MAN3DIR)/Mojolicious::Plugin::RoutesAuthDBI.$(MAN3EXT) \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/Access.pm $(INST_MAN3DIR)/Mojolicious::Plugin::RoutesAuthDBI::Access.$(MAN3EXT) \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/Admin.pm $(INST_MAN3DIR)/Mojolicious::Plugin::RoutesAuthDBI::Admin.$(MAN3EXT) \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/Install.pm $(INST_MAN3DIR)/Mojolicious::Plugin::RoutesAuthDBI::Install.$(MAN3EXT) \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/POS/Pg.pm $(INST_MAN3DIR)/Mojolicious::Plugin::RoutesAuthDBI::POS::Pg.$(MAN3EXT) \
-	  lib/Mojolicious/Plugin/RoutesAuthDBI/Sth.pm $(INST_MAN3DIR)/Mojolicious::Plugin::RoutesAuthDBI::Sth.$(MAN3EXT) 
+	  lib/Mojolicious/Plugin/RoutesAuthDBI/Sth.pm $(INST_MAN3DIR)/Mojolicious::Plugin::RoutesAuthDBI::Sth.$(MAN3EXT) \
+	  test-pod.pl $(INST_MAN3DIR)/Mojolicious::Plugin::test-pod.$(MAN3EXT) 
 
 
 
@@ -538,7 +544,7 @@ realclean_subdirs :
 # Delete temporary files (via clean) and also delete dist files
 realclean purge ::  clean realclean_subdirs
 	- $(RM_F) \
-	  $(FIRST_MAKEFILE) $(MAKEFILE_OLD) 
+	  $(MAKEFILE_OLD) $(FIRST_MAKEFILE) 
 	- $(RM_RF) \
 	  $(DISTVNAME) 
 
@@ -547,7 +553,7 @@ realclean purge ::  clean realclean_subdirs
 metafile : create_distdir
 	$(NOECHO) $(ECHO) Generating META.yml
 	$(NOECHO) $(ECHO) '---' > META_new.yml
-	$(NOECHO) $(ECHO) 'abstract: '\''Generate routes from sql-table, make authentication and make restrict access (authorization) to route with users/roles tables. Plugin makes an auth operations throught the plugin L<Mojolicious::Plugin::Authentication> on which is based.'\''' >> META_new.yml
+	$(NOECHO) $(ECHO) 'abstract: '\''from DBI sql-tables does generate routes, make authentication and make restrict access (authorization) to request. Plugin makes an auth operations throught the plugin L<Mojolicious::Plugin::Authentication> on which is based.'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) 'author:' >> META_new.yml
 	$(NOECHO) $(ECHO) '  - '\''Mikhail Che <mche@cpan.org>'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) 'build_requires:' >> META_new.yml
@@ -567,16 +573,16 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '    - inc' >> META_new.yml
 	$(NOECHO) $(ECHO) 'requires:' >> META_new.yml
 	$(NOECHO) $(ECHO) '  DBI: '\''1.6'\''' >> META_new.yml
-	$(NOECHO) $(ECHO) '  DBIx::POS: '\''0.03'\''' >> META_new.yml
+	$(NOECHO) $(ECHO) '  DBIx::POS::Template: '\''0.00002'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Mojolicious: '\''6'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Mojolicious::Plugin::Authentication: '\''1.29'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  perl: '\''5.014'\''' >> META_new.yml
-	$(NOECHO) $(ECHO) 'version: '\''0.401'\''' >> META_new.yml
+	$(NOECHO) $(ECHO) 'version: '\''0.410'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) 'x_serialization_backend: '\''CPAN::Meta::YAML version 0.018'\''' >> META_new.yml
 	-$(NOECHO) $(MV) META_new.yml $(DISTVNAME)/META.yml
 	$(NOECHO) $(ECHO) Generating META.json
 	$(NOECHO) $(ECHO) '{' > META_new.json
-	$(NOECHO) $(ECHO) '   "abstract" : "Generate routes from sql-table, make authentication and make restrict access (authorization) to route with users/roles tables. Plugin makes an auth operations throught the plugin L<Mojolicious::Plugin::Authentication> on which is based.",' >> META_new.json
+	$(NOECHO) $(ECHO) '   "abstract" : "from DBI sql-tables does generate routes, make authentication and make restrict access (authorization) to request. Plugin makes an auth operations throught the plugin L<Mojolicious::Plugin::Authentication> on which is based.",' >> META_new.json
 	$(NOECHO) $(ECHO) '   "author" : [' >> META_new.json
 	$(NOECHO) $(ECHO) '      "Mikhail Che <mche@cpan.org>"' >> META_new.json
 	$(NOECHO) $(ECHO) '   ],' >> META_new.json
@@ -610,7 +616,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '      "runtime" : {' >> META_new.json
 	$(NOECHO) $(ECHO) '         "requires" : {' >> META_new.json
 	$(NOECHO) $(ECHO) '            "DBI" : "1.6",' >> META_new.json
-	$(NOECHO) $(ECHO) '            "DBIx::POS" : "0.03",' >> META_new.json
+	$(NOECHO) $(ECHO) '            "DBIx::POS::Template" : "0.00002",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "Mojolicious" : "6",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "Mojolicious::Plugin::Authentication" : "1.29",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "perl" : "5.014"' >> META_new.json
@@ -618,7 +624,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '      }' >> META_new.json
 	$(NOECHO) $(ECHO) '   },' >> META_new.json
 	$(NOECHO) $(ECHO) '   "release_status" : "stable",' >> META_new.json
-	$(NOECHO) $(ECHO) '   "version" : "0.401",' >> META_new.json
+	$(NOECHO) $(ECHO) '   "version" : "0.410",' >> META_new.json
 	$(NOECHO) $(ECHO) '   "x_serialization_backend" : "JSON::PP version 2.27300"' >> META_new.json
 	$(NOECHO) $(ECHO) '}' >> META_new.json
 	-$(NOECHO) $(MV) META_new.json $(DISTVNAME)/META.json
@@ -921,12 +927,12 @@ testdb_static :: testdb_dynamic
 # Creates a PPD (Perl Package Description) for a binary distribution.
 ppd :
 	$(NOECHO) $(ECHO) '<SOFTPKG NAME="$(DISTNAME)" VERSION="$(VERSION)">' > $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '    <ABSTRACT>Generate routes from sql-table, make authentication and make restrict access (authorization) to route with users/roles tables. Plugin makes an auth operations throught the plugin L&lt;Mojolicious::Plugin::Authentication&gt; on which is based.</ABSTRACT>' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '    <ABSTRACT>from DBI sql-tables does generate routes, make authentication and make restrict access (authorization) to request. Plugin makes an auth operations throught the plugin L&lt;Mojolicious::Plugin::Authentication&gt; on which is based.</ABSTRACT>' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '    <AUTHOR>Mikhail Che &lt;mche@cpan.org&gt;</AUTHOR>' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '    <IMPLEMENTATION>' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <PERLCORE VERSION="5,014,0,0" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="DBI::" VERSION="1.6" />' >> $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '        <REQUIRE NAME="DBIx::POS" VERSION="0.03" />' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '        <REQUIRE NAME="DBIx::POS::Template" VERSION="0.00002" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Mojolicious::" VERSION="6" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Mojolicious::Plugin::Authentication" VERSION="1.29" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <ARCHITECTURE NAME="x86_64-linux-5.18" />' >> $(DISTNAME).ppd
@@ -941,7 +947,7 @@ pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_LIB)/auto'\'', q[$(PM_FILTER)], '\''$(PERM_DIR)'\'')' -- \
 	  Config.pm $(INST_LIB)/Mojolicious/Plugin/Config.pm \
 	  README.pod $(INST_LIB)/Mojolicious/Plugin/README.pod \
-	  Template.pm $(INST_LIB)/Mojolicious/Plugin/Template.pm \
+	  lib/DBIx/POS/Template.pm blib/lib/DBIx/POS/Template.pm \
 	  lib/Mojolicious/Plugin/ConfigApply.pm blib/lib/Mojolicious/Plugin/ConfigApply.pm \
 	  lib/Mojolicious/Plugin/EDumper.pm blib/lib/Mojolicious/Plugin/EDumper.pm \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI.pm blib/lib/Mojolicious/Plugin/RoutesAuthDBI.pm \
@@ -952,7 +958,7 @@ pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/Sth.pm blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Sth.pm \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/Test/Test.pm blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Test/Test.pm \
 	  test-app.pl $(INST_LIB)/Mojolicious/Plugin/test-app.pl \
-	  test-pos.pl $(INST_LIB)/Mojolicious/Plugin/test-pos.pl 
+	  test-pod.pl $(INST_LIB)/Mojolicious/Plugin/test-pod.pl 
 	$(NOECHO) $(TOUCH) pm_to_blib
 
 
