@@ -1,6 +1,6 @@
 package Mojolicious::Plugin::RoutesAuthDBI::Sth;
 use Mojo::Base -strict;
-use DBIx::POS;
+use DBIx::POS::Template;
 
 =pod
 
@@ -26,35 +26,35 @@ Singleton dictionary of DBI statements.
 
 =head1 SEE ALSO
 
-L<DBIx::POS>
+L<DBIx::POS::Template>
 
 =cut
 
 my $dbh;
 my $sth;
 
-our $sql;# = Mojolicious::Plugin::RoutesAuthDBI::POS::Pg->instance;
+our $sql;#
 my @path = split(/\//, __FILE__ );
 
 sub init {
   my $self = shift;
   my %arg = @_;
-  $sql = DBIx::POS->process(join('/', @path[0 .. $#path -1], 'POS', '').$arg{pos}, 'utf8') #$arg{pos} =~ s/::/\//gr . '.pm'
+  $sql = DBIx::POS::Template->new(join('/', @path[0 .. $#path -1], 'POS', $arg{pos}), enc=>'utf8') #$arg{pos} =~ s/::/\//gr . '.pm'
     if $arg{pos};
-  #~ $sql = Mojolicious::Plugin::RoutesAuthDBI::POS::Pg->instance;
   return $self;
 }
 
 sub sth {
   my ($db, $st) = @{ shift() };
   my $name = shift;
+  my %arg = @_;
   $dbh ||= $db or die "Not defined dbh a DBI handle"; # init dbh once
   #~ warn "Initiate Sth cache $st" unless $sth;
   $sth ||= $st; # init cache once
   $sth ||= {};
   return $sth unless $name;
   die "No such name[$name] in SQL dict!" unless $sql->{$name};
-  $sth->{$name} ||= $dbh->prepare($sql->{$name});
+  $sth->{$name} ||= $dbh->prepare(scalar %arg ? $sql->{$name}->template(%arg) : $sql->{$name}->sql);
 }
 
 1;

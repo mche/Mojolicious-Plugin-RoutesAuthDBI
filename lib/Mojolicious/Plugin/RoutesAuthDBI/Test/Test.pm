@@ -1,5 +1,5 @@
-package Test::Test;
-#Mojolicious::Plugin::RoutesAuthDBI::
+package Mojolicious::Plugin::RoutesAuthDBI::Test::Test;
+#
 use Mojo::Base 'Mojolicious::Controller';
 
 my $pkg = __PACKAGE__;

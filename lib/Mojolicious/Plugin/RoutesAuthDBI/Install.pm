@@ -1,8 +1,8 @@
 package Mojolicious::Plugin::RoutesAuthDBI::Install;
 use Mojo::Base 'Mojolicious::Controller';
-use DBIx::POS;
+use DBIx::POS::Template;
 
-my $sql = DBIx::POS->process(__FILE__, 'utf8');
+my $sql = DBIx::POS::Template->new(__FILE__, enc => 'utf8');
 
 =pod
 
@@ -10,7 +10,7 @@ my $sql = DBIx::POS->process(__FILE__, 'utf8');
 
 =head3 Warn
 
-B<POD ERRORS> here is normal because DBIx::POS used.
+B<POD ERRORS> here is normal because DBIx::POS::Template used.
 
 =head1 Mojolicious::Plugin::RoutesAuthDBI::Install
 
@@ -284,7 +284,6 @@ sub schema {
   my $c = shift;
   #~ $c->render(format=>'txt', text => join '', <Mojolicious::Plugin::RoutesAuthDBI::Install::DATA>);
   $c->render(format=>'txt', text => <<TXT);
----@{[$sql->template('схема', 'foo'=>'bar',)]}
 
 $sql->{'schema.sequence'}
 

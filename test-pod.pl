@@ -1,50 +1,35 @@
 use strict;
-use utf8;
-use Mojo::Util qw(dumper);
-my $sql = Foo->instance(__FILE__);
+use utf8::all;
+use lib './lib';
+use DBIx::POS::Template;
 
-print dumper(keys %$sql);
+# separate object
+my $pos = DBIx::POS::Template->instance(__FILE__, enc=>'utf8');
+my $pos2 = DBIx::POS::Template->new('./lib/Mojolicious::Plugin::RoutesAuthDBI::POS::Pg', enc=>'utf8');
 
+print $pos->{'тест'}->template(join => $pos2->{'тест'}.'', where => "bar = ?"), "\n";
+print $pos->template('тест', join => $pos2->{'тест'}.'', where => "BaZ = ?"), "\n";
+print keys %$pos2, "\n";
 
-package Foo;
-use utf8;
-use base 'DBIx::POS';
-#~ Foo->instance(__FILE__);
-
+=pod
 
 =encoding utf8
 
-=name ывавп
+=name тест
 
-=desc 1
+=desc test the DBIx::POS::Template module
 
-=sql
+=param
 
-  foo
-  
-
-=name foo
-
-=desc
+Some arbitrary parameter
 
 =sql
 
-  foo
+  select *
+    from foo f
+      join ({% $join %}) j on f.id=j.id
+  where {% $where %}
+  order by 1
+  ;
 
 =cut
-1;
-__END__
-
-use strict;
-use utf8;
-use Mojo::Util qw(dumper);
-use Pod::Simple::PullParser;
-
-my $parser = Pod::Simple::PullParser->new();
-
-$parser->set_source( "lib/Mojolicious/Plugin/RoutesAuthDBI/Install.pm" );
-
-while(my $token = $parser->get_token) {
-  print $token->dump, "\n";
-  
-}

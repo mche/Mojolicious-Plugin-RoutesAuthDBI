@@ -2,7 +2,7 @@ package Mojolicious::Plugin::RoutesAuthDBI;
 use Mojo::Base 'Mojolicious::Plugin::Authentication';
 use Mojo::Loader qw(load_class);
 
-our $VERSION = '0.401';
+our $VERSION = '0.410';
 
 my $access;# 
 my $pkg = __PACKAGE__;
@@ -19,7 +19,7 @@ my $fail_access_cb = sub {
     $c->dumper($args) =~ s/\s+//gr,
     $c->dumper($route->pattern->defaults) =~ s/\s+//gr,
   );
-  $c->render(format=>'txt', text=>"You don`t have access on this route(url)!!!\n");
+  $c->render(format=>'txt', text=>"You don`t have access on this route (url, action) !!!\n");
   
 };
 
@@ -354,7 +354,7 @@ L<Mojolicious::Plugin::Authorization>
 
 =head1 AUTHOR
 
-Михаил Че (Mikhail Che), C<< <mche [on] cpan.org> >>
+Михаил Че (Mikhail Che), C<< <mche[-at-]cpan.org> >>
 
 =head1 BUGS / CONTRIBUTING
 
