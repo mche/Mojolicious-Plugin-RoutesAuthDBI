@@ -323,13 +323,6 @@ TXT
     drop table namespaces;
     drop sequence ID;
 
-=name схема
-
-=desc
-
-=sql
-
-    123
 
 =cut
 

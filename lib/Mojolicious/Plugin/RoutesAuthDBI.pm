@@ -2,7 +2,7 @@ package Mojolicious::Plugin::RoutesAuthDBI;
 use Mojo::Base 'Mojolicious::Plugin::Authentication';
 use Mojo::Loader qw(load_class);
 
-our $VERSION = '0.410';
+our $VERSION = '0.411';
 
 my $access;# 
 my $pkg = __PACKAGE__;

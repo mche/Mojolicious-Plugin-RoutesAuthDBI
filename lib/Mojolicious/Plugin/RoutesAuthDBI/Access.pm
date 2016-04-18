@@ -140,6 +140,12 @@ Check implicit access to route by $role (id|name) and user roles ids ($id2 array
 
 =back
 
+=head1 SEE ALSO
+
+L<Mojolicious::Plugin::RoutesAuthDBI>
+
+L<Mojolicious::Plugin::RoutesAuthDBI::Sth>
+
 =head1 AUTHOR
 
 Михаил Че (Mikhail Che), C<< <mche [on] cpan.org> >>

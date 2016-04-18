@@ -76,6 +76,12 @@ Both above options determining the module controller for web actions on tables r
 
 =back
 
+=head1 SEE ALSO
+
+L<Mojolicious::Plugin::RoutesAuthDBI>
+
+L<Mojolicious::Plugin::RoutesAuthDBI::Sth>
+
 =head1 AUTHOR
 
 Михаил Че (Mikhail Che), C<< <mche [on] cpan.org> >>
