@@ -2,7 +2,7 @@ package Mojolicious::Plugin::RoutesAuthDBI;
 use Mojo::Base 'Mojolicious::Plugin::Authentication';
 use Mojo::Loader qw(load_class);
 
-our $VERSION = '0.411';
+our $VERSION = '0.412';
 
 my $access;# 
 my $pkg = __PACKAGE__;
@@ -61,7 +61,7 @@ sub register {
     $access->apply_route($app, $_) for $admin->self_routes;
   }
   
-  $app->helper('access_instance', sub {$access});
+  $app->helper('access', sub {$access});
   
   return $self, $access;
 
@@ -295,6 +295,42 @@ See L<Mojolicious::Plugin::RoutesAuthDBI::Admin> for detail options list.
 
 See L<Mojolicious::Plugin::RoutesAuthDBI::Install>.
 
+=head1 OVER CONDITIONS
+
+=head2 access
+
+Heart of this plugin!
+
+  $r->route('/foo')->...->over(access=>{auth=>0})->...;# no access check to route, but authorization by session is ready
+  
+  $r->route('/bar-bar-any-namespace')->to('bar#bar',)->over(access=>{auth=>1})->...;# 
+  
+  $r->route('/bar-bar-bar')->to('bar#bar', namespace=>'Bar')->over(access=>{auth=>1})->...;# 
+  
+  $r->route('/bar-nsX')->to('bar#bar', namespace=>'Bar')->over(access=>{auth=>1, namespace=>'BarX'})->...;# 
+  
+  $r->route('/bar-nsX-cX')->to('bar#bar', namespace=>'Bar')->over(access=>{auth=>1, namespace=>'BarX', controller=>'BarX'})->...;# 
+  
+  $r->route('/bar-nsX-cX-aX')->to('bar#bar', namespace=>'Bar')->over(access=>{auth=>1, namespace=>'BarX', controller=>'BarX', action=>'barX'})->...;#
+  
+  $r->route('/bar-cX-aX')->to('bar#bar',)->over(access=>{auth=>1, controller=>'BarX', action=>'barX'})->...;#
+  
+  $r->route('/bar-role-admin')->to('bar#bar',)->over(access=>{auth=>1, role=> 'admin'})->...;#
+
+=head1 HELPERS
+
+=head2 access
+
+Returns access instance obiect. See L<Mojolicious::Plugin::RoutesAuthDBI::Access> methods.
+
+  $c->access->db_routes;
+  if ($c->access->access_explicit([1,2,3], [1,2,3])) {
+    # yes, accessible
+  }
+
+=head1 METHODS and SUBS
+
+Internal.
 
 =head2 Example routing table records
 
