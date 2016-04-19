@@ -644,35 +644,6 @@ TABLE
   return @r;
 }
 
-sub render000 {
-  my $c = shift;
-  $c->SUPER::render(format=>'txt', text=><<TXT);
-$pkg
-
-TXT
-  
-}
 
 
 1;
-
-__END__
-sub routes000 {
-  my $c = shift;
-  
-  $sth->{insert_routes} ||= $dbh->prepare(<<SQL);
-insert into routes (@{[join ',', @self_routes_cols]}) values (@{[join ',', map '?', @self_routes_cols]}) returning *;
-SQL
-
-  local $dbh->{AutoCommit} = 0;
-  #~ $dbh->begin_work;
-  
-    $c->render(format=>'txt', text=>"$pkg\n\n". $c->dumper([
-  map($dbh->selectrow_hashref($sth->{insert_routes}, undef, @$_{@self_routes_cols},), $c->self_routes)]).<<TXT);
-
-You must kill -HUP (reload/restart) your app! 
-
-TXT
-  
-  $dbh->rollback;
-}
