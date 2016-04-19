@@ -8,7 +8,6 @@ my $access;#
 my $pkg = __PACKAGE__;
 my $conf ;# set on ->registrer
 
-
 my $fail_auth = {format=>'txt', text=>"Deny at auth step. Please sign in!!!\n"};
 my $fail_auth_cb = sub {shift->render(%$fail_auth);};
 my $fail_access_cb = sub {
@@ -22,8 +21,6 @@ my $fail_access_cb = sub {
   $c->render(format=>'txt', text=>"You don`t have access on this route (url, action) !!!\n");
   
 };
-
-
 
 sub register {
   my ($self, $app,) = (shift, shift);

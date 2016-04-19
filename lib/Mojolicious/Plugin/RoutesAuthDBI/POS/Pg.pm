@@ -6,7 +6,7 @@ package Mojolicious::Plugin::RoutesAuthDBI::POS::Pg;
 
 =head3 Warn
 
-B<POD ERRORS> here is normal because DBIx::POS used.
+B<POD ERRORS> here is normal because DBIx::POS::Template used.
 
 =head1 Mojolicious::Plugin::RoutesAuthDBI::POS::Pg
 
@@ -22,14 +22,16 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
 
 =head1 SYNOPSIS
 
-    use Mojolicious::Plugin::RoutesAuthDBI::POS::Pg;
+    use DBIx::POS::Template;
     
-    my $sql = Mojolicious::Plugin::RoutesAuthDBI::POS::Pg->instance;
-    my $sth = $dbh->prepare($sql->{'name foo'});
+    my @path = split(/\//, __FILE__ );
+    my $file = join('/', @path[0 .. $#path -1], 'POS/Pg.pm');
+    my $pos = DBIx::POS::Template->new($file, enc => 'utf8');
+    my $sth = $dbh->prepare($pos->{'user'});
 
 =head1 SEE ALSO
 
-L<DBIx::POS>
+L<DBIx::POS::Template>
 
 =head1 SQL definitions
 
@@ -316,7 +318,7 @@ L<DBIx::POS>
 
 =name controllers
 
-=desc Список таблицы
+=desc Список
 
 =sql
 
