@@ -17,7 +17,7 @@ Mojolicious::Plugin::RoutesAuthDBI::Sth - is a DBI statements hub for L<Mojolici
 =head1 SYNOPSIS
 
     my $sth = bless [$dbh, {}], 'Mojolicious::Plugin::RoutesAuthDBI::Sth';
-    $sth->init(pos => 'Mojolicious::Plugin::RoutesAuthDBI::POS::Pg');
+    $sth->init(pos => 'POS/Pg.pm');
     my $r = $dbh->selectrow_hashref($sth->sth('foo name'));
 
 =head1 DESCRIPTION
@@ -39,7 +39,7 @@ my @path = split(/\//, __FILE__ );
 sub init {
   my $self = shift;
   my %arg = @_;
-  $sql = DBIx::POS::Template->new(join('/', @path[0 .. $#path -1], 'POS', $arg{pos}), enc=>'utf8') #$arg{pos} =~ s/::/\//gr . '.pm'
+  $sql = DBIx::POS::Template->new(join('/', @path[0 .. $#path -1], $arg{pos}), enc=>'utf8') #$arg{pos} =~ s/::/\//gr . '.pm'
     if $arg{pos};
   return $self;
 }

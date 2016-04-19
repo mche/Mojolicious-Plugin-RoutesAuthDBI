@@ -108,7 +108,7 @@ Make initialization of class vars: $dbh, $sth, $init_conf. Return $self object.
 
 =item * B<apply_route($app, $r_hash)>
 
-Insert to app->routes an hash item $r_hash. DB schema specific. Return new Mojolicious route.
+Heart of routes generation from db tables and not only. Insert to app->routes an hash item $r_hash. DB schema specific. Return new Mojolicious route.
 
 =item * B<db_routes()>
 
@@ -169,7 +169,7 @@ sub init_class {# from plugin! init Class vars
   $init_conf ||= $c;
   $c->{dbh} ||= $dbh ||=  $args{dbh};
   $dbh ||= $c->{dbh};
-  $c->{sth} ||= $sth ||= $args{sth} ||=( bless [$dbh, {}], $c->{namespace}.'::Sth' )->init(pos=>$c->{pos} || $args{pos} || 'Pg.pm');#sth cache
+  $c->{sth} ||= $sth ||= $args{sth} ||=( bless [$dbh, {}], $c->{namespace}.'::Sth' )->init(pos=>$c->{pos} || $args{pos} || 'POS/Pg.pm');#sth cache
   $sth ||= $c->{sth};
   return $c;
 }

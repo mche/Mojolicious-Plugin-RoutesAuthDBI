@@ -72,7 +72,7 @@ Both above options determining the module controller for web actions on tables r
 
 =over 4
 
-=item * B<self_routes()> - builtin this access controller routes. Return array of hashrefs routes records for apply route on app. Depends on conf options I<prefix> and I<trust>.
+=item * B<self_routes()> - builtin to this access controller routes. Return array of hashrefs routes records for apply route on app. Depends on conf options I<prefix> and I<trust>.
 
 =back
 
@@ -107,7 +107,7 @@ sub init_class {# from plugin! init Class vars
   $c->{trust} =~ s/\W/-/g;
 	$c->{dbh} ||= $dbh ||=  $args{dbh};
 	$dbh ||= $c->{dbh};
-	$c->{sth} ||= $sth ||= $args{sth} ||= (bless [$dbh, {}], $c->{namespace}.'::Sth')->init(pos => $c->{pos} || 'Pg.pm');#sth cache
+	$c->{sth} ||= $sth ||= $args{sth} ||= (bless [$dbh, {}], $c->{namespace}.'::Sth')->init(pos => $c->{pos} || 'POS/Pg.pm');#sth cache
 	$sth ||= $c->{sth};
     
 	return $c;

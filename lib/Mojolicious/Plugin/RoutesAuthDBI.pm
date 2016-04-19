@@ -2,7 +2,7 @@ package Mojolicious::Plugin::RoutesAuthDBI;
 use Mojo::Base 'Mojolicious::Plugin::Authentication';
 use Mojo::Loader qw(load_class);
 
-our $VERSION = '0.412';
+our $VERSION = '0.414';
 
 my $access;# 
 my $pkg = __PACKAGE__;
@@ -214,6 +214,10 @@ sub access {# add_condition
 
 ¡ ¡ ¡ ALL GLORY TO GLORIA ! ! !
 
+=head1 VERSION
+
+0.414
+
 =head1 NAME
 
 Mojolicious::Plugin::RoutesAuthDBI - from DBI sql-tables does generate routes, make authentication and make restrict access (authorization) to request. Plugin makes an auth operations throught the plugin L<Mojolicious::Plugin::Authentication> on which is based.
@@ -299,23 +303,43 @@ See L<Mojolicious::Plugin::RoutesAuthDBI::Install>.
 
 =head2 access
 
-Heart of this plugin!
+Heart of this plugin! This condition apply for all db routes even if column auth set to 0. It is possible to apply this condition to non db routes:
 
-  $r->route('/foo')->...->over(access=>{auth=>0})->...;# no access check to route, but authorization by session is ready
-  
-  $r->route('/bar-bar-any-namespace')->to('bar#bar',)->over(access=>{auth=>1})->...;# 
-  
-  $r->route('/bar-bar-bar')->to('bar#bar', namespace=>'Bar')->over(access=>{auth=>1})->...;# 
-  
-  $r->route('/bar-nsX')->to('bar#bar', namespace=>'Bar')->over(access=>{auth=>1, namespace=>'BarX'})->...;# 
-  
-  $r->route('/bar-nsX-cX')->to('bar#bar', namespace=>'Bar')->over(access=>{auth=>1, namespace=>'BarX', controller=>'BarX'})->...;# 
-  
-  $r->route('/bar-nsX-cX-aX')->to('bar#bar', namespace=>'Bar')->over(access=>{auth=>1, namespace=>'BarX', controller=>'BarX', action=>'barX'})->...;#
-  
-  $r->route('/bar-cX-aX')->to('bar#bar',)->over(access=>{auth=>1, controller=>'BarX', action=>'barX'})->...;#
-  
-  $r->route('/bar-role-admin')->to('bar#bar',)->over(access=>{auth=>1, role=> 'admin'})->...;#
+=over 4
+
+=item * No access check to route, but authorization by session will ready:
+
+  $r->route('/foo')->...->over(access=>{auth=>0})->...;
+
+=item * Route accessible if user roles assigned to either B<loadable> namespace or controller 'Bar.pm' (which assigned neither namespece on db or assigned to that loadable namespace) or action 'bar' on controller Bar.pm (action record in db table actions):
+
+  $r->route('/bar-bar-any-namespace')->to('bar#bar',)->over(access=>{auth=>1})->...;
+
+=item * Explicit defined namespace route accessible either namespace 'Bar' or 'Bar::Bar.pm' controller or action 'bar' in controller 'Bar::Bar.pm' (which assigned to namespace 'Bar' in table refs):
+
+  $r->route('/bar-bar-bar')->to('bar#bar', namespace=>'Bar')->over(access=>{auth=>1})->...;
+
+=item * Check access by overriden namespace 'BarX': controller and action also with that namespace in db table refs:
+
+  $r->route('/bar-nsX')->to('bar#bar', namespace=>'Bar')->over(access=>{auth=>1, namespace=>'BarX'})->...;
+
+=item * Check access by overriden namespace 'BarX' and controller 'BarX.pm', action record also with that ns & c in db table refs:
+
+  $r->route('/bar-nsX-cX')->to('bar#bar', namespace=>'Bar')->over(access=>{auth=>1, namespace=>'BarX', controller=>'BarX'})->...;
+
+=item * Full override names access:
+
+  $r->route('/bar-nsX-cX-aX')->to('bar#bar', namespace=>'Bar')->over(access=>{auth=>1, namespace=>'BarX', controller=>'BarX', action=>'barX'})->...;
+
+=item *
+
+  $r->route('/bar-cX-aX')->to('bar#bar',)->over(access=>{auth=>1, controller=>'BarX', action=>'barX'})->...;
+
+=item * Route accessible if user roles list has defined role (admin):
+
+  $r->route('/bar-role-admin')->to('bar#bar',)->over(access=>{auth=>1, role=> 'admin'})->...;
+
+=back
 
 =head1 HELPERS
 
