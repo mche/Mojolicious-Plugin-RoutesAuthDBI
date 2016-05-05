@@ -30,14 +30,14 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
 
 =head1 DB schema (postgresql)
 
-=head2 View schema
+=head2 View schema (define the postgresql schema name)
 
-    $ perl -e "use Mojo::Base 'Mojolicious'; __PACKAGE__->new()->start(); sub startup {shift->routes->route('/')->to('install#schema', namespace=>'Mojolicious::Plugin::RoutesAuthDBI');}" get / 2>/dev/null
+    $ perl -e "use Mojo::Base 'Mojolicious'; __PACKAGE__->new()->start(); sub startup {shift->routes->route('/schema/:schema')->to('install#schema', namespace=>'Mojolicious::Plugin::RoutesAuthDBI');}" get /schema/<name> 2>/dev/null #  get /schema/foo || get /schema/public
     
 
-=head2 Apply schema
+=head2 Apply schema (define the postgresql schema name)
 
-    $ perl -e "use Mojo::Base 'Mojolicious'; __PACKAGE__->new()->start(); sub startup {shift->routes->route('/')->to('install#schema', namespace=>'Mojolicious::Plugin::RoutesAuthDBI');}" get / 2>/dev/null | psql -d <dbname>
+    $ perl -e "use Mojo::Base 'Mojolicious'; __PACKAGE__->new()->start(); sub startup {shift->routes->route('/schema/:schema')->to('install#schema', namespace=>'Mojolicious::Plugin::RoutesAuthDBI');}" get /schema/<name> 2>/dev/null | psql -d <dbname> # get /schema/foo || get /schema/public
 
 
 =head1 Sample test-app.pl
@@ -77,10 +77,10 @@ sub manual {
    $c->render(format=>'txt', text=><<'TXT');
 Welcome  Mojolicious::Plugin::RoutesAuthDBI !
 
-1. Apply db schema by command:
+1. Apply db schema by command (define the postgresql schema name):
 ------------
 
-$ perl -e "use Mojo::Base 'Mojolicious'; __PACKAGE__->new()->start(); sub startup {shift->routes->route('/')->to('install#schema', namespace=>'Mojolicious::Plugin::RoutesAuthDBI');}" get / 2>/dev/null | psql -d <dbname>
+$ perl -e "use Mojo::Base 'Mojolicious'; __PACKAGE__->new()->start(); sub startup {shift->routes->route('/schema/:schema')->to('install#schema', namespace=>'Mojolicious::Plugin::RoutesAuthDBI');}" get /schema/public 2>/dev/null | psql -d <dbname> # here set public pg schema!
 
 
 2. Create test-app.pl and  define in them DBI->connect(...) and some plugin options:
@@ -152,6 +152,17 @@ TXT
 
 =over 4
 
+=item * B<Schema name>
+
+=name schema.name
+
+=desc Отдельная схема
+
+=sql
+
+  CREATE SCHEMA IF NOT EXISTS "{% $schema %}";
+  set local search_path = "{% $schema %}";
+
 =item * B<Sequence>
 
 =name schema.sequence
@@ -160,7 +171,7 @@ TXT
 
 =sql
 
-  CREATE SEQUENCE ID;-- one sequence for all tables id
+  CREATE SEQUENCE {% $schema %}ID;-- one sequence for all tables id
 
 =item * B<Routes>
 
@@ -170,8 +181,8 @@ TXT
 
 =sql
 
-  CREATE TABLE routes (
-    id integer default nextval('ID'::regclass) not null primary key,
+  CREATE TABLE {% $schema %}routes (
+    id integer default nextval('{% $schema %}ID'::regclass) not null primary key,
     ts timestamp without time zone default now() not null,
     request character varying not null,
     name character varying not null unique,
@@ -189,8 +200,8 @@ TXT
 
 =sql
 
-  create table namespaces (
-    id integer default nextval('ID'::regclass) not null primary key,
+  create table {% $schema %}namespaces (
+    id integer default nextval('{% $schema %}ID'::regclass) not null primary key,
     ts timestamp without time zone default now() not null,
     namespace character varying not null unique,
     descr text null
@@ -204,8 +215,8 @@ TXT
 
 =sql
 
-  create table controllers (
-    id integer default nextval('ID'::regclass) not null primary key,
+  create table {% $schema %}controllers (
+    id integer default nextval('{% $schema %}ID'::regclass) not null primary key,
     ts timestamp without time zone default now() not null,
     controller character varying not null,
     descr text null
@@ -219,8 +230,8 @@ TXT
 
 =sql
 
-  create table actions (
-    id integer default nextval('ID'::regclass) not null primary key,
+  create table {% $schema %}actions (
+    id integer default nextval('{% $schema %}ID'::regclass) not null primary key,
     ts timestamp without time zone default now() not null,
     action character varying not null,
     callback text null,
@@ -235,8 +246,8 @@ TXT
 
 =sql
 
-  create table users (
-    id int default nextval('ID'::regclass) not null  primary key,
+  create table {% $schema %}users (
+    id int default nextval('{% $schema %}ID'::regclass) not null  primary key,
     ts timestamp without time zone default now() not null,
     login varchar not null unique,
     pass varchar not null,
@@ -251,8 +262,8 @@ TXT
 
 =sql
 
-  create table roles (
-    id int default nextval('ID'::regclass) not null  primary key,
+  create table {% $schema %}roles (
+    id int default nextval('{% $schema %}ID'::regclass) not null  primary key,
     ts timestamp without time zone default now() not null,
     name varchar not null unique,
     disable bit(1)
@@ -266,14 +277,14 @@ TXT
 
 =sql
 
-  create table refs (
-    id int default nextval('ID'::regclass) not null  primary key,
+  create table {% $schema %}refs (
+    id int default nextval('{% $schema %}ID'::regclass) not null  primary key,
     ts timestamp without time zone default now() not null,
     id1 int not null,
     id2 int not null,
     unique(id1, id2)
   );
-  create index on refs (id2);
+  create index on {% $schema %}refs (id2);
 
 =back
 
@@ -283,23 +294,26 @@ TXT
 sub schema {
   my $c = shift;
   #~ $c->render(format=>'txt', text => join '', <Mojolicious::Plugin::RoutesAuthDBI::Install::DATA>);
+  my $schema = $c->stash('schema') || $c->param('schema');
+  my $schema2 = qq{"$schema".} if $schema;
   $c->render(format=>'txt', text => <<TXT);
+@{[$schema ? $sql->{'schema.name'}->template(schema => $schema) : '']}
 
-$sql->{'schema.sequence'}
+@{[$sql->{'schema.sequence'}->template(schema => $schema2)]}
 
-$sql->{'schema.routes'}
+@{[$sql->{'schema.routes'}->template(schema => $schema2)]}
 
-$sql->{'schema.namespaces'}
+@{[$sql->{'schema.namespaces'}->template(schema => $schema2)]}
 
-$sql->{'schema.controllers'}
+@{[$sql->{'schema.controllers'}->template(schema => $schema2)]}
 
-$sql->{'schema.actions'}
+@{[$sql->{'schema.actions'}->template(schema => $schema2)]}
 
-$sql->{'schema.users'}
+@{[$sql->{'schema.users'}->template(schema => $schema2)]}
 
-$sql->{'schema.roles'}
+@{[$sql->{'schema.roles'}->template(schema => $schema2)]}
 
-$sql->{'schema.refs'}
+@{[$sql->{'schema.refs'}->template(schema => $schema2)]}
 
 TXT
 }
@@ -314,39 +328,56 @@ TXT
 
 =sql
 
-    drop table refs;
-    drop table users;
-    drop table roles;
-    drop table routes;
-    drop table controllers;
-    drop table actions;
-    drop table namespaces;
-    drop sequence ID;
+    drop table {% $schema %}refs;
+    drop table {% $schema %}users;
+    drop table {% $schema %}roles;
+    drop table {% $schema %}routes;
+    drop table {% $schema %}controllers;
+    drop table {% $schema %}actions;
+    drop table {% $schema %}namespaces;
+    drop sequence {% $schema %}ID;
 
 
 =cut
 
 sub schema_drop {
   my $c = shift;
-  
+  my $schema = $c->stash('schema') || $c->param('schema');
+  $schema = qq{"$schema".} if $schema;
   $c->render(format=>'txt', text => <<TXT);
-$sql->{'schema.drop'}
+@{[$sql->{'schema.drop'}->template(schema => $schema)]}
 
 TXT
 }
 
+=pod
+
+=head1 Flush schema
+
+=name schema.flush
+
+=desc
+
+=sql
+
+  delete from {% $schema %}refs;
+  delete from {% $schema %}users;
+  delete from {% $schema %}roles;
+  delete from {% $schema %}routes;
+  delete from {% $schema %}controllers;
+  delete from {% $schema %}namespaces;
+  delete from {% $schema %}actions;
+
+
+=cut
+
 sub schema_flush {
   my $c = shift;
-  
+  my $schema = $c->stash('schema') || $c->param('schema');
+  $schema = qq{"$schema".} if $schema;
   $c->render(format=>'txt', text => <<TXT);
 
-delete from refs;
-delete from users;
-delete from roles;
-delete from routes;
-delete from controllers;
-delete from namespaces;
-delete from actions;
+@{[$sql->{'schema.flush'}->template(schema => $schema)]}
 
 TXT
 }

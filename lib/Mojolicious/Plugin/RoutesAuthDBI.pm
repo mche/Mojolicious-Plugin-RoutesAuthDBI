@@ -2,7 +2,7 @@ package Mojolicious::Plugin::RoutesAuthDBI;
 use Mojo::Base 'Mojolicious::Plugin::Authentication';
 use Mojo::Loader qw(load_class);
 
-our $VERSION = '0.414';
+our $VERSION = '0.420';
 
 my $access;# 
 my $pkg = __PACKAGE__;
@@ -93,6 +93,12 @@ sub access {# add_condition
   # 2. по кукам выставить пользователя
   my $meth = $conf->{auth}{current_user_fn};
   my $u = $c->$meth;
+  if (ref $args eq 'CODE') {
+    $args->($u, @_)
+      or $conf->{access}{fail_auth_cb}->($c, )
+      and return undef;
+      return 0x01;
+  }
   # 3. если не проверять доступ вернуть 1
   return 1 unless $args->{auth};
   # не авторизовался
@@ -213,7 +219,7 @@ sub access {# add_condition
 
 =head1 VERSION
 
-0.414
+0.420
 
 =head1 NAME
 
@@ -300,7 +306,7 @@ See L<Mojolicious::Plugin::RoutesAuthDBI::Install>.
 
 =head2 access
 
-Heart of this plugin! This condition apply for all db routes even if column auth set to 0. It is possible to apply this condition to non db routes:
+Heart of this plugin! This condition apply for all db routes even if column auth set to 0. It is possible to apply this condition to non db routes also:
 
 =over 4
 
@@ -335,6 +341,12 @@ Heart of this plugin! This condition apply for all db routes even if column auth
 =item * Route accessible if user roles list has defined role (admin):
 
   $r->route('/bar-role-admin')->to('bar#bar',)->over(access=>{auth=>1, role=> 'admin'})->...;
+  
+=item * Pass callback to access condition
+
+The callback will get parameters: $user, $route, $c, $captures, $args (this callback ref). Callback must returns true or false for restrict access. Example simple auth access:
+
+  $r->route('/check-auth')->over(access=>sub {my ($user, $route, $c, $captures, $args) = @_; return $user;})->to(cb=>sub {my $c =shift; $c->render(format=>'txt', text=>"Hi @{[$c->auth_user->{login}]}!\n\nYou have access!");});
 
 =back
 
@@ -351,7 +363,7 @@ Returns access instance obiect. See L<Mojolicious::Plugin::RoutesAuthDBI::Access
 
 =head1 METHODS and SUBS
 
-Internal.
+Registration() & access() & <internal>.
 
 =head2 Example routing table records
 
