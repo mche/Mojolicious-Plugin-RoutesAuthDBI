@@ -136,6 +136,7 @@ sub startup {
   # $app->plugin(Config =>{file => 'Config.pm'});
   $app->plugin('RoutesAuthDBI',
     dbh=>$app->dbh,
+    
     auth=>{current_user_fn=>'auth_user'},
     # access=> {},
     admin=>{prefix=>'myadmin', trust=>'fooobaaar',},
@@ -190,7 +191,7 @@ TXT
     request character varying not null,
     name character varying not null unique,
     descr text null,
-    auth bit(1) null,
+    auth varchar null,-- was bit(1): alter table {% $schema %}routes alter column auth type varchar;
     disable bit(1) null,
     order_by int null
   );

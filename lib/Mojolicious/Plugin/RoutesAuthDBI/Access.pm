@@ -167,9 +167,11 @@ sub init_class {# from plugin! init Class vars
   my $c = shift;
   my %args = @_;
   $init_conf ||= $c;
+  $c->{schema} ||= 'public';
+  $c->{schema} = qq{"$c->{schema}".};
   $c->{dbh} ||= $dbh ||=  $args{dbh};
   $dbh ||= $c->{dbh};
-  $c->{sth} ||= $sth ||= $args{sth} ||=( bless [$dbh, {}], $c->{namespace}.'::Sth' )->init(pos=>$c->{pos} || $args{pos} || 'POS/Pg.pm');#sth cache
+  $c->{sth} ||= $sth ||= $args{sth} ||=( bless [$dbh, {}, $c->{schema},], $c->{namespace}.'::Sth' )->init(pos=>$c->{pos} || $args{pos} || 'POS/Pg.pm');#sth cache
   $sth ||= $c->{sth};
   return $c;
 }

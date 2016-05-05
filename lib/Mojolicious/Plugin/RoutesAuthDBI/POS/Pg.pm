@@ -48,7 +48,7 @@ L<DBIx::POS::Template>
 =sql
 
   select *
-  from users
+  from {% $schema %}users
   where id = ? or login=?
 
 =item * B<apply routes> 
@@ -60,15 +60,15 @@ L<DBIx::POS::Template>
 =sql
 
   select r.*, ac.controller, ac.namespace, ac.action, ac.callback, ac.id as action_id, ac.controller_id, ac.namespace_id
-  from routes r
-    join refs rf on r.id=rf.id1
+  from {% $schema %}routes r
+    join {% $schema %}refs rf on r.id=rf.id1
     join 
     (select a.*, c.controller, c.id as controller_id, n.namespace, n.id as namespace_id
-      from actions a 
-      left join refs r on a.id=r.id2
-      left join controllers c on c.id=r.id1
-      left join refs r2 on c.id=r2.id2
-      left join namespaces n on n.id=r2.id1
+      from {% $schema %}actions a 
+      left join {% $schema %}refs r on a.id=r.id2
+      left join {% $schema %}controllers c on c.id=r.id1
+      left join {% $schema %}refs r2 on c.id=r2.id2
+      left join {% $schema %}namespaces n on n.id=r2.id1
     ) ac on rf.id2=ac.id
   order by r.order_by, r.ts;
 
@@ -82,8 +82,8 @@ L<DBIx::POS::Template>
 
   select g.*
   from
-    roles g
-    join refs r on g.id=r.id1
+    {% $schema %}roles g
+    join {% $schema %}refs r on g.id=r.id1
   where r.id2=?;
   --and coalesce(g.disable, 0::bit) <> 1::bit
 
@@ -96,7 +96,7 @@ L<DBIx::POS::Template>
 =sql
 
   select count(*)
-  from refs
+  from {% $schema %}refs
   where id1 = any(?) and id2 = ANY(?);
 
 =item * B<access action>
@@ -109,10 +109,10 @@ L<DBIx::POS::Template>
 
   select count(r.*)
   from
-    refs rc 
-    join actions a on a.id=rc.id2
-    join refs r on a.id=r.id1
-    ---join roles o on o.id=r.id2
+    {% $schema %}refs rc 
+    join {% $schema %}actions a on a.id=rc.id2
+    join {% $schema %}refs r on a.id=r.id1
+    ---join {% $schema %}roles o on o.id=r.id2
   where
     rc.id1=? ---controller id
     and a.action=?
@@ -131,9 +131,9 @@ L<DBIx::POS::Template>
 
   select count(n.*)
   from 
-    namespaces n
-    join refs r on n.id=r.id1
-    ---join roles o on r.id2=o.id
+    {% $schema %}namespaces n
+    join {% $schema %}refs r on n.id=r.id1
+    ---join {% $schema %}roles o on r.id2=o.id
   where
     n.namespace=?
     and r.id2=any(?) --- roles ids
@@ -149,7 +149,7 @@ L<DBIx::POS::Template>
 =sql
 
   select count(*)
-  from roles
+  from {% $schema %}roles
   where (id = ? or name = ?)
     and id = any(?)
     and coalesce(disable, 0::bit) <> 1::bit
@@ -169,7 +169,7 @@ L<DBIx::POS::Template>
 
 =sql
 
-  insert into users (login, pass) values (?,?)
+  insert into {% $schema %}users (login, pass) values (?,?)
   returning *;
 
 =item * B<role> 
@@ -181,7 +181,7 @@ L<DBIx::POS::Template>
 =sql
 
   select *
-  from roles
+  from {% $schema %}roles
   where id=? or lower(name)=?
 
 =item * B<new role> 
@@ -192,7 +192,7 @@ L<DBIx::POS::Template>
 
 =sql
 
-  insert into roles (name) values (?)
+  insert into {% $schema %}roles (name) values (?)
   returning *;
 
 =item * B<dsbl/enbl role> 
@@ -203,7 +203,7 @@ L<DBIx::POS::Template>
 
 =sql
 
-  update roles set disable=?::bit where id=? or lower(name)=?
+  update {% $schema %}roles set disable=?::bit where id=? or lower(name)=?
   returning *;
 
 =item * B<ref> 
@@ -215,7 +215,7 @@ L<DBIx::POS::Template>
 =sql
 
   select *
-  from refs
+  from {% $schema %}refs
   where id1=? and id2=?;
 
 =item * B<new ref> 
@@ -226,7 +226,7 @@ L<DBIx::POS::Template>
 
 =sql
 
-  insert into refs (id1,id2) values (?,?)
+  insert into {% $schema %}refs (id1,id2) values (?,?)
   returning *;
 
 
@@ -238,7 +238,7 @@ L<DBIx::POS::Template>
 
 =sql
 
-  delete from refs
+  delete from {% $schema %}refs
   where id1=? and id2=?
   returning *;
 
@@ -252,9 +252,9 @@ L<DBIx::POS::Template>
 
   select c.*, n.namespace, n.id as namespace_id, n.descr as namespace_descr
   from
-    controllers c
-    left join refs r on c.id=r.id2
-    left join namespaces n on n.id=r.id1
+    {% $schema %}controllers c
+    left join {% $schema %}refs r on c.id=r.id2
+    left join {% $schema %}namespaces n on n.id=r.id1
   
   where
     c.controller=?
@@ -269,7 +269,7 @@ L<DBIx::POS::Template>
 
 =sql
 
-  insert into controllers (controller, descr)
+  insert into {% $schema %}controllers (controller, descr)
   values (?,?)
   returning *;
 
@@ -281,7 +281,7 @@ L<DBIx::POS::Template>
 
 =sql
 
-  insert into routes (request, name, auth, descr, disable, order_by)
+  insert into {% $schema %}routes (request, name, auth, descr, disable, order_by)
   values (?,?,?,?,?,?,?,?,?)
   returning *;
 
@@ -295,8 +295,8 @@ L<DBIx::POS::Template>
 
   select u.*
   from
-    users u
-    join refs r on u.id=r.id2
+    {% $schema %}users u
+    join {% $schema %}refs r on u.id=r.id2
   where r.id1=?;
 
 =item * B<role routes> 
@@ -309,8 +309,8 @@ L<DBIx::POS::Template>
 
   select t.*
   from
-    routes t
-    join refs r on t.id=r.id1
+    {% $schema %}routes t
+    join {% $schema %}refs r on t.id=r.id1
   where r.id2=?;
 
 
@@ -323,9 +323,9 @@ L<DBIx::POS::Template>
 =sql
 
   select c.*, n.namespace, n.id as namespace_id, n.descr as namespace_descr
-    from controllers c
-    left join refs r on c.id=r.id2
-    left join namespaces n on n.id=r.id1
+    from {% $schema %}controllers c
+    left join {% $schema %}refs r on c.id=r.id2
+    left join {% $schema %}namespaces n on n.id=r.id1
     ;
 
 =item * B<namespaces>
@@ -337,7 +337,7 @@ L<DBIx::POS::Template>
 =sql
 
   select *
-  from namespaces;
+  from {% $schema %}namespaces;
 
 =item * B<namespace>
 
@@ -348,7 +348,7 @@ L<DBIx::POS::Template>
 =sql
 
   select *
-  from namespaces
+  from {% $schema %}namespaces
   where namespace = ?;
 
 =item * B<new namespace>
@@ -359,7 +359,7 @@ L<DBIx::POS::Template>
 
 =sql
 
-  insert into namespaces (namespace, descr) values (?,?)
+  insert into {% $schema %}namespaces (namespace, descr) values (?,?)
   returning *;
 
 
@@ -372,11 +372,11 @@ L<DBIx::POS::Template>
 =sql
 
   select a.*, c.namespace, c.controller
-  from actions a
-    left join refs r on a.id=r.id2
-    left join controllers c on c.id=r.id1
+  from {% $schema %}actions a
+    left join {% $schema %}refs r on a.id=r.id2
+    left join {% $schema %}controllers c on c.id=r.id1
 
-=item * B<> 
+=item * B<тест> 
 
 =name тест
 

@@ -16,7 +16,7 @@ Mojolicious::Plugin::RoutesAuthDBI::Sth - is a DBI statements hub for L<Mojolici
 
 =head1 SYNOPSIS
 
-    my $sth = bless [$dbh, {}], 'Mojolicious::Plugin::RoutesAuthDBI::Sth';
+    my $sth = bless [$dbh, {}, $schema], 'Mojolicious::Plugin::RoutesAuthDBI::Sth';
     $sth->init(pos => 'POS/Pg.pm');
     my $r = $dbh->selectrow_hashref($sth->sth('foo name'));
 
@@ -45,7 +45,7 @@ sub init {
 }
 
 sub sth {
-  my ($db, $st) = @{ shift() };
+  my ($db, $st, $schema) = @{ shift() };
   my $name = shift;
   my %arg = @_;
   $dbh ||= $db or die "Not defined dbh a DBI handle"; # init dbh once
@@ -54,7 +54,7 @@ sub sth {
   $sth ||= {};
   return $sth unless $name;
   die "No such name[$name] in SQL dict!" unless $sql->{$name};
-  $sth->{$name} ||= $dbh->prepare(scalar %arg ? $sql->{$name}->template(%arg) : $sql->{$name}->sql);
+  $sth->{$name} ||= $dbh->prepare($sql->{$name}->template(schema => $schema, %arg)); # : $sql->{$name}->sql
 }
 
 1;

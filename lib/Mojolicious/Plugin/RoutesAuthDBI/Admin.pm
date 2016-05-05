@@ -49,6 +49,8 @@ Both above options determining the module controller for web actions on tables r
 
 =item * B<trust> is a url subprefix for trust admin urls of this module. See defaults below.
 
+=item * B<schema> is a Postgresql schema name.
+
 =back
 
 =head2 Defaults
@@ -58,6 +60,7 @@ Both above options determining the module controller for web actions on tables r
         module => 'Admin',
         prefix => 'admin', # lc(<module>)
         trust => $app->secrets->[0],
+        #schema => 'public', # sets from plugin options
     },
     
     admin = {}, # empty hashref sets defaults above
@@ -105,9 +108,11 @@ sub init_class {# from plugin! init Class vars
   $init_conf ||= $c;
   $c->{prefix} =~ s/^\///;
   $c->{trust} =~ s/\W/-/g;
+  $c->{schema} ||= 'public';
+  $c->{schema} = qq{"$c->{schema}".};
 	$c->{dbh} ||= $dbh ||=  $args{dbh};
 	$dbh ||= $c->{dbh};
-	$c->{sth} ||= $sth ||= $args{sth} ||= (bless [$dbh, {}], $c->{namespace}.'::Sth')->init(pos => $c->{pos} || 'POS/Pg.pm');#sth cache
+	$c->{sth} ||= $sth ||= $args{sth} ||= (bless [$dbh, {}, $c->{schema},], $c->{namespace}.'::Sth')->init(pos => $c->{pos} || 'POS/Pg.pm');#sth cache
 	$sth ||= $c->{sth};
     
 	return $c;

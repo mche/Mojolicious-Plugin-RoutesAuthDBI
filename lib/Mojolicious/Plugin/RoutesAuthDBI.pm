@@ -26,6 +26,7 @@ sub register {
   my ($self, $app,) = (shift, shift);
   $conf = shift; # global
   $conf->{dbh} ||= $app->dbh;
+  $conf->{schema} ||= 'public';
   die "Plugin must work with arg dbh, see SYNOPSIS" unless $conf->{dbh};
   $conf->{access} ||= {};
   $conf->{access}{namespace} ||= $pkg unless $conf->{access}{module};
@@ -33,6 +34,7 @@ sub register {
   $conf->{access}{dbh} = $conf->{dbh};
   $conf->{access}{fail_auth_cb} ||= $fail_auth_cb;
   $conf->{access}{fail_access_cb} ||= $fail_access_cb;
+  $conf->{access}{schema} ||= $conf->{schema};
   # class obiect
   $access ||= $self->access_instance($app, $conf->{access});
   
@@ -54,6 +56,7 @@ sub register {
     $conf->{admin}{sth} = $access->{sth};
     $conf->{admin}{prefix} ||= lc($conf->{admin}{controller});
     $conf->{admin}{trust} ||= $app->secrets->[0];
+    $conf->{admin}{schema} ||= $conf->{schema};
     my $admin ||= $self->admin_controller($app, $conf->{admin});
     $access->apply_route($app, $_) for $admin->self_routes;
   }
@@ -105,6 +108,8 @@ sub access {# add_condition
   $conf->{access}{fail_auth_cb}->($c, )
     and return undef
     unless $u;
+  # допустить если {auth=>'only'}
+  return 1 if lc($args->{auth}) eq 'only';
   #  получить все группы пользователя
   $access->load_user_roles($u);
 
@@ -236,6 +241,7 @@ First of all you will see L<SVG|https://github.com/mche/Mojolicious-Plugin-Route
         auth => {...},
         access => {...},
         admin => {...},
+        schema=>'public',# Postgresql
     );
 
 
@@ -295,6 +301,7 @@ You might define your own controller by passing options:
 
 See L<Mojolicious::Plugin::RoutesAuthDBI::Admin> for detail options list.
 
+=item * B<schema> - Postgresql schema name. Default is 'public'.
 
 =back
 
@@ -313,6 +320,12 @@ Heart of this plugin! This condition apply for all db routes even if column auth
 =item * No access check to route, but authorization by session will ready:
 
   $r->route('/foo')->...->over(access=>{auth=>0})->...;
+
+=item * Allow if has authentication only:
+
+  $r->route('/foo')->...->over(access=>{auth=>'only'})->...;
+  # same as
+  # $r->route('/foo')->...->over(authenticated => 1)->...; # see Mojolicious::Plugin::Authentication
 
 =item * Route accessible if user roles assigned to either B<loadable> namespace or controller 'Bar.pm' (which assigned neither namespece on db or assigned to that loadable namespace) or action 'bar' on controller Bar.pm (action record in db table actions):
 
