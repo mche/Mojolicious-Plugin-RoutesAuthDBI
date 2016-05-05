@@ -510,9 +510,9 @@ TXT
 
 sub new_controller {
   my $c = shift;
-  my $ns = $c->stash('ns') || $c->param('ns') ||  $c->stash('namespace') || $c->param('namespace');
-  $ns = undef if $ns eq 'undef';
-  my $mod = $c->stash('module') || $c->param('module');
+  #~ my $ns = $c->stash('ns') || $c->param('ns') ||  $c->stash('namespace') || $c->param('namespace');
+  my ($ns) = $c->vars('ns') || $c->vars('namespace');
+  my ($mod) = $c->vars('module');
   my $cn = $dbh->selectrow_hashref($sth->sth('controller'), undef, ($mod, ($ns) x 2,));
   $c->render(format=>'txt', text=><<TXT)
 $pkg
@@ -544,7 +544,7 @@ TXT
 
 sub new_namespace {
   my $c = shift;
-  my $ns = shift ||  $c->stash('ns') || $c->param('ns') ||  $c->stash('namespace') || $c->param('namespace');
+  my ($ns) = shift ||  $c->vars('ns') || $c->vars('namespace');
   my $n = $dbh->selectrow_hashref($sth->sth('namespace'), undef, ($ns));
   $c->render(format=>'txt', text=><<TXT)
 $pkg
@@ -595,6 +595,76 @@ ROUTES list (@{[scalar @$list]})
 TXT
 }
 
+sub new_route_ns {# показать список мест-имен
+  my $c = shift;
+  my $list = $dbh->selectall_arrayref($sth->sth('namespaces'), { Slice => {} }, );
+  $c->render(format=>'txt', text=><<TXT);
+$pkg
+
+1. Для нового маршрута укажите имя namespace или его ID или undef.
+Новый можно ввести.
+
+Namespaces (@{[scalar @$list]})
+===
+
+@{[$c->dumper( $list )]}
+TXT
+}
+
+sub new_route_c {# показать список контроллеров
+  my $c = shift;
+  my ($ns) = $c->vars('ns');
+  my $list = $dbh->selectall_arrayref($sth->sth('controllers', where=>"where n.id=? or n.namespace=? or (?::varchar is null and n.id is null)"), { Slice => {} }, ($ns =~ /\D/ ? (undef, $ns) : ($ns, undef,), $ns));
+  $c->render(format=>'txt', text=><<TXT);
+$pkg
+
+1. namespace = [$ns]
+2. Указать имя или ID контроллера или ввести новый
+
+Controllers (@{[scalar @$list]})
+===
+
+@{[$c->dumper( $list )]}
+TXT
+}
+
+sub new_route_a {# показать список действий
+  my $c = shift;
+  my ($ns, $controll) = $c->vars('ns', 'controll');
+  
+  $controll = $dbh->selectrow_hashref($sth->sth('controllers', where=>"where (n.id=? or n.namespace=? or (?::varchar is null and n.id is null)) and (c.id=? or c.controller=?)"), undef, ($ns =~ /\D/ ? (undef, $ns) : ($ns, undef,), $ns, $controll =~ /\D/ ? (undef, $controll) : ($controll, undef,), ));
+  
+  my $list = $dbh->selectall_arrayref($sth->sth('actions', where=>"where c.id=?"), { Slice => {} }, ($controll->{id}));
+  $c->render(format=>'txt', text=><<TXT);
+$pkg
+
+1. namespace = [$controll->{namespace_id}:$controll->{namespace}]
+2. controller = [$controll->{id}:$controll->{controller}]
+2. Указать имя или ID действия или ввести новое
+
+Actions (@{[scalar @$list]})
+===
+
+@{[$c->dumper( $list )]}
+TXT
+}
+
+sub new_route_req {# показать маршруты к действию
+  my $c = shift;
+  my ($ns, $controll, $act) = $c->vars('ns', 'controll', 'act');
+  
+}
+
+sub vars {# получить из stash || param
+  my $c = shift;
+  return map {
+    my $var = $c->stash($_) || $c->param($_);
+    $var = undef if $var eq 'undef';
+    $var;
+  } @_;
+}
+
+
 
 my @self_routes_cols = qw(request action name auth descr);
 sub self_routes {# from plugin!
@@ -617,7 +687,12 @@ sub self_routes {# from plugin!
 /$prefix/roles/:user	user_roles	$prefix roles of user	1	View roles of :user by id|login
 /$prefix/role/:role/:user	new_role_user	$prefix create ref role->user	1	Assign :user to :role by user.id|user.login and role.id|role.name.
 
-/$prefix/route/new	new_route	$prefix create route	1	Add new route by params: request,namespace, controller,....
+/$prefix/route/new	new_route_ns	$prefix create route step ns	1	Step namespace
+/$prefix/route/new/:ns	new_route_c	$prefix create route step controll	1	Step controller
+/$prefix/route/new/:ns/:controll	new_route_a	$prefix create route step action	1	Step action
+/$prefix/route/new/:ns/:controll/:act	new_route_req	$prefix create route step request	1	Step request
+/$prefix/route/new/:ns/:controll/:act/save	new_route	$prefix create route final	1	Final new route! Params request, name, auth, descr, ....
+
 /$prefix/routes	routes	$prefix view routes	1	View routes list
 /$prefix/routes/:role	role_routes	$prefix routes of role	1	All routes of :role by id|name
 /$prefix/route/:route/:role	ref	$prefix create ref route->role	1	Assign :route with :role by route.id and role.id|role.name

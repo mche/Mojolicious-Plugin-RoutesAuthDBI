@@ -326,7 +326,7 @@ L<DBIx::POS::Template>
     from {% $schema %}controllers c
     left join {% $schema %}refs r on c.id=r.id2
     left join {% $schema %}namespaces n on n.id=r.id1
-    ;
+    {% $where %};
 
 =item * B<namespaces>
 
@@ -371,10 +371,11 @@ L<DBIx::POS::Template>
 
 =sql
 
-  select a.*, c.namespace, c.controller
+  select a.*, c.id as controller_id, c.controller
   from {% $schema %}actions a
     left join {% $schema %}refs r on a.id=r.id2
     left join {% $schema %}controllers c on c.id=r.id1
+  {% $where %}
 
 =item * B<тест> 
 

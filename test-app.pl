@@ -24,6 +24,7 @@ sub startup {#
     auth=>{current_user_fn=>'auth_user'},
     access=> {},
     admin=>{prefix=>'myadmin', trust=>'fooobaaar'},
+    #~ schema=>'foo',
   );
   my $r = $app->routes;
   push @{ $r->namespaces() }, 'Mojolicious::Plugin::RoutesAuthDBI::Test',;
