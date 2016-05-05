@@ -160,6 +160,7 @@ TXT
 
 =sql
 
+  
   CREATE SCHEMA IF NOT EXISTS "{% $schema %}";
   set local search_path = "{% $schema %}";
 
@@ -171,6 +172,8 @@ TXT
 
 =sql
 
+  -- you may change schema name for PostgreSQL objects
+  
   CREATE SEQUENCE {% $schema %}ID;-- one sequence for all tables id
 
 =item * B<Routes>
