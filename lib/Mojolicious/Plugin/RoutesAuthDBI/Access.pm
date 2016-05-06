@@ -257,14 +257,14 @@ sub access_namespace {#implicit
 
 sub access_controller {#implicit
   my ($self, $namespace, $controller, $id2,) = @_;
-  my $c = $dbh->selectrow_hashref($sth->sth('controller'), undef, ( $controller, ($namespace) x 2,))
+  my $c = $dbh->selectrow_hashref($sth->sth('controller', where => "where controller=? and (namespace=? or (?::varchar is null and namespace is null))"), undef, ( $controller, ($namespace) x 2,))
     or return undef;
   $self->access_explicit([$c->{id}], $id2);
 }
 
 sub access_action {#implicit
   my ($self, $namespace, $controller, $action, $id2,) = @_;
-  my $c = $dbh->selectrow_hashref($sth->sth('controller'), undef, ( $controller, ($namespace) x 2,))
+  my $c = $dbh->selectrow_hashref($sth->sth('controller', where => "where controller=? and (namespace=? or (?::varchar is null and namespace is null))"), undef, ( $controller, ($namespace) x 2,))
     or return undef;
   return scalar $dbh->selectrow_array($sth->sth('access action'), undef, ( $c->{id}, $action, $id2));
 }

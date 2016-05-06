@@ -498,7 +498,21 @@ sub controllers {
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
-CONTROLLERS TABLE (@{[scalar @$list]})
+CONTROLLERS (@{[scalar @$list]})
+===
+
+@{[$c->dumper( $list)]}
+TXT
+}
+
+sub controller {# /controller/:ns/:controll
+  my $c = shift;
+  my ($ns, $controll) = $c->vars(qw(ns controll));
+  my $list = $dbh->selectall_arrayref($sth->sth('controller', where=>"where (id=? or controller=?) and (namespace_id = ? or namespace = ? or (?::varchar is null and namespace is null))"), { Slice => {} }, ($controll =~ /\D/ ? (undef, $controll) : ($controll, undef), $ns =~ /\D/ ? (undef, $ns) : ($ns, undef), $ns));
+  $c->render(format=>'txt', text=><<TXT);
+$pkg
+
+CONTROLLER (@{[scalar @$list]})
 ===
 
 @{[$c->dumper( $list)]}
@@ -569,6 +583,9 @@ TXT
 sub actions {
   my $c = shift;
   my $list = $dbh->selectall_arrayref($sth->sth('actions'), { Slice => {} }, );
+  map {
+    $_->{routes} = $dbh->selectall_arrayref($sth->sth('action routes', where=>"where action_id=?"), { Slice => {} }, ($_->{id}));
+  } @$list;
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
@@ -582,6 +599,7 @@ TXT
 sub routes {
   my $c = shift;
   my $list = $dbh->selectall_arrayref($sth->sth('apply routes'), { Slice => {} }, );
+  
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
@@ -638,8 +656,8 @@ sub new_route_a {# показать список действий
   $controll = $dbh->selectrow_hashref($sth->sth('controllers', where=>"where (n.id=? or (?::varchar is null and n.id is null)) and (c.id=? or c.controller=?)"), undef, ($ns->{id}, $ns->{id}, $controll =~ /\D/ ? (undef, $controll) : ($controll, undef,), ))
     || {controller=>$controll};
   
-  my $list = $dbh->selectall_arrayref($sth->sth('actions', where=>"where c.id=?"), { Slice => {} }, ($controll->{id}));
-  my $list2 = $dbh->selectall_arrayref($sth->sth('actions', where=>"where c.id is null"), { Slice => {} }, ());
+  my $list = $dbh->selectall_arrayref($sth->sth('actions', where=>"where controller_id=?"), { Slice => {} }, ($controll->{id}));
+  my $list2 = $dbh->selectall_arrayref($sth->sth('actions', where=>"where controller_id is null"), { Slice => {} }, ());
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
@@ -670,8 +688,8 @@ sub new_route {# показать маршруты к действию
   $controll = $dbh->selectrow_hashref($sth->sth('controllers', where=>"where (n.id=? or (?::varchar is null and n.id is null)) and (c.id=? or c.controller=?)"), undef, ($ns->{id}, $ns->{id}, $controll =~ /\D/ ? (undef, $controll) : ($controll, undef,), ))
     || {controller=>$controll};
   
-  $act = $dbh->selectrow_hashref($sth->sth('actions', where=>"where c.id=? and (a.id = ? or a.action = ? )"), undef, ($controll->{id}, $act =~ /\D/ ? (undef, $act) : ($act, undef,),))
-    || $dbh->selectrow_hashref($sth->sth('actions', where=>"where c.id is null and (a.id = ? or a.action = ? )"), undef, ($act =~ /\D/ ? (undef, $act) : ($act, undef,),))
+  $act = $dbh->selectrow_hashref($sth->sth('actions', where=>"where controller_id=? and (a.id = ? or a.action = ? )"), undef, ($controll->{id}, $act =~ /\D/ ? (undef, $act) : ($act, undef,),))
+    || $dbh->selectrow_hashref($sth->sth('actions', where=>"where controller_id is null and (a.id = ? or a.action = ? )"), undef, ($act =~ /\D/ ? (undef, $act) : ($act, undef,),))
     || {action => $act};
   
   # Проверка на похожий $request ?? TODO
@@ -712,10 +730,10 @@ TXT
   
   
   # маршруты действия
-  my $list = $act->{id} ? $dbh->selectall_arrayref($sth->sth('action routes', where=>'where a.id=?'), { Slice => {} }, ($act->{id}))
+  my $list = $act->{id} ? $dbh->selectall_arrayref($sth->sth('action routes', where=>'where action_id=?'), { Slice => {} }, ($act->{id}))
     : [];
   # свободные маршруты
-  my $list2 = $act->{id} ? $dbh->selectall_arrayref($sth->sth('action routes', where=>'where a.id is null'), { Slice => {} }, ())
+  my $list2 = $act->{id} ? $dbh->selectall_arrayref($sth->sth('action routes', where=>'where action_id is null'), { Slice => {} }, ())
     : [];
   
   $c->render(format=>'txt', text=><<TXT);
@@ -803,6 +821,7 @@ sub self_routes {# from plugin!
 #
 /$prefix/controllers	controllers	$prefix controllers	1	Controllers list
 /$prefix/controller/new/:ns/:module	new_controller	$prefix new_controller	1	Add new controller by :ns and :module
+/$prefix/controller/:ns/:controll	controller	$prefix controller	1	View a controller (ID and name for NS and controller)
 /$prefix/actions	actions	$prefix actions	1	Actions list
 #
 # Роли и доступ

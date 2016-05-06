@@ -108,7 +108,7 @@ L<DBIx::POS::Template>
 
 =name access action
 
-=desc доступ к действию
+=desc доступ к действию в контроллере (действие-каллбак - доступ проверяется по его ID)
 
 =sql
 
@@ -255,16 +255,14 @@ L<DBIx::POS::Template>
 
 =sql
 
+  select * from (
   select c.*, n.namespace, n.id as namespace_id, n.descr as namespace_descr
   from
     {% $schema %}controllers c
     left join {% $schema %}refs r on c.id=r.id2
     left join {% $schema %}namespaces n on n.id=r.id1
-  
-  where
-    c.controller=?
-    and (n.namespace=? or (?::varchar is null and n.id is null))
-    
+  ) s
+  {% $where %}
 
 =item * B<new controller> 
 
@@ -286,11 +284,16 @@ L<DBIx::POS::Template>
 
 =sql
 
-  select r.*
+  select * from (
+  select r.*, s.action_id
   from {% $schema %}routes r
-    left join {% $schema %}refs s on r.id=s.id1
-    left join {% $schema %}actions a on a.id=s.id2
-  {% $where %};
+    left join (
+     select s.id1, a.id as action_id
+     from {% $schema %}refs s
+      join {% $schema %}actions a on a.id=s.id2
+    ) s on r.id=s.id1
+  ) s
+  {% $where %}; -- action_id is null - free routes; or action(id) routes
   ;
 
 
@@ -388,14 +391,20 @@ L<DBIx::POS::Template>
 
 =name actions
 
-=desc Список
+=desc Список действий
 
 =sql
 
-  select a.*, c.id as controller_id, c.controller
+  select * from (
+  select a.*, ac.controller_id, ac.controller
   from {% $schema %}actions a
-    left join {% $schema %}refs r on a.id=r.id2
-    left join {% $schema %}controllers c on c.id=r.id1
+    left join (
+      select a.id, c.id as controller_id, c.controller
+      from {% $schema %}actions a
+        join {% $schema %}refs r on a.id=r.id2
+        join {% $schema %}controllers c on c.id=r.id1
+      ) ac on a.id=ac.id-- действия с контроллером
+  ) as a
   {% $where %}
 
 =item * B<new action>

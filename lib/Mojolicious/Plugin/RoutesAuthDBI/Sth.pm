@@ -2,6 +2,7 @@ package Mojolicious::Plugin::RoutesAuthDBI::Sth;
 use Mojo::Base -strict;
 use DBIx::POS::Template;
 use Digest::MD5 qw( md5_hex );
+use Encode qw(encode_utf8);
 
 
 =pod
@@ -57,7 +58,7 @@ sub sth {
   return $sth unless $name;
   die "No such name[$name] in SQL dict!" unless $sql->{$name};
   my $s = $sql->{$name}->template(schema => $schema, %arg);
-  $sth->{$name}{md5_hex($s)} ||= $dbh->prepare($s); # : $sql->{$name}->sql
+  $sth->{$name}{md5_hex( encode_utf8($s))} ||= $dbh->prepare($s); # : $sql->{$name}->sql
 }
 
 1;
