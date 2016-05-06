@@ -17,7 +17,7 @@ my $sth;#sth hub
 
 =head1 WARN
 
-Still incomplete!
+More or less complete!
 
 =head1 NAME
 
@@ -48,8 +48,6 @@ Both above options determining the module controller for web actions on tables r
 =item * B<prefix> -is a prefix for admin urls of this module. Default as name of controller lowcase.
 
 =item * B<trust> is a url subprefix for trust admin urls of this module. See defaults below.
-
-=item * B<schema> is a Postgresql schema name.
 
 =back
 
