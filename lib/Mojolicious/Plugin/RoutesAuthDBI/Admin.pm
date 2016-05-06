@@ -203,8 +203,7 @@ sub trust_new_user {
   $rl ||= $dbh->selectrow_hashref($sth->sth('new role'), undef, ('admin'));
   
   # REF role->user
-  my $ru = $dbh->selectrow_hashref($sth->sth('ref'), undef, ($rl->{id}, $u->{id}));
-  $ru ||= $dbh->selectrow_hashref($sth->sth('new ref'), undef, ($rl->{id}, $u->{id}));
+  my $ru = $c->ref($rl->{id}, $u->{id});
   
   # CONTROLLER
   my $cc = $dbh->selectrow_hashref($sth->sth('controller'), undef, (($init_conf->{controller}, $init_conf->{namespace}) x 2,));
@@ -215,12 +214,10 @@ sub trust_new_user {
   $ns ||= $dbh->selectrow_hashref($sth->sth('new namespace'), undef, ($init_conf->{namespace}, 'plugin ns!'));
   
   #ref namespace -> controller
-  my $nc = $dbh->selectrow_hashref($sth->sth('ref'), undef, ($ns->{id}, $cc->{id}));
-  $nc ||= $dbh->selectrow_hashref($sth->sth('new ref'), undef, ($ns->{id}, $cc->{id}));
+  my $nc = $c->ref($ns->{id}, $cc->{id});
   
   #REF namespace->role
-  my $cr = $dbh->selectrow_hashref($sth->sth('ref'), undef, ($ns->{id}, $rl->{id}));
-  $cr ||= $dbh->selectrow_hashref($sth->sth('new ref'), undef, ($ns->{id}, $rl->{id}));
+  my $cr = $c->ref($ns->{id}, $rl->{id});
   
   $c->render(format=>'txt', text=><<TXT);
 $pkg
@@ -347,7 +344,7 @@ TXT
     and return
     if $ref;
   
-  $ref = $dbh->selectrow_hashref($sth->sth('new ref'), undef, ($r->{id}, $u->{id}));
+  $ref = $c->ref($r->{id}, $u->{id});
   
   $c->render(format=>'txt', text=><<TXT);
 $pkg
@@ -526,7 +523,7 @@ TXT
   if $cn;
   my $n = $c->new_namespace($ns) if $ns;
   $cn = $dbh->selectrow_hashref($sth->sth('new controller'), undef, ($mod, undef));
-  $dbh->selectrow_hashref($sth->sth('new ref'), undef, ($n->{id}, $cn->{id}))
+  $c->ref($n->{id}, $cn->{id})
     if $n;
   
   $cn = $dbh->selectrow_hashref($sth->sth('controller'), undef, ($mod, ($ns) x 2,));
@@ -642,6 +639,7 @@ sub new_route_a {# показать список действий
     || {controller=>$controll};
   
   my $list = $dbh->selectall_arrayref($sth->sth('actions', where=>"where c.id=?"), { Slice => {} }, ($controll->{id}));
+  my $list2 = $dbh->selectall_arrayref($sth->sth('actions', where=>"where c.id is null"), { Slice => {} }, ());
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
@@ -650,10 +648,14 @@ $pkg
 
 Указать имя или ID действия из списка или ввести новое имя действия
 
-Actions (@{[scalar @$list]})
+Actions for selected controller (@{[scalar @$list]})
 ===
-
 @{[$c->dumper( $list )]}
+
+Actions without controller (@{[scalar @$list2]}):
+===
+@{[$c->dumper( $list2 )]}
+
 TXT
 }
 
@@ -669,21 +671,17 @@ sub new_route {# показать маршруты к действию
     || {controller=>$controll};
   
   $act = $dbh->selectrow_hashref($sth->sth('actions', where=>"where c.id=? and (a.id = ? or a.action = ? )"), undef, ($controll->{id}, $act =~ /\D/ ? (undef, $act) : ($act, undef,),))
+    || $dbh->selectrow_hashref($sth->sth('actions', where=>"where c.id is null and (a.id = ? or a.action = ? )"), undef, ($act =~ /\D/ ? (undef, $act) : ($act, undef,),))
     || {action => $act};
   
   # Проверка на похожий $request ?? TODO
   my $route = {};
-  @$route{@route_cols} = $c->vars(@route_cols);
-  
+  @$route{@route_cols, 'id'} = $c->vars(@route_cols, 'id',);
+
   my @save = ();
-  $route->{request} && $route->{name}
+  ($route->{id} || ($route->{request} && $route->{name}))
     && (@save = $c->route_save($ns, $controll, $act, $route))
-  ;
-  
-  # маршруты действия
-  my $list = $act->{id} ? $dbh->selectall_arrayref($sth->sth('role routes'), { Slice => {} }, ($act->{id}))
-    : [];
-  $c->render(format=>'txt', text=>scalar @save ? <<TXT
+    && $c->render(format=>'txt', text=><<TXT)
 $pkg
 
 Success done save!
@@ -709,17 +707,28 @@ Refs:
 @{[$c->dumper( $save[4] )]}
 
 TXT
-  : # 
-  <<TXT);
+    && return $c
+  ;
+  
+  
+  # маршруты действия
+  my $list = $act->{id} ? $dbh->selectall_arrayref($sth->sth('action routes', where=>'where a.id=?'), { Slice => {} }, ($act->{id}))
+    : [];
+  # свободные маршруты
+  my $list2 = $act->{id} ? $dbh->selectall_arrayref($sth->sth('action routes', where=>'where a.id is null'), { Slice => {} }, ())
+    : [];
+  
+  $c->render(format=>'txt', text=><<TXT);
 $pkg
 
 1. namespace = [$ns->{id}:$ns->{namespace}]
 2. controller = [$controll->{id}:$controll->{controller}]
 3. action = [$act->{id}:$act->{action}]
 
-Указано: ?request=$request;name=$name;descr=$descr;auth=$auth;disable=$disable;order_by=$order_by
+Указано: 
+@{[map ("$_=$route->{$_}\n", @route_cols)]}
 
-Уаказать параметры маршрута (?request=/x/y/:z&name=xyz&descr=...):
+Указать параметры маршрута (?request=/x/y/:z&name=xyz&descr=...):
 
 * request (request=GET POST /foo/:bar)
 * name (name=foo_bar)
@@ -730,8 +739,11 @@ $pkg
 
 Exists routes for selected action (@{[$list ? scalar @$list : 0]})
 ===
-
 @{[$c->dumper( $list )]}
+
+Free routes (@{[$list2 ? scalar @$list2 : 0]})
+===
+@{[$c->dumper( $list2 )]}
 
 TXT
   
@@ -740,29 +752,40 @@ TXT
 sub route_save {
   my $c = shift;
   my ($ns, $controll, $act, $route) = @_;
-  $ns = $dbh->selectrow_hashref($sth->sth('new namespace'), undef, (@$ns->{qw(namespace descr)}))
+  local $dbh->{AutoCommit} = 0;
+  $ns = $dbh->selectrow_hashref($sth->sth('new namespace'), undef, (@$ns{qw(namespace descr)}))
     if $ns->{namespace} && ! $ns->{id};
-  $controll = $dbh->selectrow_hashref($sth->sth('new controller'), undef, (@$controll->{qw(controller descr)}))
+  $controll = $dbh->selectrow_hashref($sth->sth('new controller'), undef, (@$controll{qw(controller descr)}))
     unless $controll->{id};
-  $act = $dbh->selectrow_hashref($sth->sth('new action'), undef, (@$act->{qw(action callback descr)}))
+  $act = $dbh->selectrow_hashref($sth->sth('new action'), undef, (@$act{qw(action callback descr)}))
     unless $act->{id};
-  $route = $dbh->selectrow_hashref($sth->sth('new route'), undef, (@$route->{@route_cols}))
+    
+  $route = $dbh->selectrow_hashref($sth->sth('new route'), undef, (@$route{@route_cols}))
     unless $route->{id};
   my $ref = [map {
-    $dbh->selectrow_hashref($sth->sth('new ref'), undef, ($_->[0]{id}, $_->[1]{id},))
+    $c->ref($$_[0]{id}, $$_[1]{id},) if $$_[0]{id} && $$_[1]{id};
   } ([$ns, $controll], [$controll, $act], [$route, $act],)];
-  
+  $dbh->commit;
   return ($ns, $controll, $act, $route, $ref);
 
 }
 
 sub vars {# получить из stash || param
   my $c = shift;
+
   return map {
     my $var = $c->stash($_) || $c->param($_);
-    $var = undef if $var eq 'undef';
+    $var = undef if defined($var) && $var eq 'undef';
     $var;
   } @_;
+}
+
+sub ref {# get or save
+  my $c = shift;
+  my ($id1, $id2) = @_;
+    #~ $c->app->log->debug($c->dumper(\@_));
+  $dbh->selectrow_hashref($sth->sth('ref'), undef, ($id1, $id2,))
+    || $dbh->selectrow_hashref($sth->sth('new ref'), undef, ($id1, $id2,));
 }
 
 
@@ -798,6 +821,7 @@ sub self_routes {# from plugin!
 /$prefix/route/new/:ns	new_route_c	$prefix create route step controll	1	Step controller
 /$prefix/route/new/:ns/:controll	new_route_a	$prefix create route step action	1	Step action
 /$prefix/route/new/:ns/:controll/:act	new_route	$prefix create route step request	1	Step request. Params: request, name, auth, descr, ....
+/$prefix/route/new/:ns/:controll/:act/:id	new_route	$prefix create route step exist route	1	Step by route id to assign to ns-controller-action
 #
 # Маршруты и доступ
 #

@@ -63,12 +63,17 @@ L<DBIx::POS::Template>
   from {% $schema %}routes r
     join {% $schema %}refs rf on r.id=rf.id1
     join 
-    (select a.*, c.controller, c.id as controller_id, n.namespace, n.id as namespace_id
+    (
+      select a.*, c.*
       from {% $schema %}actions a 
-      left join {% $schema %}refs r on a.id=r.id2
-      left join {% $schema %}controllers c on c.id=r.id1
-      left join {% $schema %}refs r2 on c.id=r2.id2
-      left join {% $schema %}namespaces n on n.id=r2.id1
+      left join (
+        select r.id2 as _id, c.controller, c.id as controller_id, n.namespace, n.id as namespace_id
+        from 
+          {% $schema %}refs r
+          join {% $schema %}controllers c on r.id1=c.id
+          left join {% $schema %}refs r2 on c.id=r2.id2
+          left join {% $schema %}namespaces n on n.id=r2.id1
+      ) c on a.id=c._id
     ) ac on rf.id2=ac.id
   order by r.order_by, r.ts;
 
@@ -273,6 +278,22 @@ L<DBIx::POS::Template>
   values (?,?)
   returning *;
 
+=item * B<action routes> 
+
+=name action routes
+
+=desc маршрут может не привязан к действию
+
+=sql
+
+  select r.*
+  from {% $schema %}routes r
+    left join {% $schema %}refs s on r.id=s.id1
+    left join {% $schema %}actions a on a.id=s.id2
+  {% $where %};
+  ;
+
+
 =item * B<new route> 
 
 =name new route
@@ -281,8 +302,8 @@ L<DBIx::POS::Template>
 
 =sql
 
-  insert into {% $schema %}routes (request, name, auth, descr, disable, order_by)
-  values (?,?,?,?,?,?,?,?,?)
+  insert into {% $schema %}routes (request, name, descr, auth, disable, order_by)
+  values (?,?,?,?,?,?)
   returning *;
 
 =item * B<role users> 
