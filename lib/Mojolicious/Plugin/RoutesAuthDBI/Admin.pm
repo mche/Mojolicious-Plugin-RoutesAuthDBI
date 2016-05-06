@@ -144,7 +144,7 @@ TXT
 sub sign {
   my $c = shift;
   
-  $c->authenticate($c->stash('login') || $c->param('login'), $c->stash('pass') || $c->param('pass'))
+  $c->authenticate($c->vars('login','pass'))
     and $c->redirect_to("admin home")
     #~ and $c->render(format=>'txt', text=>__PACKAGE__ . "\n\nSuccessfull signed! ".$c->dumper( $c->auth_user))
     and return;
@@ -165,7 +165,7 @@ sub signout {
 sub new_user {
   my $c = shift;
   
-  my ($login, $pass) = ($c->stash('login') || $c->param('login'), $c->stash('pass') ||  $c->param('pass'));
+  my ($login, $pass) = $c->vars('login', 'pass');
   
   my $r;
   ($r = $dbh->selectrow_hashref($sth->sth('user'), undef, (undef, $login)))
@@ -245,7 +245,7 @@ TXT
 
 sub new_role {
 	my $c = shift;
-	my $name = $c->stash('name');
+	my ($name) = $c->vars('name');
 	my $r = $dbh->selectrow_hashref($sth->sth('role'), undef, (undef, $name));
 	$c->render(format=>'txt', text=><<TXT)
 $pkg
@@ -274,7 +274,7 @@ TXT
 
 sub user_roles {
   my $c = shift;
-  my $user = $c->stash('user') || $c->param('user');
+  my ($user) = $c->vars('user');
   my $u =  $dbh->selectrow_hashref($sth->sth('user'), undef, ($user =~ /\D/ ? (undef, $user) : ($user, undef,)));
   
   $c->render(format=>'txt', text=><<TXT)
@@ -308,7 +308,7 @@ TXT
 sub new_role_user {
   my $c = shift;
   
-  my $role = $c->stash('role') || $c->param('role');
+  my ($role) = $c->vars('role');
   # ROLE
   my $r = $dbh->selectrow_hashref($sth->sth('role'), undef, ($role =~ /\D/ ? (undef, $role) : ($role, undef,)));
   $c->render(format=>'txt', text=><<TXT)
@@ -364,7 +364,7 @@ TXT
 sub del_role_user {# удалить связь пользователя с ролью
   my $c = shift;
   
-  my $role = $c->stash('role') || $c->param('role');
+  my ($role) = $c->vars('role');
   # ROLE
   my $r = $dbh->selectrow_hashref($sth->sth('role'), undef, ($role =~ /\D/ ? (undef, $role) : ($role, undef,)));
   $c->render(format=>'txt', text=><<TXT)
@@ -416,7 +416,7 @@ sub disable_role {
   my $a = shift // 1; # 0-enable 1 - disable
   my $k = {0=>'enable', 1=>'disable',};
   
-  my $role = $c->stash('role') || $c->param('role');
+  my ($role) = $c->vars('role');
   # ROLE
   my $r = $dbh->selectrow_hashref($sth->sth('dsbl/enbl role'), undef, ($a, $role =~ /\D/ ? (undef, $role) : ($role, undef,)));
   $c->render(format=>'txt', text=><<TXT)
@@ -446,7 +446,7 @@ sub enable_role {shift->disable_role(0);}
 sub role_users {# все пользователи роли по запросу /myadmin/users/:role
   my $c = shift;
   
-  my $role = $c->stash('role') || $c->param('role');
+  my ($role) = $c->vars('role');
   # ROLE
   my $r = $dbh->selectrow_hashref($sth->sth('role'), undef, ($role =~ /\D/ ? (undef, $role) : ($role, undef,)));
   $c->render(format=>'txt', text=><<TXT)
@@ -473,7 +473,7 @@ TXT
 sub role_routes {# все маршруты роли по запросу /myadmin/routes/:role
   my $c = shift;
   
-   my $role = $c->stash('role') || $c->param('role');
+   my ($role) = $c->vars('role');
   # ROLE
   my $r = $dbh->selectrow_hashref($sth->sth('role'), undef, ($role =~ /\D/ ? (undef, $role) : ($role, undef,)));
   $c->render(format=>'txt', text=><<TXT)
@@ -619,7 +619,8 @@ sub new_route_c {# показать список контроллеров
 $pkg
 
 1. namespace = [$ns]
-2. Указать имя или ID контроллера или ввести новый
+
+Указать имя или ID контроллера или ввести новое имя
 
 Controllers (@{[scalar @$list]})
 ===
@@ -640,7 +641,8 @@ $pkg
 
 1. namespace = [$controll->{namespace_id}:$controll->{namespace}]
 2. controller = [$controll->{id}:$controll->{controller}]
-2. Указать имя или ID действия или ввести новое
+
+Указать имя или ID действия из списка или ввести новое имя действия
 
 Actions (@{[scalar @$list]})
 ===
@@ -652,6 +654,27 @@ TXT
 sub new_route_req {# показать маршруты к действию
   my $c = shift;
   my ($ns, $controll, $act) = $c->vars('ns', 'controll', 'act');
+  $controll = $dbh->selectrow_hashref($sth->sth('controllers', where=>"where (n.id=? or n.namespace=? or (?::varchar is null and n.id is null)) and (c.id=? or c.controller=?)"), undef, ($ns =~ /\D/ ? (undef, $ns) : ($ns, undef,), $ns, $controll =~ /\D/ ? (undef, $controll) : ($controll, undef,), ));
+  
+  $act = $dbh->selectrow_hashref($sth->sth('actions', where=>"where c.id=? and (a.id = ? or a.action = ? )"), undef, ($controll->{id}, $act =~ /\D/ ? (undef, $act) : ($act, undef,),));
+  
+  $c->render(format=>'txt', text=><<TXT);
+$pkg
+
+1. namespace = [$controll->{namespace_id}:$controll->{namespace}]
+2. controller = [$controll->{id}:$controll->{controller}]
+3. action = [$act->{id}:$act->{action}]
+
+Уаказать параметры маршрута (?request=/x/y/:z&name=xyz&descr...):
+
+* request (request=GET POST /foo/:bar)
+* name (name=foo_bar)
+- descr (descr=пояснение такое)
+- auth (auth=1) (auth='only')
+- disable (disable=1)
+- order_by (order_by=123)
+
+TXT
   
 }
 
