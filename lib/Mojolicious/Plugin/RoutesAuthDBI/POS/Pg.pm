@@ -303,7 +303,7 @@ L<DBIx::POS::Template>
 
 =name role routes
 
-=desc Маршруты роли
+=desc Маршруты роли/действия
 
 =sql
 
@@ -349,7 +349,7 @@ L<DBIx::POS::Template>
 
   select *
   from {% $schema %}namespaces
-  where namespace = ?;
+  where id=? or namespace = ?;
 
 =item * B<new namespace>
 
@@ -376,6 +376,19 @@ L<DBIx::POS::Template>
     left join {% $schema %}refs r on a.id=r.id2
     left join {% $schema %}controllers c on c.id=r.id1
   {% $where %}
+
+=item * B<new action>
+
+=name new action
+
+=desc 
+
+=sql
+
+  insert into {% $schema %}actions (action, callback, descr)
+  values (?,?,?)
+  returning *;
+
 
 =item * B<тест> 
 

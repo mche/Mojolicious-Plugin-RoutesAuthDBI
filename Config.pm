@@ -3,6 +3,7 @@
 Главный Конфиг сервиса, различные опции для главного модуля
 В него сливаются все отдельные конфиги
 Его имя жестко зашито в app
+Обрабатывается плугином 'ConfigApply'
 =cut
 
 #use strict;# Plugin::Config добавляет use Mojo::Base -strict
@@ -48,12 +49,26 @@
 				#~ AutoInactiveDestroy => 1,
 			}],
 			do=>['set  datestyle to "ISO, DMY";',],
-			#~ sth=>{now=>"select now();"},# prepared sth
+			sth=>{# prepared sth
+					'table.columns'=><<SQL,
+select * 
+from information_schema.columns
+where
+	table_catalog='test'
+	and table_schema=? --'public'
+	and table_name=? --'routes'
+;
+
+
+SQL
+				
+				},
+			
 		}
 	},
 	#!!! пустой has sth=>sub{{};}; в app !!!
 	sth => { main=>{},},# prepared sth
-
+#~ now=>"select now();"
 };
 
 

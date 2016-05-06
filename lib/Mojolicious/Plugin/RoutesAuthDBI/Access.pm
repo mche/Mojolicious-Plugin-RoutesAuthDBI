@@ -205,6 +205,10 @@ sub apply_route {# meth in Plugin
     and return undef
     unless $r_hash->{request};
   
+  $app->log->debug("Skip comment request [$r_hash->{request}]")
+    and return undef
+    if $r_hash->{request} =~ /^#/;
+  
   my @request = grep /\S/, split /\s+/, $r_hash->{request}
     or return;
   my $nr = $r->route(pop @request);
