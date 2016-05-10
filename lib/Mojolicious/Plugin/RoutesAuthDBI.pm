@@ -2,7 +2,7 @@ package Mojolicious::Plugin::RoutesAuthDBI;
 use Mojo::Base 'Mojolicious::Plugin::Authentication';
 use Mojo::Loader qw(load_class);
 
-our $VERSION = '0.420';
+our $VERSION = '0.440';
 
 my $access;# 
 my $pkg = __PACKAGE__;
@@ -26,7 +26,9 @@ sub register {
   my ($self, $app,) = (shift, shift);
   $conf = shift; # global
   $conf->{dbh} ||= $app->dbh;
-  $conf->{schema} ||= 'public';
+  $conf->{pos} ||= {};
+  $conf->{pos}{schema} ||= 'public';
+  $conf->{pos}{file} ||= 'POS/Pg.pm';
   die "Plugin must work with arg dbh, see SYNOPSIS" unless $conf->{dbh};
   $conf->{access} ||= {};
   $conf->{access}{namespace} ||= $pkg unless $conf->{access}{module};
@@ -34,7 +36,7 @@ sub register {
   $conf->{access}{dbh} = $conf->{dbh};
   $conf->{access}{fail_auth_cb} ||= $fail_auth_cb;
   $conf->{access}{fail_access_cb} ||= $fail_access_cb;
-  $conf->{access}{schema} ||= $conf->{schema};
+  $conf->{access}{pos} ||= $conf->{pos};
   # class obiect
   $access ||= $self->access_instance($app, $conf->{access});
   
@@ -56,7 +58,7 @@ sub register {
     $conf->{admin}{sth} = $access->{sth};
     $conf->{admin}{prefix} ||= lc($conf->{admin}{controller});
     $conf->{admin}{trust} ||= $app->secrets->[0];
-    $conf->{admin}{schema} ||= $conf->{schema};
+    $conf->{admin}{pos} ||= $conf->{pos};
     my $admin ||= $self->admin_controller($app, $conf->{admin});
     $access->apply_route($app, $_) for $admin->self_routes;
   }
@@ -224,7 +226,7 @@ sub access {# add_condition
 
 =head1 VERSION
 
-0.420
+0.440
 
 =head1 NAME
 
@@ -241,17 +243,19 @@ First of all you will see L<SVG|https://github.com/mche/Mojolicious-Plugin-Route
         auth => {...},
         access => {...},
         admin => {...},
-        schema=>'public',# Postgresql
+        pos => {...},
     );
 
 
-=head2 OPTIONS
+=head2 PLUGIN OPTIONS
 
-=over 4
+=head3 dbh
 
-=item * B<dbh> - handler DBI connection where are tables: controllers, actions, routes, users, roles, refs.
+Handler DBI connection where are tables: controllers, actions, routes, users, roles, refs.
 
-=item * B<auth> - hashref options pass to base plugin L<Mojolicious::Plugin::Authentication>.
+=head3 auth
+
+Hashref options pass to base plugin L<Mojolicious::Plugin::Authentication>.
 By default the option:
 
     current_user_fn => 'auth_user',
@@ -282,7 +286,9 @@ You might define your own module by passing options:
 
 See L<Mojolicious::Plugin::RoutesAuthDBI::Access> for detail options list.
 
-=item * B<admin> - hashref options for admin controller for actions on SQL tables routes, roles, users. By default the builtin module:
+=head3 admin
+
+Hashref options for admin controller for actions on SQL tables routes, roles, users. By default the builtin module:
 
     admin => {
         controller => 'Access',
@@ -301,7 +307,9 @@ You might define your own controller by passing options:
 
 See L<Mojolicious::Plugin::RoutesAuthDBI::Admin> for detail options list.
 
-=item * B<schema> - Postgresql schema name. Default is 'public'.
+=head3 pos
+
+Hashref options for POS-dictionary instance. See L<Mojolicious::Plugin::RoutesAuthDBI::Sth>.
 
 =back
 

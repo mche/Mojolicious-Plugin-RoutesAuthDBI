@@ -1,8 +1,6 @@
 package Mojolicious::Plugin::RoutesAuthDBI::Sth;
 use Mojo::Base -strict;
 use DBIx::POS::Template;
-use Digest::MD5 qw( md5_hex );
-use Encode qw(encode_utf8);
 
 
 =pod
@@ -19,13 +17,16 @@ Mojolicious::Plugin::RoutesAuthDBI::Sth - is a DBI statements hub for L<Mojolici
 
 =head1 SYNOPSIS
 
-    my $sth = bless [$dbh, {}, $schema], 'Mojolicious::Plugin::RoutesAuthDBI::Sth';
-    $sth->init(pos => 'POS/Pg.pm');
+    my $sth = Mojolicious::Plugin::RoutesAuthDBI::Sth->new($dbh, <opt1> => <val1>, ...);
     my $r = $dbh->selectrow_hashref($sth->sth('foo name'));
 
 =head1 DESCRIPTION
 
-Singleton dictionary of DBI statements.
+Dictionary of DBI statements parses from POS-file.
+
+=head1 OPTIONS on new()
+
+
 
 =head1 SEE ALSO
 
@@ -33,32 +34,28 @@ L<DBIx::POS::Template>
 
 =cut
 
-my $dbh;
-my $sth;
-
-our $sql;#
+our %sql;
 my @path = split(/\//, __FILE__ );
 
-sub init {
-  my $self = shift;
-  my %arg = @_;
-  $sql = DBIx::POS::Template->new(join('/', @path[0 .. $#path -1], $arg{pos}), enc=>'utf8') #$arg{pos} =~ s/::/\//gr . '.pm'
-    if $arg{pos};
-  return $self;
+sub new {
+  my $class = shift;
+  my %opt = @_;
+  my $file = join('/', @path[0 .. $#path -1], $opt{file});
+  $sql{$file} ||= DBIx::POS::Template->new($file,);
+  return bless [$dbh, \%opt, $sql{$file}], $class;
 }
 
 sub sth {
-  my ($db, $st, $schema) = @{ shift() };
+  my ($dbh, $opt, $sql) = @{ shift() };
   my $name = shift;
   my %arg = @_;
-  $dbh ||= $db or die "Not defined dbh a DBI handle"; # init dbh once
-  #~ warn "Initiate Sth cache $st" unless $sth;
-  $sth ||= $st; # init cache once
-  $sth ||= {};
-  return $sth unless $name;
   die "No such name[$name] in SQL dict!" unless $sql->{$name};
-  my $s = $sql->{$name}->template(schema => $schema, %arg);
+  my $s = $sql->{$name}->template(schema => $opt->{schema}, %arg);
+  my $p = $sql->{$name}->param;
   $sth->{$name}{md5_hex( encode_utf8($s))} ||= $dbh->prepare($s); # : $sql->{$name}->sql
+  return $dbh->prepare_cached($s)
+    if $p && $p->{cached};
+  return $dbh->prepare($s);
 }
 
 1;

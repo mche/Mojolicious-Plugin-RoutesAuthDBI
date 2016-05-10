@@ -1,0 +1,46 @@
+{
+   "abstract" : "from DBI sql-tables does generate routes, make authentication and make restrict access (authorization) to request. Plugin makes an auth operations throught the plugin L<Mojolicious::Plugin::Authentication> on which is based.",
+   "author" : [
+      "Mikhail Che <mche@cpan.org>"
+   ],
+   "dynamic_config" : 1,
+   "generated_by" : "ExtUtils::MakeMaker version 7.1, CPAN::Meta::Converter version 2.150005",
+   "license" : [
+      "unknown"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "Mojolicious-Plugin-RoutesAuthDBI",
+   "no_index" : {
+      "directory" : [
+         "t",
+         "inc"
+      ]
+   },
+   "prereqs" : {
+      "build" : {
+         "requires" : {
+            "Test::More" : "0"
+         }
+      },
+      "configure" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "0"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "DBI" : "1.6",
+            "DBIx::POS::Template" : "0.00002",
+            "Mojolicious" : "6",
+            "Mojolicious::Plugin::Authentication" : "1.29",
+            "perl" : "5.014"
+         }
+      }
+   },
+   "release_status" : "stable",
+   "version" : "0.430",
+   "x_serialization_backend" : "JSON::PP version 2.27300"
+}
