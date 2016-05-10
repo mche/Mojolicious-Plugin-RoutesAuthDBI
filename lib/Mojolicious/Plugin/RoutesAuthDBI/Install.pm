@@ -2,7 +2,7 @@ package Mojolicious::Plugin::RoutesAuthDBI::Install;
 use Mojo::Base 'Mojolicious::Controller';
 use DBIx::POS::Template;
 
-my $sql = DBIx::POS::Template->new(__FILE__, enc => 'utf8');
+my $sql = DBIx::POS::Template->new(__FILE__);
 
 =pod
 
@@ -40,10 +40,37 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
     $ perl -e "use Mojo::Base 'Mojolicious'; __PACKAGE__->new()->start(); sub startup {shift->routes->route('/schema/:schema')->to('install#schema', namespace=>'Mojolicious::Plugin::RoutesAuthDBI');}" get /schema/<name> 2>/dev/null | psql -d <dbname> # get /schema/foo || get /schema/public
 
 
-=head1 Sample test-app.pl
+=head1 Sample app
 
     $ perl -e "use Mojo::Base 'Mojolicious'; __PACKAGE__->new()->start(); sub startup {shift->routes->route('/')->to('install#test_app', namespace=>'Mojolicious::Plugin::RoutesAuthDBI');}" get / 2>/dev/null > test-app.pl
     
+
+=name sample.app
+
+=desc 
+
+  use Mojo::Base 'Mojolicious';
+  use DBI;
+
+  has dbh => sub { DBI->connect("DBI:Pg:dbname=<dbname>;", "postgres", undef); };
+
+  sub startup {
+    my $app = shift;
+    # $app->plugin(Config =>{file => 'Config.pm'});
+    $app->plugin('RoutesAuthDBI',
+      dbh=>$app->dbh,
+      
+      auth=>{current_user_fn=>'auth_user'},
+      # access=> {},
+      admin=>{prefix=>'myadmin', trust=>'fooobaaar',},
+    );
+  }
+
+  __PACKAGE__->new()->start();
+
+=sql
+
+  --
 
 =head1 Define DBI->connect(.........) and some plugin options in test-app.pl
 
@@ -83,7 +110,7 @@ Welcome  Mojolicious::Plugin::RoutesAuthDBI !
 $ perl -e "use Mojo::Base 'Mojolicious'; __PACKAGE__->new()->start(); sub startup {shift->routes->route('/schema/:schema')->to('install#schema', namespace=>'Mojolicious::Plugin::RoutesAuthDBI');}" get /schema/public 2>/dev/null | psql -d <dbname> # here set public pg schema!
 
 
-2. Create test-app.pl and  define in them DBI->connect(...) and some plugin options:
+2. Create test-app.pl and then define in them DBI->connect(...) and some plugin options:
 ------------
 
 $ perl -e "use Mojo::Base 'Mojolicious'; __PACKAGE__->new()->start(); sub startup {shift->routes->route('/')->to('install#test_app', namespace=>'Mojolicious::Plugin::RoutesAuthDBI');}" get / 2>/dev/null > test-app.pl
@@ -123,27 +150,12 @@ Administration of system ready!
 TXT
 }
 
+
 sub test_app {
   my $c = shift;
-  $c->render(format=>'txt', text => <<'TXT');
-use Mojo::Base 'Mojolicious';
-use DBI;
-
-has dbh => sub { DBI->connect("DBI:Pg:dbname=<dbname>;", "postgres", undef); };
-
-sub startup {
-  my $app = shift;
-  # $app->plugin(Config =>{file => 'Config.pm'});
-  $app->plugin('RoutesAuthDBI',
-    dbh=>$app->dbh,
-    
-    auth=>{current_user_fn=>'auth_user'},
-    # access=> {},
-    admin=>{prefix=>'myadmin', trust=>'fooobaaar',},
-  );
-}
-
-__PACKAGE__->new()->start();
+  my $code = $sql->{'sample.app'}->desc;
+  $c->render(format=>'txt', text => <<TXT);
+$code
 TXT
 }
 
