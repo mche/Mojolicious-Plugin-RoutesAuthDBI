@@ -19,7 +19,7 @@
 #     MIN_PERL_VERSION => q[5.014]
 #     NAME => q[Mojolicious::Plugin::RoutesAuthDBI]
 #     PL_FILES => {  }
-#     PREREQ_PM => { DBI=>q[1.6], DBIx::POS::Template=>q[0.00002], Mojolicious=>q[6], Mojolicious::Plugin::Authentication=>q[1.29], Test::More=>q[0] }
+#     PREREQ_PM => { DBI=>q[1.6], DBIx::POS::Template=>q[0.0001], Mojolicious=>q[6], Mojolicious::Plugin::Authentication=>q[1.29], Test::More=>q[0] }
 #     TEST_REQUIRES => {  }
 #     VERSION_FROM => q[lib/Mojolicious/Plugin/RoutesAuthDBI.pm]
 #     dist => { COMPRESS=>q[gzip -9f], SUFFIX=>q[gz] }
@@ -61,11 +61,11 @@ DIRFILESEP = /
 DFSEP = $(DIRFILESEP)
 NAME = Mojolicious::Plugin::RoutesAuthDBI
 NAME_SYM = Mojolicious_Plugin_RoutesAuthDBI
-VERSION = 0.420
+VERSION = 0.440
 VERSION_MACRO = VERSION
-VERSION_SYM = 0_420
+VERSION_SYM = 0_440
 DEFINE_VERSION = -D$(VERSION_MACRO)=\"$(VERSION)\"
-XS_VERSION = 0.420
+XS_VERSION = 0.440
 XS_VERSION_MACRO = XS_VERSION
 XS_DEFINE_VERSION = -D$(XS_VERSION_MACRO)=\"$(XS_VERSION)\"
 INST_ARCHLIB = blib/arch
@@ -209,6 +209,7 @@ TO_INST_PM = Config.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Sth.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Test/Test.pm \
 	test-app.pl \
+	test-app2.pl \
 	test-pod.pl
 
 PM_TO_BLIB = Config.pm \
@@ -235,6 +236,8 @@ PM_TO_BLIB = Config.pm \
 	blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Test/Test.pm \
 	test-app.pl \
 	$(INST_LIB)/Mojolicious/Plugin/test-app.pl \
+	test-app2.pl \
+	$(INST_LIB)/Mojolicious/Plugin/test-app2.pl \
 	test-pod.pl \
 	$(INST_LIB)/Mojolicious/Plugin/test-pod.pl
 
@@ -306,7 +309,7 @@ RCS_LABEL = rcs -Nv$(VERSION_SYM): -q
 DIST_CP = best
 DIST_DEFAULT = tardist
 DISTNAME = Mojolicious-Plugin-RoutesAuthDBI
-DISTVNAME = Mojolicious-Plugin-RoutesAuthDBI-0.420
+DISTVNAME = Mojolicious-Plugin-RoutesAuthDBI-0.440
 
 
 # --- MakeMaker macro section:
@@ -538,7 +541,7 @@ realclean_subdirs :
 # Delete temporary files (via clean) and also delete dist files
 realclean purge ::  clean realclean_subdirs
 	- $(RM_F) \
-	  $(MAKEFILE_OLD) $(FIRST_MAKEFILE) 
+	  $(FIRST_MAKEFILE) $(MAKEFILE_OLD) 
 	- $(RM_RF) \
 	  $(DISTVNAME) 
 
@@ -567,11 +570,11 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '    - inc' >> META_new.yml
 	$(NOECHO) $(ECHO) 'requires:' >> META_new.yml
 	$(NOECHO) $(ECHO) '  DBI: '\''1.6'\''' >> META_new.yml
-	$(NOECHO) $(ECHO) '  DBIx::POS::Template: '\''0.00002'\''' >> META_new.yml
+	$(NOECHO) $(ECHO) '  DBIx::POS::Template: '\''0.0001'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Mojolicious: '\''6'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Mojolicious::Plugin::Authentication: '\''1.29'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  perl: '\''5.014'\''' >> META_new.yml
-	$(NOECHO) $(ECHO) 'version: '\''0.420'\''' >> META_new.yml
+	$(NOECHO) $(ECHO) 'version: '\''0.440'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) 'x_serialization_backend: '\''CPAN::Meta::YAML version 0.018'\''' >> META_new.yml
 	-$(NOECHO) $(MV) META_new.yml $(DISTVNAME)/META.yml
 	$(NOECHO) $(ECHO) Generating META.json
@@ -610,7 +613,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '      "runtime" : {' >> META_new.json
 	$(NOECHO) $(ECHO) '         "requires" : {' >> META_new.json
 	$(NOECHO) $(ECHO) '            "DBI" : "1.6",' >> META_new.json
-	$(NOECHO) $(ECHO) '            "DBIx::POS::Template" : "0.00002",' >> META_new.json
+	$(NOECHO) $(ECHO) '            "DBIx::POS::Template" : "0.0001",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "Mojolicious" : "6",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "Mojolicious::Plugin::Authentication" : "1.29",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "perl" : "5.014"' >> META_new.json
@@ -618,7 +621,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '      }' >> META_new.json
 	$(NOECHO) $(ECHO) '   },' >> META_new.json
 	$(NOECHO) $(ECHO) '   "release_status" : "stable",' >> META_new.json
-	$(NOECHO) $(ECHO) '   "version" : "0.420",' >> META_new.json
+	$(NOECHO) $(ECHO) '   "version" : "0.440",' >> META_new.json
 	$(NOECHO) $(ECHO) '   "x_serialization_backend" : "JSON::PP version 2.27300"' >> META_new.json
 	$(NOECHO) $(ECHO) '}' >> META_new.json
 	-$(NOECHO) $(MV) META_new.json $(DISTVNAME)/META.json
@@ -926,7 +929,7 @@ ppd :
 	$(NOECHO) $(ECHO) '    <IMPLEMENTATION>' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <PERLCORE VERSION="5,014,0,0" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="DBI::" VERSION="1.6" />' >> $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '        <REQUIRE NAME="DBIx::POS::Template" VERSION="0.00002" />' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '        <REQUIRE NAME="DBIx::POS::Template" VERSION="0.0001" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Mojolicious::" VERSION="6" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Mojolicious::Plugin::Authentication" VERSION="1.29" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <ARCHITECTURE NAME="x86_64-linux-5.18" />' >> $(DISTNAME).ppd
@@ -951,6 +954,7 @@ pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/Sth.pm blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Sth.pm \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/Test/Test.pm blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Test/Test.pm \
 	  test-app.pl $(INST_LIB)/Mojolicious/Plugin/test-app.pl \
+	  test-app2.pl $(INST_LIB)/Mojolicious/Plugin/test-app2.pl \
 	  test-pod.pl $(INST_LIB)/Mojolicious/Plugin/test-pod.pl 
 	$(NOECHO) $(TOUCH) pm_to_blib
 
