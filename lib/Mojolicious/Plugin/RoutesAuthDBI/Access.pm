@@ -61,6 +61,7 @@ or
 
 =back
 
+See detail L<Mojolicious::Plugin::RoutesAuthDBI#access>
 
 =head1 SYNOPSIS
 

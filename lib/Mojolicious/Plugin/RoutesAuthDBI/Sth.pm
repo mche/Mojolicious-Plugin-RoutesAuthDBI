@@ -68,7 +68,8 @@ sub sth {
   my $s = $sql->{$name}->template(schema => $opt->{schema}, %arg);
   my $p = $sql->{$name}->param;
   #~ $sth->{$name}{md5_hex( encode_utf8($s))} ||= $dbh->prepare($s); # : $sql->{$name}->sql
-  return $dbh->prepare_cached($s)
+  warn "Cached sth [$name]"
+    and return $dbh->prepare_cached($s)
     if $p && $p->{cached};
   return $dbh->prepare($s);
 }
