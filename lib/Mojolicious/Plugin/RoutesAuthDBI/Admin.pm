@@ -107,7 +107,7 @@ sub init_class {# from plugin! init Class vars
   $c->{trust} =~ s/\W/-/g;
   $c->{pos} ||= {};
   $c->{pos}{schema} ||= 'public';
-  $c->{pos}{schema} = qq{"$c->{schema}".};
+  $c->{pos}{schema} = qq{"$c->{pos}{schema}".};
   $c->{pos}{file} ||= 'POS/Pg.pm';
 	$c->{dbh} ||= $dbh ||=  $args{dbh};
 	$dbh ||= $c->{dbh};
@@ -211,7 +211,7 @@ sub trust_new_user {
   
   #Namespace
   my $ns = $dbh->selectrow_hashref($sth->sth('namespace'), undef, (undef, $init_conf->{namespace},));
-  $ns ||= $dbh->selectrow_hashref($sth->sth('new namespace'), undef, ($init_conf->{namespace}, 'plugin ns!'));
+  $ns ||= $dbh->selectrow_hashref($sth->sth('new namespace'), undef, ($init_conf->{namespace}, 'plugin ns!', undef, undef,));
   
   #ref namespace -> controller
   my $nc = $c->ref($ns->{id}, $cc->{id});
@@ -553,9 +553,25 @@ TXT
   return $cn;
 }
 
+sub namespaces {
+  my $c = shift;
+  my $list = $dbh->selectall_arrayref($sth->sth('namespaces'), { Slice => {} }, );
+  $c->render(format=>'txt', text=><<TXT);
+$pkg
+
+Namespaces (@{[scalar @$list]})
+===
+
+@{[$c->dumper( $list)]}
+TXT
+}
+
 sub new_namespace {
   my $c = shift;
-  my ($ns) = shift ||  $c->vars('ns') || $c->vars('namespace');
+  my ($ns) = $_[0] ? (shift) : $c->vars('ns');
+  my ($descr) = $_[0] ? (shift) :  $c->vars('descr');
+  my ($app_ns) = $_[0] ? (shift) : $c->vars('app_ns');
+  my ($interval_ts) = $_[0] ? (shift) : $c->vars('interval_ts');
   my $n = $dbh->selectrow_hashref($sth->sth('namespace'), undef, ($ns =~ /\D/ ? (undef, $ns) : ($ns, undef,)));
   $c->render(format=>'txt', text=><<TXT)
 $pkg
@@ -567,7 +583,7 @@ Namespace already exists
 TXT
   and return $n
   if $n;
-  $n = $dbh->selectrow_hashref($sth->sth('new namespace'), undef, ($ns, undef));
+  $n = $dbh->selectrow_hashref($sth->sth('new namespace'), undef, ($ns, $descr, $app_ns, $interval_ts));
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
@@ -677,7 +693,7 @@ Actions without controller (@{[scalar @$list2]}):
 TXT
 }
 
-my @route_cols = qw(request name descr auth disable order_by);
+my @route_cols = qw(request name descr auth disable interval_ts);
 sub new_route {# показать маршруты к действию
   my $c = shift;
   my ($ns, $controll, $act) = $c->vars('ns', 'controll', 'act');
@@ -753,7 +769,7 @@ $pkg
 - descr (descr=пояснение такое)
 - auth (auth=1) (auth='only')
 - disable (disable=1)
-- order_by (order_by=123)
+- interval_ts (interval_ts=123)
 
 Exists routes for selected action (@{[$list ? scalar @$list : 0]})
 ===
@@ -771,7 +787,7 @@ sub route_save {
   my $c = shift;
   my ($ns, $controll, $act, $route) = @_;
   local $dbh->{AutoCommit} = 0;
-  $ns = $dbh->selectrow_hashref($sth->sth('new namespace'), undef, (@$ns{qw(namespace descr)}))
+  $ns = $dbh->selectrow_hashref($sth->sth('new namespace'), undef, (@$ns{qw(namespace descr app_ns interval_ts)}))
     if $ns->{namespace} && ! $ns->{id};
   $controll = $dbh->selectrow_hashref($sth->sth('new controller'), undef, (@$controll{qw(controller descr)}))
     unless $controll->{id};
@@ -819,6 +835,8 @@ sub self_routes {# from plugin!
 #
 # Namespaces, controllers, actions
 #
+/$prefix/namespaces	namespaces	$prefix namespaces	1	Namespaces list
+/$prefix/namespace/new/:ns/:descr/:app_ns	new_namespace	$prefix new_namespace	1	Add new ns
 /$prefix/controllers	controllers	$prefix controllers	1	Controllers list
 /$prefix/controller/new/:ns/:module	new_controller	$prefix new_controller	1	Add new controller by :ns and :module
 /$prefix/controller/:ns/:controll	controller	$prefix controller	1	View a controller (ID and name for NS and controller)

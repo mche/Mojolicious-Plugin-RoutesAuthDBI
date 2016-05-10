@@ -79,7 +79,7 @@ L<DBIx::POS::Template>
           left join {% $schema %}namespaces n on n.id=r2.id1
       ) c on a.id=c._id
     ) ac on rf.id2=ac.id
-  order by r.order_by, r.ts;
+  order by r.ts - (coalesce(r.interval_ts, 0::int)::varchar || ' second')::interval;
 
 =item * B<user roles> 
 
@@ -333,7 +333,7 @@ L<DBIx::POS::Template>
 
 =sql
 
-  insert into {% $schema %}routes (request, name, descr, auth, disable, order_by)
+  insert into {% $schema %}routes (request, name, descr, auth, disable, interval_ts)
   values (?,?,?,?,?,?)
   returning *;
 
@@ -384,12 +384,14 @@ L<DBIx::POS::Template>
 
 =name namespaces
 
-=desc
+=desc Используется в плугине
 
 =sql
 
   select *
-  from {% $schema %}namespaces;
+  from {% $schema %}namespaces
+  {% $where %}
+  {% $order %};
 
 =item * B<namespace>
 
@@ -411,7 +413,7 @@ L<DBIx::POS::Template>
 
 =sql
 
-  insert into {% $schema %}namespaces (namespace, descr) values (?,?)
+  insert into {% $schema %}namespaces (namespace, descr, app_ns, interval_ts) values (?,?,?,?)
   returning *;
 
 

@@ -49,6 +49,7 @@ sub register {
   
   $app->routes->add_condition(access => \&access);
   $access->{'app.routes'} = $app->routes;
+  $access->apply_ns($app);
   $access->apply_route($app, $_) for @{ $access->db_routes };
   
   if ($conf->{admin}) {

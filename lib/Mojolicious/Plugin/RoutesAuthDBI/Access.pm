@@ -107,6 +107,10 @@ This callback invoke when request need auth route but access was failure. $route
 
 Make initialization of class vars: $dbh, $sth, $init_conf. Return $self object.
 
+=item * B<apply_ns($app,)>
+
+Select from db table I<namespaces> ns thus app_ns=1 and push them to $app->namespaces()
+
 =item * B<apply_route($app, $r_hash)>
 
 Heart of routes generation from db tables and not only. Insert to app->routes an hash item $r_hash. DB schema specific. Return new Mojolicious route.
@@ -170,7 +174,7 @@ sub init_class {# from plugin! init Class vars
   $init_conf ||= $c;
   $c->{pos} ||= {};
   $c->{pos}{schema} ||= 'public';
-  $c->{pos}{schema} = qq{"$c->{schema}".};
+  $c->{pos}{schema} = qq{"$c->{pos}{schema}".};
   $c->{pos}{file} ||= 'POS/Pg.pm';
   $c->{dbh} ||= $dbh ||=  $args{dbh};
   $dbh ||= $c->{dbh};
@@ -195,6 +199,14 @@ sub validate_user {# import for Mojolicious::Plugin::Authentication
       if $u->{pass} eq $pass  && !$u->{disable};
   }
   return undef;
+}
+
+sub apply_ns {# Plugin
+  my ($self, $app,) = @_;
+  my $ns = $dbh->selectall_arrayref($sth->sth('namespaces', where=>"where app_ns=1::bit(1)", order=>"order by ts - (coalesce(interval_ts, 0::int)::varchar || ' second')::interval"), { Slice => {namespace=>1} },);
+  return unless @$ns;
+  my $r = $app->routes;
+  push @{ $r->namespaces() }, $_->{namespace} for @$ns;
 }
 
 sub apply_route {# meth in Plugin

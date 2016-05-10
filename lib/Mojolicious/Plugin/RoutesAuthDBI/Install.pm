@@ -193,7 +193,8 @@ TXT
     descr text null,
     auth varchar null,-- was bit(1): alter table {% $schema %}routes alter column auth type varchar;
     disable bit(1) null,
-    order_by int null
+    -- interval_ts - смещение ts (seconds) для приоритета маршрута, т.е. влияет на сортровку маршрутов
+    interval_ts int null -- was order_by int null; alter table {% $schema %}routes rename column order_by to interval_ts;
   );
 
 =item * B<Namespaces>
@@ -208,7 +209,10 @@ TXT
     id integer default nextval('{% $schema %}ID'::regclass) not null primary key,
     ts timestamp without time zone default now() not null,
     namespace character varying not null unique,
-    descr text null
+    descr text null,
+    app_ns bit(1) null, -- alter table {% $schema %}namespaces add column app_ns bit(1) null;
+    -- interval_ts - смещение ts (seconds) для приоритета namespace
+    interval_ts int null -- alter table {% $schema %}namespaces add column interval_ts int null;
   );
 
 =item * B<Controllers>

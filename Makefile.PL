@@ -22,7 +22,7 @@ WriteMakefile(
         'Mojolicious'=>6.00,
         'Mojolicious::Plugin::Authentication'=>1.29,
         'DBI'=>1.6,
-        'DBIx::POS::Template'=>0.00002,
+        'DBIx::POS::Template'=>0.0001,
     },
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     #~ clean => { FILES => 'Mojolicious-Plugin-RoutesAuthDBI-*' },
