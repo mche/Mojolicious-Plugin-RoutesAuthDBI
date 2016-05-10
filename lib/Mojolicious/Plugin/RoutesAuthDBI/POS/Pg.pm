@@ -26,7 +26,7 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
     
     my @path = split(/\//, __FILE__ );
     my $file = join('/', @path[0 .. $#path -1], 'POS/Pg.pm');
-    my $pos = DBIx::POS::Template->new($file, enc => 'utf8');
+    my $pos = DBIx::POS::Template->new($file,);
     my $sth = $dbh->prepare($pos->{'user'});
 
 =head1 SEE ALSO
@@ -44,6 +44,10 @@ L<DBIx::POS::Template>
 =name user
 
 =desc
+
+=param
+
+  {cached=>1}
 
 =sql
 
@@ -83,6 +87,10 @@ L<DBIx::POS::Template>
 
 =desc Роли пользователя
 
+=param
+
+  {cached=>1}
+
 =sql
 
   select g.*
@@ -98,6 +106,10 @@ L<DBIx::POS::Template>
 
 =desc check if ref between [IDs1] and [IDs2] exists
 
+=param
+
+  {cached=>1}
+
 =sql
 
   select count(*)
@@ -109,6 +121,10 @@ L<DBIx::POS::Template>
 =name access action
 
 =desc доступ к действию в контроллере (действие-каллбак - доступ проверяется по его ID)
+
+=param
+
+  {cached=>1}
 
 =sql
 
@@ -132,6 +148,10 @@ L<DBIx::POS::Template>
 
 =desc доступ ко всем действиям по имени пути
 
+=param
+
+  {cached=>1}
+
 =sql
 
   select count(n.*)
@@ -150,6 +170,10 @@ L<DBIx::POS::Template>
 =name access role
 
 =desc Доступ по роли
+
+=param
+
+  {cached=>1}
 
 =sql
 
@@ -252,6 +276,10 @@ L<DBIx::POS::Template>
 =name controller
 
 =desc Не пустой namespace - четко привязанный контроллер, пустой - обязательно не привязанный контроллер
+
+=param
+
+  {cached=>1}
 
 =sql
 

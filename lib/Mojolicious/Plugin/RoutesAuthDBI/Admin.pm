@@ -30,10 +30,9 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
 =head1 SYNOPSIS
 
     $app->plugin('RoutesAuthDBI', 
-        dbh => $app->dbh,
-        auth => {...},
-        access => {...},
+        ...
         admin => {< options below >},
+        ...
     );
 
 
@@ -58,7 +57,7 @@ Both above options determining the module controller for web actions on tables r
         module => 'Admin',
         prefix => 'admin', # lc(<module>)
         trust => $app->secrets->[0],
-        #schema => 'public', # sets from plugin options
+        pos => {...}, # sets from plugin options
     },
     
     admin = {}, # empty hashref sets defaults above
@@ -106,11 +105,14 @@ sub init_class {# from plugin! init Class vars
   $init_conf ||= $c;
   $c->{prefix} =~ s/^\///;
   $c->{trust} =~ s/\W/-/g;
-  $c->{schema} ||= 'public';
-  $c->{schema} = qq{"$c->{schema}".};
+  $c->{pos} ||= {};
+  $c->{pos}{schema} ||= 'public';
+  $c->{pos}{schema} = qq{"$c->{schema}".};
+  $c->{pos}{file} ||= 'POS/Pg.pm';
 	$c->{dbh} ||= $dbh ||=  $args{dbh};
 	$dbh ||= $c->{dbh};
-	$c->{sth} ||= $sth ||= $args{sth} ||= (bless [$dbh, {}, $c->{schema},], $c->{namespace}.'::Sth')->init(pos => $c->{pos} || 'POS/Pg.pm');#sth cache
+	#~ $c->{sth} ||= $sth ||= $args{sth} ||= (bless [$dbh, {}, $c->{schema},], $c->{namespace}.'::Sth')->init(pos => $c->{pos} || 'POS/Pg.pm');#sth cache
+  $c->{sth} ||= $sth ||= $args{sth} || Mojolicious::Plugin::RoutesAuthDBI::Sth->new($dbh, %{$c->{pos}});
 	$sth ||= $c->{sth};
     
 	return $c;
