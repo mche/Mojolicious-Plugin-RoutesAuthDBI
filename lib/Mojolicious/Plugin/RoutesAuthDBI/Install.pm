@@ -90,11 +90,11 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
 
 Go to http://127.0.0.1:3000/sign/in/<new admin login>/<admin pass>
 
-=head1 Admin index:
+=head1 Admin index page
 
 Go to http://127.0.0.1:3000/<pluginconf->{admin}{prefix}>
 
-Administration of system ready!
+=head1 Administration of system ready!
 
 =cut
 
