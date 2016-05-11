@@ -12,6 +12,6 @@ use lib "$FindBin::Bin/lib";
 sub startup {# 
   my $app = shift;
   $app->plugin(Config =>{file => 'Config.pm'});
-  $app->che_go();
+  $app->поехали();
 }
 __PACKAGE__->new()->start();
