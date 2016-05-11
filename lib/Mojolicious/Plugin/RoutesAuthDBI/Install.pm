@@ -18,7 +18,7 @@ B<POD ERRORS> here is normal because DBIx::POS::Template used.
 
 =head1 NAME
 
-Mojolicious::Plugin::RoutesAuthDBI::Install - is a Mojolicious::Controller for installation instructions. DB schema (PostgreSQL) and sample app.
+Mojolicious::Plugin::RoutesAuthDBI::Install - is a Mojolicious::Controller for installation instructions.
 
 =head1 DB DESIGN DIAGRAM
 
@@ -35,27 +35,26 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
   __PACKAGE__->new()->start();
   PERL
 
-=head1 DB schema (postgresql)
 
-=head2 View schema (define the postgresql schema name)
+=head1 View schema (define the postgresql schema name)
 
   $ read -d '' CODE <<PERL; perl -e "$CODE" get /schema/<name> #
   use Mojo::Base 'Mojolicious';
   sub startup {
     shift->routes->route('/schema/:schema')
-      ->to('install#schema', namespace=>'Mojolicious::Plugin::RoutesAuthDBI');
+      ->to('DB#schema', namespace=>'Mojolicious::Plugin::RoutesAuthDBI');
   }
   __PACKAGE__->new()->start();
   PERL
 
 
-=head2 Apply schema (define the postgresql schema name)
+=head1 Apply schema (define the postgresql schema name)
 
   $ read -d '' CODE <<PERL; perl -e "$CODE" get /schema/<name> 2>/dev/null | psql -d <dbname> #
   use Mojo::Base 'Mojolicious';
   sub startup {
     shift->routes->route('/schema/:schema')
-      ->to('install#schema', namespace=>'Mojolicious::Plugin::RoutesAuthDBI');
+      ->to('DB#schema', namespace=>'Mojolicious::Plugin::RoutesAuthDBI');
   }
   __PACKAGE__->new()->start();
   PERL
@@ -130,7 +129,7 @@ Welcome  Mojolicious::Plugin::RoutesAuthDBI !
 1. Apply db schema by command (define the postgresql schema name):
 ------------
 
-$ perl -e "use Mojo::Base 'Mojolicious'; __PACKAGE__->new()->start(); sub startup {shift->routes->route('/schema/:schema')->to('install#schema', namespace=>'Mojolicious::Plugin::RoutesAuthDBI');}" get /schema/public 2>/dev/null | psql -d <dbname> # here set public pg schema!
+$ perl -e "use Mojo::Base 'Mojolicious'; __PACKAGE__->new()->start(); sub startup {shift->routes->route('/schema/:schema')->to('DB#schema', namespace=>'Mojolicious::Plugin::RoutesAuthDBI');}" get /schema/public 2>/dev/null | psql -d <dbname> # here set public pg schema!
 
 
 2. Create test-app.pl and then define in them DBI->connect(...) and some plugin options:
@@ -176,248 +175,6 @@ $code
 TXT
 }
 
-=pod
-
-=head1 DB design
-
-=over 4
-
-=item * B<Schema name>
-
-=name schema.name
-
-=desc Отдельная схема
-
-=sql
-
-  
-  CREATE SCHEMA IF NOT EXISTS "{% $schema %}";
-  set local search_path = "{% $schema %}";
-
-=item * B<Sequence>
-
-=name schema.sequence
-
-=desc последовательность
-
-=sql
-
-  -- you may change schema name for PostgreSQL objects
-  
-  CREATE SEQUENCE {% $schema %}ID;-- one sequence for all tables id
-
-=item * B<Routes>
-
-=name schema.routes
-
-=desc
-
-=sql
-
-  CREATE TABLE {% $schema %}routes (
-    id integer default nextval('{% $schema %}ID'::regclass) not null primary key,
-    ts timestamp without time zone default now() not null,
-    request character varying not null,
-    name character varying not null unique,
-    descr text null,
-    auth varchar null,-- was bit(1): alter table {% $schema %}routes alter column auth type varchar;
-    disable bit(1) null,
-    -- interval_ts - смещение ts (seconds) для приоритета маршрута, т.е. влияет на сортровку маршрутов
-    interval_ts int null -- was order_by int null; alter table {% $schema %}routes rename column order_by to interval_ts;
-  );
-
-=item * B<Namespaces>
-
-=name schema.namespaces
-
-=desc
-
-=sql
-
-  create table {% $schema %}namespaces (
-    id integer default nextval('{% $schema %}ID'::regclass) not null primary key,
-    ts timestamp without time zone default now() not null,
-    namespace character varying not null unique,
-    descr text null,
-    app_ns bit(1) null, -- alter table {% $schema %}namespaces add column app_ns bit(1) null;
-    -- interval_ts - смещение ts (seconds) для приоритета namespace
-    interval_ts int null -- alter table {% $schema %}namespaces add column interval_ts int null;
-  );
-
-=item * B<Controllers>
-
-=name schema.controllers
-
-=desc
-
-=sql
-
-  create table {% $schema %}controllers (
-    id integer default nextval('{% $schema %}ID'::regclass) not null primary key,
-    ts timestamp without time zone default now() not null,
-    controller character varying not null,
-    descr text null
-  );
-
-=item * B<Actions>
-
-=name schema.actions
-
-=desc
-
-=sql
-
-  create table {% $schema %}actions (
-    id integer default nextval('{% $schema %}ID'::regclass) not null primary key,
-    ts timestamp without time zone default now() not null,
-    action character varying not null,
-    callback text null,
-    descr text null
-  );
-
-=item * B<Users>
-
-=name schema.users
-
-=desc
-
-=sql
-
-  create table {% $schema %}users (
-    id int default nextval('{% $schema %}ID'::regclass) not null  primary key,
-    ts timestamp without time zone default now() not null,
-    login varchar not null unique,
-    pass varchar not null,
-    disable bit(1)
-  );
-
-=item * B<Roles>
-
-=name schema.roles
-
-=desc
-
-=sql
-
-  create table {% $schema %}roles (
-    id int default nextval('{% $schema %}ID'::regclass) not null  primary key,
-    ts timestamp without time zone default now() not null,
-    name varchar not null unique,
-    disable bit(1)
-  );
-
-=item * B<Refs>
-
-=name schema.refs
-
-=desc
-
-=sql
-
-  create table {% $schema %}refs (
-    id int default nextval('{% $schema %}ID'::regclass) not null  primary key,
-    ts timestamp without time zone default now() not null,
-    id1 int not null,
-    id2 int not null,
-    unique(id1, id2)
-  );
-  create index on {% $schema %}refs (id2);
-
-=back
-
-=cut
-
-
-sub schema {
-  my $c = shift;
-  #~ $c->render(format=>'txt', text => join '', <Mojolicious::Plugin::RoutesAuthDBI::Install::DATA>);
-  my $schema = $c->stash('schema') || $c->param('schema');
-  my $schema2 = qq{"$schema".} if $schema;
-  $c->render(format=>'txt', text => <<TXT);
-@{[$schema ? $sql->{'schema.name'}->template(schema => $schema) : '']}
-
-@{[$sql->{'schema.sequence'}->template(schema => $schema2)]}
-
-@{[$sql->{'schema.routes'}->template(schema => $schema2)]}
-
-@{[$sql->{'schema.namespaces'}->template(schema => $schema2)]}
-
-@{[$sql->{'schema.controllers'}->template(schema => $schema2)]}
-
-@{[$sql->{'schema.actions'}->template(schema => $schema2)]}
-
-@{[$sql->{'schema.users'}->template(schema => $schema2)]}
-
-@{[$sql->{'schema.roles'}->template(schema => $schema2)]}
-
-@{[$sql->{'schema.refs'}->template(schema => $schema2)]}
-
-TXT
-}
-
-=pod
-
-=head1 Drop schema
-
-=name schema.drop
-
-=desc
-
-=sql
-
-    drop table {% $schema %}refs;
-    drop table {% $schema %}users;
-    drop table {% $schema %}roles;
-    drop table {% $schema %}routes;
-    drop table {% $schema %}controllers;
-    drop table {% $schema %}actions;
-    drop table {% $schema %}namespaces;
-    drop sequence {% $schema %}ID;
-
-
-=cut
-
-sub schema_drop {
-  my $c = shift;
-  my $schema = $c->stash('schema') || $c->param('schema');
-  $schema = qq{"$schema".} if $schema;
-  $c->render(format=>'txt', text => <<TXT);
-@{[$sql->{'schema.drop'}->template(schema => $schema)]}
-
-TXT
-}
-
-=pod
-
-=head1 Flush schema
-
-=name schema.flush
-
-=desc
-
-=sql
-
-  delete from {% $schema %}refs;
-  delete from {% $schema %}users;
-  delete from {% $schema %}roles;
-  delete from {% $schema %}routes;
-  delete from {% $schema %}controllers;
-  delete from {% $schema %}namespaces;
-  delete from {% $schema %}actions;
-
-
-=cut
-
-sub schema_flush {
-  my $c = shift;
-  my $schema = $c->stash('schema') || $c->param('schema');
-  $schema = qq{"$schema".} if $schema;
-  $c->render(format=>'txt', text => <<TXT);
-
-@{[$sql->{'schema.flush'}->template(schema => $schema)]}
-
-TXT
-}
 
 1;
 
