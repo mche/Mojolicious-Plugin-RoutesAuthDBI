@@ -68,6 +68,7 @@ SQL
   #!!! пустой has sth=>sub{{};}; в app !!!
   sth => { main=>{},},# prepared sth
 #~ now=>"select now();"
+  namespaces => [],
   routes => [
   [
     route=>'/callback',
