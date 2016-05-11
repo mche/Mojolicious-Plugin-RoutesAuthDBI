@@ -26,24 +26,51 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
 
 =head1 Manual
 
-    $ perl -e "use Mojo::Base 'Mojolicious'; __PACKAGE__->new()->start(); sub startup {shift->routes->route('/')->to('install#manual', namespace=>'Mojolicious::Plugin::RoutesAuthDBI');}" get / 2>/dev/null
+  $ read -d '' CODE <<PERL; perl -e "$CODE" get /man
+  use Mojo::Base 'Mojolicious';
+  sub startup {
+    shift->routes->route('/man')
+      ->to('install#manual', namespace=>'Mojolicious::Plugin::RoutesAuthDBI');
+  }
+  __PACKAGE__->new()->start();
+  PERL
 
 =head1 DB schema (postgresql)
 
 =head2 View schema (define the postgresql schema name)
 
-    $ perl -e "use Mojo::Base 'Mojolicious'; __PACKAGE__->new()->start(); sub startup {shift->routes->route('/schema/:schema')->to('install#schema', namespace=>'Mojolicious::Plugin::RoutesAuthDBI');}" get /schema/<name> 2>/dev/null #  get /schema/foo || get /schema/public
-    
+  $ read -d '' CODE <<PERL; perl -e "$CODE" get /schema/<name> #
+  use Mojo::Base 'Mojolicious';
+  sub startup {
+    shift->routes->route('/schema/:schema')
+      ->to('install#schema', namespace=>'Mojolicious::Plugin::RoutesAuthDBI');
+  }
+  __PACKAGE__->new()->start();
+  PERL
+
 
 =head2 Apply schema (define the postgresql schema name)
 
-    $ perl -e "use Mojo::Base 'Mojolicious'; __PACKAGE__->new()->start(); sub startup {shift->routes->route('/schema/:schema')->to('install#schema', namespace=>'Mojolicious::Plugin::RoutesAuthDBI');}" get /schema/<name> 2>/dev/null | psql -d <dbname> # get /schema/foo || get /schema/public
+  $ read -d '' CODE <<PERL; perl -e "$CODE" get /schema/<name> 2>/dev/null | psql -d <dbname> #
+  use Mojo::Base 'Mojolicious';
+  sub startup {
+    shift->routes->route('/schema/:schema')
+      ->to('install#schema', namespace=>'Mojolicious::Plugin::RoutesAuthDBI');
+  }
+  __PACKAGE__->new()->start();
+  PERL
 
 
 =head1 Sample app
 
-    $ perl -e "use Mojo::Base 'Mojolicious'; __PACKAGE__->new()->start(); sub startup {shift->routes->route('/')->to('install#test_app', namespace=>'Mojolicious::Plugin::RoutesAuthDBI');}" get / 2>/dev/null > test-app.pl
-    
+  $ read -d '' CODE <<PERL; perl -e "$CODE" get /app 2>/dev/null > test-app.pl
+  use Mojo::Base 'Mojolicious';
+  sub startup {
+    shift->routes->route('/app')
+      ->to('install#test_app', namespace=>'Mojolicious::Plugin::RoutesAuthDBI');
+  }
+  __PACKAGE__->new()->start();
+  PERL
 
 =name sample.app
 
@@ -59,20 +86,18 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
     # $app->plugin(Config =>{file => 'Config.pm'});
     $app->plugin('RoutesAuthDBI',
       dbh=>$app->dbh,
-      
       auth=>{current_user_fn=>'auth_user'},
       # access=> {},
       admin=>{prefix=>'myadmin', trust=>'fooobaaar',},
     );
   }
-
   __PACKAGE__->new()->start();
 
 =sql
 
   --
 
-=head1 Define DBI->connect(.........) and some plugin options in test-app.pl
+=head1 Define DBI->connect(...) and some plugin options in test-app.pl
 
 =head1 Check list of admin routes:
 
@@ -86,13 +111,11 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
 
     $ perl test-app.pl get /<pluginconf->{admin}{prefix}>/<pluginconf->{admin}{trust}>/user/new/<new admin login>/<admin pass> 2>/dev/null
 
-=head1 Sign in by browser:
+User will be created and assigned to role 'Admin' . Role 'Admin' assigned to namespace 'Mojolicious::Plugin::RoutesAuthDBI' that has access to all admin controller routes!
 
-Go to http://127.0.0.1:3000/sign/in/<new admin login>/<admin pass>
+=head1 Sign in on browser
 
-=head1 Admin index page
-
-Go to http://127.0.0.1:3000/<pluginconf->{admin}{prefix}>
+http://127.0.0.1:3000/sign/in/<new admin login>/<admin pass>
 
 =head1 Administration of system ready!
 
@@ -132,16 +155,10 @@ $ perl test-app.pl daemon
 
 $ perl test-app.pl get /<pluginconf->{admin}{prefix}>/<pluginconf->{admin}{trust}>/admin/new/<new admin login>/<admin pass>
 
-User will be created and assigned to role 'Admin' . Role 'Admin' assigned to pseudo-route that has access to all routes of this controller!
-
+User will be created and assigned to role 'Admin' . Role 'Admin' assigned to namespace 'Mojolicious::Plugin::RoutesAuthDBI' that has access to all admin controller routes!
 
 
 6. Go to http://127.0.0.1:3000/sign/in/<new admin login>/<admin pass>
-------------
-
-
-
-7. Go to http://127.0.0.1:3000/<plugiconf->{admin}{prefix}>
 ------------
 
 
