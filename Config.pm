@@ -90,7 +90,7 @@ SQL
   ],[
     route=>'/schema/:schema',
     over=>{access=>{auth=>0,}},
-    to=>['install#schema', namespace=>'Mojolicious::Plugin::RoutesAuthDBI',],#
+    to=>['db#schema', namespace=>'Mojolicious::Plugin::RoutesAuthDBI',],#
   ],[
     route=>'/test1',
     over=>{access=>{auth=>1,}},
