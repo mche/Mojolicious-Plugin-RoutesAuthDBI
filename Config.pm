@@ -24,7 +24,7 @@
       #~ ['HeaderCondition'],
       #~ ['ParamsArray'],
   ],
-  mojo_session => {cookie_name => 'SESS'},
+  mojo_session => {cookie_name => 'ELK'},
   # Хуки
   #~ mojo_hooks=>{
     #~ before_dispatch => sub {1;},
