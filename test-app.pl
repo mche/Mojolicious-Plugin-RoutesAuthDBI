@@ -20,7 +20,7 @@ sub startup {#
   $app->plugin(Config =>{file => 'Config.pm'});
   $app->plugin('ConfigApply');
   $app->plugin('RoutesAuthDBI',
-    dbh=>$app->dbh->{'main'},
+    dbh=>sub{ shift->dbh->{'main'}},
     auth=>{current_user_fn=>'auth_user'},
     access=> {},
     admin=>{prefix=>'myadmin', trust=>'fooobaaar'},
@@ -34,6 +34,7 @@ sub startup {#
   $r->route('/man')->over(access=>{auth=>0,})->to('install#manual', namespace=>'Mojolicious::Plugin::RoutesAuthDBI',);#
   $r->route('/schema/:schema')->over(access=>{auth=>0,})->to('install#schema', namespace=>'Mojolicious::Plugin::RoutesAuthDBI',);#
   $r->route('/test1')->over(access=>{auth=>1,})->to('test#test1', );
+  $r->route('/test5/:action')->to(controller=>'Test');
   
 }
 

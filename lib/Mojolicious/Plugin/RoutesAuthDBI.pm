@@ -2,7 +2,7 @@ package Mojolicious::Plugin::RoutesAuthDBI;
 use Mojo::Base 'Mojolicious::Plugin::Authentication';
 use Mojo::Loader qw(load_class);
 
-our $VERSION = '0.442';
+our $VERSION = '0.443';
 
 my $access;# 
 my $pkg = __PACKAGE__;
@@ -26,6 +26,8 @@ sub register {
   my ($self, $app,) = (shift, shift);
   $conf = shift; # global
   $conf->{dbh} ||= $app->dbh;
+  $conf->{dbh} = $conf->{dbh}($app)
+    if ref($conf->{dbh}) eq 'CODE';
   $conf->{pos} ||= {};
   $conf->{pos}{schema} ||= 'public';
   $conf->{pos}{file} ||= 'POS/Pg.pm';
@@ -227,7 +229,7 @@ sub access {# add_condition
 
 =head1 VERSION
 
-0.442
+0.443
 
 =head1 NAME
 
@@ -239,13 +241,13 @@ First of all you will see L<SVG|https://github.com/mche/Mojolicious-Plugin-Route
 
 =head1 SYNOPSIS
 
-    $app->plugin('RoutesAuthDBI',
-        dbh => $app->dbh,
-        auth => {...},
-        access => {...},
-        admin => {...},
-        pos => {...},
-    );
+  $app->plugin('RoutesAuthDBI',
+    dbh => $app->dbh,
+    auth => {...},
+    access => {...},
+    admin => {...},
+    pos => {...},
+  );
 
 
 =head2 PLUGIN OPTIONS
@@ -254,36 +256,40 @@ First of all you will see L<SVG|https://github.com/mche/Mojolicious-Plugin-Route
 
 Handler DBI connection where are tables: controllers, actions, routes, users, roles, refs.
 
+  dbh => $app->dbh,
+  # or
+  dbh => sub { shift->dbh },
+
 =head3 auth
 
 Hashref options pass to base plugin L<Mojolicious::Plugin::Authentication>.
 By default the option:
 
-    current_user_fn => 'auth_user',
+  current_user_fn => 'auth_user',
     
 The options:
 
-    load_user => \&load_user,
-    validate_user => \&validate_user,
+  load_user => \&load_user,
+  validate_user => \&validate_user,
 
 are imported from package access module. See below.
 
 =item * B<access> - hashref options for special access module. This module has subs and methods for manage auth and access operations, has appling routes from sql-table. By default plugin will load the builtin module:
 
-    access => {
-        module => 'Access',
-        namespace => 'Mojolicious::Plugin::RoutesAuthDBI',
-        ...,
-    },
+  access => {
+    module => 'Access',
+    namespace => 'Mojolicious::Plugin::RoutesAuthDBI',
+    ...,
+  },
 
 
 You might define your own module by passing options:
 
-    access => {
-        module => 'Foo',
-        namespace => 'Bar::Baz', 
-        ...,
-    },
+  access => {
+    module => 'Foo',
+    namespace => 'Bar::Baz', 
+    ...,
+  },
 
 See L<Mojolicious::Plugin::RoutesAuthDBI::Access> for detail options list.
 
@@ -291,20 +297,20 @@ See L<Mojolicious::Plugin::RoutesAuthDBI::Access> for detail options list.
 
 Hashref options for admin controller for actions on SQL tables routes, roles, users. By default the builtin module:
 
-    admin => {
-        controller => 'Access',
-        namespace => 'Mojolicious::Plugin::RoutesAuthDBI',
-        ...,
-    },
+  admin => {
+    controller => 'Access',
+    namespace => 'Mojolicious::Plugin::RoutesAuthDBI',
+    ...,
+  },
 
 
 You might define your own controller by passing options:
 
-    admin => {
-        controller => 'Foo',
-        namespace => 'Bar::Baz', 
-        ...,
-    },
+  admin => {
+    controller => 'Foo',
+    namespace => 'Bar::Baz', 
+    ...,
+  },
 
 See L<Mojolicious::Plugin::RoutesAuthDBI::Admin> for detail options list.
 
