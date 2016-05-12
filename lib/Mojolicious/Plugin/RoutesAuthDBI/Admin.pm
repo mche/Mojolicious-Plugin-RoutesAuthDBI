@@ -107,7 +107,7 @@ sub init_class {# from plugin! init Class vars
   $c->{trust} =~ s/\W/-/g;
   $c->{pos} ||= {};
   $c->{pos}{schema} ||= 'public';
-  $c->{pos}{schema} = qq{"$c->{pos}{schema}".};
+  #~ $c->{pos}{schema} = qq{"$c->{pos}{schema}".};
   $c->{pos}{file} ||= 'POS/Pg.pm';
 	$c->{dbh} ||= $dbh ||=  $args{dbh};
 	$dbh ||= $c->{dbh};
