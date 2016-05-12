@@ -73,7 +73,7 @@ SQL
   [
     route=>'/callback',
     over=>{access=>{auth=>1, role=>'admin'}},
-    to=>{cb => sub {shift->render(format=>'txt', text=>'You have access!')}},
+    to=>sub {shift->render(format=>'txt', text=>'You have access!')},
     name=>'foo',#'install#manual', namespace000=>'Mojolicious::Plugin::RoutesAuthDBI',
   ],[
     route=>'/check-auth',

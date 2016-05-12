@@ -14,4 +14,5 @@ sub startup {#
   $app->plugin(Config =>{file => 'Config.pm'});
   $app->поехали();
 }
+
 __PACKAGE__->new()->start();
