@@ -2,7 +2,7 @@ package Mojolicious::Plugin::RoutesAuthDBI;
 use Mojo::Base 'Mojolicious::Plugin::Authentication';
 use Mojo::Loader qw(load_class);
 
-our $VERSION = '0.446';
+our $VERSION = '0.448';
 
 my $access;# 
 my $pkg = __PACKAGE__;
@@ -42,6 +42,7 @@ sub register {
   # class obiect
   $access ||= $self->access_instance($app, $conf->{access});
   
+  $conf->{auth} ||= {};
   $conf->{auth}{stash_key} ||= $pkg;
   $conf->{auth}{current_user_fn} ||= 'auth_user';
   $conf->{auth}{load_user} ||= \&load_user;
@@ -229,7 +230,7 @@ sub access {# add_condition
 
 =head1 VERSION
 
-0.446
+0.448
 
 =head1 NAME
 
