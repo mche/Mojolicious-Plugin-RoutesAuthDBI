@@ -2,7 +2,7 @@ package Mojolicious::Plugin::RoutesAuthDBI;
 use Mojo::Base 'Mojolicious::Plugin::Authentication';
 use Mojo::Loader qw(load_class);
 
-our $VERSION = '0.445';
+our $VERSION = '0.446';
 
 my $access;# 
 my $pkg = __PACKAGE__;
@@ -105,7 +105,7 @@ sub access {# add_condition
     $args->($u, @_)
       or $conf->{access}{fail_auth_cb}->($c, )
       and return undef;
-      return 0x01;
+    return 0x01;
   }
   # 3. если не проверять доступ вернуть 1
   return 1 unless $args->{auth};
@@ -229,7 +229,7 @@ sub access {# add_condition
 
 =head1 VERSION
 
-0.445
+0.446
 
 =head1 NAME
 

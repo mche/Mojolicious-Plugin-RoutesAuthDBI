@@ -206,7 +206,7 @@ sub trust_new_user {
   my $ru = $c->ref($rl->{id}, $u->{id});
   
   # CONTROLLER
-  my $cc = $dbh->selectrow_hashref($sth->sth('controller'), undef, (($init_conf->{controller}, $init_conf->{namespace}) x 2,));
+  my $cc = $dbh->selectrow_hashref($sth->sth('controller', where=>"where controller=? and (namespace=? or (?::varchar is null and namespace is null))"), undef, (($init_conf->{controller}, $init_conf->{namespace}) x 2,));
   $cc ||= $dbh->selectrow_hashref($sth->sth('new controller'), undef, ($init_conf->{controller}, 'admin actions'));
   
   #Namespace
