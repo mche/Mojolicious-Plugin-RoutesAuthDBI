@@ -22,16 +22,22 @@ my $fail_access_cb = sub {
   
 };
 
+has [qw(app dbh conf)];
+has pos => sub { {schema => 'public', file => 'POS/Pg.pm'} };
+
 sub register {
-  my ($self, $app,) = (shift, shift);
-  $conf = shift; # global
-  $conf->{dbh} ||= $app->dbh;
-  $conf->{dbh} = $conf->{dbh}($app)
-    if ref($conf->{dbh}) eq 'CODE';
+  my $self = shift;
+  $self->app(shift);
+  $self->conf(shift); # global
+  
+  $self->dbh($self->conf->{dbh} || $self->app->dbh);
+  $self->dbh($self->dbh->($self->app))
+    if ref($self->dbh) eq 'CODE';
+  die "Plugin must work with dbh, see SYNOPSIS" unless $self->{dbh};
   $conf->{pos} ||= {};
-  $conf->{pos}{schema} ||= 'public';
-  $conf->{pos}{file} ||= 'POS/Pg.pm';
-  die "Plugin must work with arg dbh, see SYNOPSIS" unless $conf->{dbh};
+  $conf->{pos}{;
+  $conf->{pos}{;
+  
   $conf->{access} ||= {};
   $conf->{access}{namespace} ||= $pkg unless $conf->{access}{module};
   $conf->{access}{module} ||= 'Access';
