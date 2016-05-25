@@ -13,6 +13,7 @@ sub init {# from plugin! init Class vars
   $dbh = $self->dbh($self->{dbh} || $args{dbh})
     or die "Нет DBI handler";
   $sth = $self->sth($self->{sth} || $args{sth});
+  #~ $app = $self->app($self->{app} || $args{app});
   $init_conf = $self;
   return $self;
 }

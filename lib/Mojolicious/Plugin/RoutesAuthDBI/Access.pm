@@ -6,8 +6,8 @@ our @EXPORT_OK = qw(load_user validate_user);
 
 
 my $pkg = __PACKAGE__;
-my ($dbh, $sth);
-has [qw(dbh sth)];
+my ($dbh, $sth, $app);
+has [qw(dbh sth app)];
 
 sub init {# from plugin! init Class vars
   my $self = shift;
@@ -16,6 +16,7 @@ sub init {# from plugin! init Class vars
   $dbh = $self->dbh($self->{dbh} || $args{dbh})
     or die "Нет DBI handler";
   $sth = $self->sth($self->{sth} || $args{sth});
+  $app = $self->app($self->{app} || $args{app});
   return $self;
 }
 
@@ -37,7 +38,7 @@ sub validate_user {# import for Mojolicious::Plugin::Authentication
 }
 
 sub apply_ns {# Plugin
-  my ($self, $app,) = @_;
+  my ($self,) = @_;
   my $ns = $dbh->selectall_arrayref($sth->sth('namespaces', where=>"where app_ns=1::bit(1)", order=>"order by ts - (coalesce(interval_ts, 0::int)::varchar || ' second')::interval"), { Slice => {namespace=>1} },);
   return unless @$ns;
   my $r = $app->routes;
@@ -45,7 +46,7 @@ sub apply_ns {# Plugin
 }
 
 sub apply_route {# meth in Plugin
-  my ($self, $app, $r_hash) = @_;
+  my ($self, $r_hash) = @_;
   my $r = $app->routes;
   
   $app->log->debug("Skip disabled route id=[$r_hash->{id}] [$r_hash->{request}]")
@@ -185,9 +186,11 @@ See detail L<Mojolicious::Plugin::RoutesAuthDBI#access>
 
     $app->plugin('RoutesAuthDBI', 
         ...
-        access => {< options below >},
+        access => {< options list below >},
         ...
     );
+
+=head1 OPTIONS for plugin
 
 =over 4
 

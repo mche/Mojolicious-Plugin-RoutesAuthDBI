@@ -46,7 +46,7 @@ Mojolicious::Plugin::RoutesAuthDBI::Sth - is a DBI statements hub for L<Mojolici
     my $sth = Mojolicious::Plugin::RoutesAuthDBI::Sth->new(
       $dbh,
       $pos, # SQL dict
-      foo => 'bar', # any opts
+      foo => 'bar', # any pairs opts
       ...,
     );
     my $r = $dbh->selectrow_hashref($sth->sth('foo name'));

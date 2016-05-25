@@ -51,17 +51,17 @@ has merge_conf => sub {#hashref
   merge($self->conf, $self->default);
 };
 
-has pos => sub {# object
+has pos => sub {# object DBIx::POS::Template
   my $self = shift;
   my $pos = $self->merge_conf->{'pos'};
   my $class = $self->_class($pos);
   $class->new;
 };
 
-has sth => sub {
+has sth => sub {# object Sth
   my $self = shift;
   my $sth = $self->merge_conf->{'sth'};
-  my $class = $self->_class($pos);
+  my $class = $self->_class($sth);
   my $template = $self->merge_conf->{template};
   $class->new($self->dbh, $self->pos, %$template);
 };
@@ -73,6 +73,7 @@ has access => sub {# object
   $class->import( @{$access->{import}});
   bless $access, $class;
   $access->{sth} = $self->sth;
+  $access->{app} = $self->app;
   return $access->init;
 };
 
@@ -83,6 +84,7 @@ has admin => sub {
   my $class = $self->_class($admin);
   bless $admin, $class;
   $admin->{sth} = $self->sth;
+  
   return $admin->init;
 };
 
@@ -92,24 +94,26 @@ sub register {
   $self->app(shift);
   $self->conf(shift); # global
   
+  die $self->app->dumper($self->merge_conf);
+  
   $self->dbh($self->conf->{dbh} || $self->app->dbh);
   $self->dbh($self->dbh->($self->app))
     if ref($self->dbh) eq 'CODE';
   die "Plugin must work with dbh, see SYNOPSIS" unless $self->dbh;
 
   my $access = $self->access;
-  $self->SUPER::register($app, $self->merge_conf->{auth});
+  $self->SUPER::register($self->app, $self->merge_conf->{auth});
   
-  $app->routes->add_condition(access => sub {$self->access(@_)});
-  $access->apply_ns($app);
-  $access->apply_route($app, $_) for @{ $access->db_routes };
+  $self->app->routes->add_condition(access => sub {$self->access(@_)});
+  $access->apply_ns();
+  $access->apply_route($_) for @{ $access->db_routes };
   
   if ($self->conf->{admin}) {
     my $admin = $self->admin;
-    $access->apply_route($app, $_) for $admin->self_routes;
+    $access->apply_route($_) for $admin->self_routes;
   }
   
-  $app->helper('access', sub {$access});
+  $self->app->helper('access', sub {$access});
   
   return $self, $access;
 
@@ -119,7 +123,7 @@ sub _class {
   my $self = shift;
   my $conf = shift;
   my $class  = join '::', $conf->{namespace}, $conf->{module};
-  my $e = load_class($class)# success undef
+  my $e; $e = load_class($class)# success undef
     and die $e;
   return $class;
 }
@@ -132,23 +136,26 @@ sub access {# add_condition
   # 1. по паролю выставить куки
   # 2. по кукам выставить пользователя
   my $conf = $self->merge_conf;
+  my $app = $c->app;
+  my $access = $self->access;
+  
   my $meth = $conf->{auth}{current_user_fn};
   my $u = $c->$meth;
   if (ref $args eq 'CODE') {
     $args->($u, @_)
-      or $conf->{access}{fail_auth_cb}->($c, )
+      or $access->{fail_auth_cb}->($c, )
       and return undef;
     return 0x01;
   }
   # 3. если не проверять доступ вернуть 1
   return 1 unless $args->{auth};
   # не авторизовался
-  $conf->{access}{fail_auth_cb}->($c, )
+  $access->{fail_auth_cb}->($c, )
     and return undef
     unless $u;
   # допустить если {auth=>'only'}
   return 1 if lc($args->{auth}) eq 'only';
-  my $access = $self->access;
+  
   #  получить все группы пользователя
   $access->load_user_roles($u);
 
@@ -158,7 +165,7 @@ sub access {# add_condition
   # explicit acces to route
   scalar @$id1
     && $access->access_explicit($id1, $id2)
-    && $c->app->log->debug(sprintf "Allow [%s] for roles=[%s] joined id1=%s; args=[%s]; defaults=%s",
+    && $app->log->debug(sprintf "Allow [%s] for roles=[%s] joined id1=%s; args=[%s]; defaults=%s",
       $route->pattern->unparsed,
       $c->dumper($id2) =~ s/\s+//gr,
       $c->dumper($id1) =~ s/\s+//gr,
@@ -170,7 +177,7 @@ sub access {# add_condition
   # Access to non db route by role
   $args->{role}
     && $access->access_role($args->{role}, $id2)
-    && $c->app->log->debug(sprintf "Allow [%s] by role [%s] joined roles=[%s]",
+    && $app->log->debug(sprintf "Allow [%s] by role [%s] joined roles=[%s]",
       $route->pattern->unparsed,
       $args->{role},
     )
@@ -179,16 +186,15 @@ sub access {# add_condition
   # implicit access to non db routes
   my $controller = $args->{controller} || ucfirst(lc($route->pattern->defaults->{controller}));
   my $namespace = $args->{namespace} || $route->pattern->defaults->{namespace};
-  my $routes = $self->app->routes;
   if ($controller && !$namespace) {
-    (load_class($_.'::'.$controller) or ($namespace = $_) and last) for @{ $routes->namespaces };
+    (load_class($_.'::'.$controller) or ($namespace = $_) and last) for @{ $app->routes->namespaces };
   }
-  $conf->{access}{fail_access_cb}->($c, $route, $args, $u)
+  $access->{fail_access_cb}->($c, $route, $args, $u)
     and return undef
     unless $controller && $namespace;# failed load class
 
   $access->access_namespace($namespace, $id2)
-    && $c->app->log->debug(sprintf "Allow [%s] for roles=[%s] by namespace=[%s]; args=[%s]; defaults=[%s]",
+    && $app->log->debug(sprintf "Allow [%s] for roles=[%s] by namespace=[%s]; args=[%s]; defaults=[%s]",
       $route->pattern->unparsed,
       $c->dumper($id2) =~ s/\s+//gr,
       $namespace,
@@ -198,7 +204,7 @@ sub access {# add_condition
     && return 1;
   
   $access->access_controller($namespace, $controller, $id2)
-    && $c->app->log->debug(sprintf "Allow [%s] for roles=[%s] by namespace=[%s] and controller=[%s]; args=[%s]; defaults=[%s]",
+    && $app->log->debug(sprintf "Allow [%s] for roles=[%s] by namespace=[%s] and controller=[%s]; args=[%s]; defaults=[%s]",
       $route->pattern->unparsed,
       $c->dumper($id2) =~ s/\s+//gr,
       $namespace, $controller,
@@ -210,7 +216,7 @@ sub access {# add_condition
   # еще раз контроллер, который тут без namespace и в базе без namespace ------> доступ из любого места
   $args->{namespace} || $route->pattern->defaults->{namespace}
     || $access->access_controller(undef, $controller, $id2)
-    && $c->app->log->debug(sprintf "Allow [%s] for roles=[%s] by controller=[%s] without namespace on db; args=[%s]; defaults=[%s]",
+    && $app->log->debug(sprintf "Allow [%s] for roles=[%s] by controller=[%s] without namespace on db; args=[%s]; defaults=[%s]",
       $route->pattern->unparsed,
       $c->dumper($id2) =~ s/\s+//gr,
       $controller,
@@ -220,11 +226,11 @@ sub access {# add_condition
     && return 1;
   
   my $action = $args->{action} || $route->pattern->defaults->{action}
-    or $conf->{access}{fail_access_cb}->($c, $route, $args, $u)
+    or $access->{fail_access_cb}->($c, $route, $args, $u)
     and return undef;
   
   $access->access_action($namespace, $controller, $action, $id2)
-    && $c->app->log->debug(sprintf "Allow [%s] for roles=[%s] by namespace=[%s] and controller=[%s] and action=[%s]; args=[%s]; defaults=[%s]",
+    && $app->log->debug(sprintf "Allow [%s] for roles=[%s] by namespace=[%s] and controller=[%s] and action=[%s]; args=[%s]; defaults=[%s]",
       $route->pattern->unparsed,
       $c->dumper($id2) =~ s/\s+//gr,
       $namespace , $controller, $action,
@@ -236,7 +242,7 @@ sub access {# add_condition
   # еще раз контроллер, который тут без namespace и в базе без namespace ------> доступ из любого места
   $args->{namespace} || $route->pattern->defaults->{namespace}
     && $access->access_action(undef, $controller, $action, $id2)
-    && $c->app->log->debug(sprintf "Allow [%s] for roles=[%s] by (namespace=[any]) controller=[%s] and action=[%s]; args=[%s]; defaults=[%s]",
+    && $app->log->debug(sprintf "Allow [%s] for roles=[%s] by (namespace=[any]) controller=[%s] and action=[%s]; args=[%s]; defaults=[%s]",
       $route->pattern->unparsed,
       $c->dumper($id2) =~ s/\s+//gr,
       $controller, $action,
@@ -245,7 +251,7 @@ sub access {# add_condition
     )
     && return 1;
   
-  $conf->{access}{fail_access_cb}->($c, $route, $args, $u);
+  $access->{fail_access_cb}->($c, $route, $args, $u);
   return undef;
 }
 
