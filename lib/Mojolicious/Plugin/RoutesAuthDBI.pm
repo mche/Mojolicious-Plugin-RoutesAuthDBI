@@ -4,7 +4,7 @@ use Mojo::Loader qw(load_class);
 use Mojo::Util qw(hmac_sha1_sum);
 use Hash::Merge qw( merge );
 
-our $VERSION = '0.500';
+our $VERSION = '0.501';
 
 my $pkg = __PACKAGE__;
 
@@ -297,7 +297,7 @@ sub deny_log {
 
 =head1 VERSION
 
-0.448
+0.501
 
 =head1 NAME
 
