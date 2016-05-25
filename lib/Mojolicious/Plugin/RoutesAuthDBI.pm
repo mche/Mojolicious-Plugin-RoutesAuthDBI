@@ -92,25 +92,19 @@ sub register {
     if ref($self->dbh) eq 'CODE';
   die "Plugin must work with dbh, see SYNOPSIS" unless $self->dbh;
 
-  $conf->{access} ||= {};
-  $conf->{access}{namespace} ||= $pkg unless $conf->{access}{module};
-  $conf->{access}{module} ||= 'Access';
-  $conf->{access}{dbh} = $conf->{dbh};
-  $conf->{access}{fail_auth_cb} ||= $fail_auth_cb;
-  $conf->{access}{fail_access_cb} ||= $fail_access_cb;
-  $conf->{access}{pos} ||= $conf->{pos};
-  # class obiect
-  $access = $self->access;
+  my $access = $self->access;
+  
   
 
-  $self->SUPER::register($app, $conf->{auth});
+  $self->SUPER::register($app, $self->merge_conf->{auth});
   
   $app->routes->add_condition(access => \&access);
   $access->{'app.routes'} = $app->routes;
   $access->apply_ns($app);
   $access->apply_route($app, $_) for @{ $access->db_routes };
   
-  if ($conf->{admin}) {
+  if ($self->conf->{admin}) {
+    my $admin = $self->admin;
     $conf->{admin}{namespace} ||= $pkg;
     $conf->{admin}{controller} ||= 'Admin';
     $conf->{admin}{dbh} = $conf->{dbh};
