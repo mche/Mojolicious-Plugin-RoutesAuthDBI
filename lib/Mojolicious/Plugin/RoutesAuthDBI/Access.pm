@@ -4,10 +4,133 @@ use Mojolicious::Plugin::RoutesAuthDBI::Sth;#  sth cache
 use Exporter 'import'; 
 our @EXPORT_OK = qw(load_user validate_user);
 
-my $dbh; # one per class
+
 my $pkg = __PACKAGE__;
-my $init_conf;
-my $sth;#sth hub
+my ($dbh, $sth);
+has [qw(dbh pos)];
+has sth => sub {
+  my $self = shift;
+  Mojolicious::Plugin::RoutesAuthDBI::Sth->new($self->dbh, $self->pos, $self->{template});
+};
+
+sub init {# from plugin! init Class vars
+  my $self = shift;
+  my %args = @_;
+
+  $self->dbh($self->{dbh} || $args{dbh});
+  $dbh = $self->dbh
+    or die "Нет DBI handler";
+  $sth = $self->sth;
+  return $self;
+}
+
+sub load_user {# import for Mojolicious::Plugin::Authentication
+  my ($c, $uid) = @_;
+  my $u = $dbh->selectrow_hashref($sth->sth('user'), undef, ($uid, undef));
+  $c->app->log->debug("Loading user by id=$uid ". ($u ? 'success' : 'failed'));
+  $u->{pass} = '**********************' if $u;
+  return $u;
+}
+
+sub validate_user {# import for Mojolicious::Plugin::Authentication
+  my ($c, $login, $pass, $extradata) = @_;
+  if (my $u = $dbh->selectrow_hashref($sth->sth('user'), undef, (undef, $login))) {
+    return $u->{id}
+      if $u->{pass} eq $pass  && !$u->{disable};
+  }
+  return undef;
+}
+
+sub apply_ns {# Plugin
+  my ($self, $app,) = @_;
+  my $ns = $dbh->selectall_arrayref($sth->sth('namespaces', where=>"where app_ns=1::bit(1)", order=>"order by ts - (coalesce(interval_ts, 0::int)::varchar || ' second')::interval"), { Slice => {namespace=>1} },);
+  return unless @$ns;
+  my $r = $app->routes;
+  push @{ $r->namespaces() }, $_->{namespace} for @$ns;
+}
+
+sub apply_route {# meth in Plugin
+  my ($self, $app, $r_hash) = @_;
+  my $r = $app->routes;
+  
+  $app->log->debug("Skip disabled route id=[$r_hash->{id}] [$r_hash->{request}]")
+    and return undef
+    if $r_hash->{disable};
+  
+  $app->log->debug("Skip route id=[$r_hash->{id}] empty request")
+    and return undef
+    unless $r_hash->{request};
+  
+  $app->log->debug("Skip comment request [$r_hash->{request}]")
+    and return undef
+    if $r_hash->{request} =~ /^#/;
+  
+  my @request = grep /\S/, split /\s+/, $r_hash->{request}
+    or return;
+  my $nr = $r->route(pop @request);
+  $nr->via(@request) if @request;
+  
+  # STEP AUTH не катит! только один over!
+  #~ $nr->over(authenticated=>$r_hash->{auth});
+  # STEP ACCESS
+  $nr->over(access => $r_hash);
+  
+  if ($r_hash->{controller}) {
+    $nr->to(controller=>$r_hash->{controller}, action => $r_hash->{action},  $r_hash->{namespace} ? (namespace => $r_hash->{namespace}) : (),);
+  } elsif ($r_hash->{callback}) {
+    my $cb = eval $r_hash->{callback};
+    die "Compile error on callback: [$@]", $app->dumper($r_hash)
+      if $@;
+    $nr->to(cb => $cb);
+  } else {
+    die "No defaults for route: ", $app->dumper($r_hash);
+  }
+  $nr->name($r_hash->{name}) if $r_hash->{name};
+  #~ $app->log->debug("$pkg generate the route from data row [@{[$app->dumper($r_hash) =~ s/\n/ /gr]}]");
+  return $nr;
+}
+
+sub db_routes {
+  my ($self,) = @_;
+  $dbh->selectall_arrayref($sth->sth('apply routes'), { Slice => {} },);
+}
+
+sub load_user_roles {
+  my ($self, $user) = @_;
+  $user->{roles} ||= $dbh->selectall_arrayref($sth->sth('user roles'), { Slice => {} }, ($user->{id}));
+}
+
+sub access_explicit {# i.e. by refs table
+  my ($self, $id1, $id2,) = @_;
+  return scalar $dbh->selectrow_array($sth->sth('cnt refs'), undef, ($id1, $id2));
+}
+
+
+sub access_namespace {#implicit
+  my ($self, $namespace, $id2,) = @_;
+  return scalar $dbh->selectrow_array($sth->sth('access namespace'), undef, ($namespace, $id2));
+}
+
+sub access_controller {#implicit
+  my ($self, $namespace, $controller, $id2,) = @_;
+  my $c = $dbh->selectrow_hashref($sth->sth('controller', where => "where controller=? and (namespace=? or (?::varchar is null and namespace is null))"), undef, ( $controller, ($namespace) x 2,))
+    or return undef;
+  $self->access_explicit([$c->{id}], $id2);
+}
+
+sub access_action {#implicit
+  my ($self, $namespace, $controller, $action, $id2,) = @_;
+  my $c = $dbh->selectrow_hashref($sth->sth('controller', where => "where controller=? and (namespace=? or (?::varchar is null and namespace is null))"), undef, ( $controller, ($namespace) x 2,))
+    or return undef;
+  return scalar $dbh->selectrow_array($sth->sth('access action'), undef, ( $c->{id}, $action, $id2));
+}
+
+sub access_role {#implicit
+  my ($self, $role, $id2,) = @_;
+  return scalar $dbh->selectrow_array($sth->sth('access role'), undef, ($role =~ /\D/ ? (undef, $role) : ($role, undef),), $id2);
+}
+
+1;
 
 =pod
 
@@ -167,127 +290,3 @@ This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
 
 =cut
-
-sub init_class {# from plugin! init Class vars
-  my $c = shift;
-  my %args = @_;
-  $init_conf ||= $c;
-  $c->{pos} ||= {};
-  $c->{pos}{schema} ||= 'public';
-  #~ $c->{pos}{schema} = qq{"$c->{pos}{schema}".};
-  $c->{pos}{file} ||= 'POS/Pg.pm';
-  $c->{dbh} ||= $dbh ||=  $args{dbh};
-  $dbh ||= $c->{dbh};
-  #~ $c->{sth} ||= $sth ||= $args{sth} ||=( bless [$dbh, {}, $c->{schema},], $c->{namespace}.'::Sth' )->init(pos=>$c->{pos} || $args{pos} || 'POS/Pg.pm');#sth cache
-  $c->{sth} ||= $sth ||= $args{sth} || Mojolicious::Plugin::RoutesAuthDBI::Sth->new($dbh, %{$c->{pos}});
-  $sth ||= $c->{sth};
-  return $c;
-}
-
-sub load_user {# import for Mojolicious::Plugin::Authentication
-  my ($c, $uid) = @_;
-  my $u = $dbh->selectrow_hashref($sth->sth('user'), undef, ($uid, undef));
-  $c->app->log->debug("Loading user by id=$uid ". ($u ? 'success' : 'failed'));
-  $u->{pass} = '**********************' if $u;
-  return $u;
-}
-
-sub validate_user {# import for Mojolicious::Plugin::Authentication
-  my ($c, $login, $pass, $extradata) = @_;
-  if (my $u = $dbh->selectrow_hashref($sth->sth('user'), undef, (undef, $login))) {
-    return $u->{id}
-      if $u->{pass} eq $pass  && !$u->{disable};
-  }
-  return undef;
-}
-
-sub apply_ns {# Plugin
-  my ($self, $app,) = @_;
-  my $ns = $dbh->selectall_arrayref($sth->sth('namespaces', where=>"where app_ns=1::bit(1)", order=>"order by ts - (coalesce(interval_ts, 0::int)::varchar || ' second')::interval"), { Slice => {namespace=>1} },);
-  return unless @$ns;
-  my $r = $app->routes;
-  push @{ $r->namespaces() }, $_->{namespace} for @$ns;
-}
-
-sub apply_route {# meth in Plugin
-  my ($self, $app, $r_hash) = @_;
-  my $r = $app->routes;
-  
-  $app->log->debug("Skip disabled route id=[$r_hash->{id}] [$r_hash->{request}]")
-    and return undef
-    if $r_hash->{disable};
-  
-  $app->log->debug("Skip route id=[$r_hash->{id}] empty request")
-    and return undef
-    unless $r_hash->{request};
-  
-  $app->log->debug("Skip comment request [$r_hash->{request}]")
-    and return undef
-    if $r_hash->{request} =~ /^#/;
-  
-  my @request = grep /\S/, split /\s+/, $r_hash->{request}
-    or return;
-  my $nr = $r->route(pop @request);
-  $nr->via(@request) if @request;
-  
-  # STEP AUTH не катит! только один over!
-  #~ $nr->over(authenticated=>$r_hash->{auth});
-  # STEP ACCESS
-  $nr->over(access => $r_hash);
-  
-  if ($r_hash->{controller}) {
-    $nr->to(controller=>$r_hash->{controller}, action => $r_hash->{action},  $r_hash->{namespace} ? (namespace => $r_hash->{namespace}) : (),);
-  } elsif ($r_hash->{callback}) {
-    my $cb = eval $r_hash->{callback};
-    die "Compile error on callback: [$@]", $app->dumper($r_hash)
-      if $@;
-    $nr->to(cb => $cb);
-  } else {
-    die "No defaults for route: ", $app->dumper($r_hash);
-  }
-  $nr->name($r_hash->{name}) if $r_hash->{name};
-  #~ $app->log->debug("$pkg generate the route from data row [@{[$app->dumper($r_hash) =~ s/\n/ /gr]}]");
-  return $nr;
-}
-
-sub db_routes {
-  my ($self,) = @_;
-  $dbh->selectall_arrayref($sth->sth('apply routes'), { Slice => {} },);
-}
-
-sub load_user_roles {
-  my ($self, $user) = @_;
-  $user->{roles} ||= $dbh->selectall_arrayref($sth->sth('user roles'), { Slice => {} }, ($user->{id}));
-}
-
-sub access_explicit {# i.e. by refs table
-  my ($self, $id1, $id2,) = @_;
-  return scalar $dbh->selectrow_array($sth->sth('cnt refs'), undef, ($id1, $id2));
-}
-
-
-sub access_namespace {#implicit
-  my ($self, $namespace, $id2,) = @_;
-  return scalar $dbh->selectrow_array($sth->sth('access namespace'), undef, ($namespace, $id2));
-}
-
-sub access_controller {#implicit
-  my ($self, $namespace, $controller, $id2,) = @_;
-  my $c = $dbh->selectrow_hashref($sth->sth('controller', where => "where controller=? and (namespace=? or (?::varchar is null and namespace is null))"), undef, ( $controller, ($namespace) x 2,))
-    or return undef;
-  $self->access_explicit([$c->{id}], $id2);
-}
-
-sub access_action {#implicit
-  my ($self, $namespace, $controller, $action, $id2,) = @_;
-  my $c = $dbh->selectrow_hashref($sth->sth('controller', where => "where controller=? and (namespace=? or (?::varchar is null and namespace is null))"), undef, ( $controller, ($namespace) x 2,))
-    or return undef;
-  return scalar $dbh->selectrow_array($sth->sth('access action'), undef, ( $c->{id}, $action, $id2));
-}
-
-sub access_role {#implicit
-  my ($self, $role, $id2,) = @_;
-  return scalar $dbh->selectrow_array($sth->sth('access role'), undef, ($role =~ /\D/ ? (undef, $role) : ($role, undef),), $id2);
-}
-
-1;

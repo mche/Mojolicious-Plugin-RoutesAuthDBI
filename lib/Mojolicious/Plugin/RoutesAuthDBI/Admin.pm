@@ -7,97 +7,6 @@ my $pkg = __PACKAGE__;
 my $init_conf;
 my $sth;#sth hub
 
-=pod
-
-=encoding utf8
-
-=head1 Mojolicious::Plugin::RoutesAuthDBI::Admin
-
-¡ ¡ ¡ ALL GLORY TO GLORIA ! ! !
-
-=head1 WARN
-
-More or less complete!
-
-=head1 NAME
-
-Mojolicious::Plugin::RoutesAuthDBI::Admin - is a Mojolicious::Controller for manage admin operations on DBI tables: namespaces, controllers, actions, routes, roles, users.
-
-=head1 DB DESIGN DIAGRAM
-
-See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagram.svg>
-
-=head1 SYNOPSIS
-
-    $app->plugin('RoutesAuthDBI', 
-        ...
-        admin => {< options below >},
-        ...
-    );
-
-
-=over 4
-
-=item * B<namespace> - default 'Mojolicious::Plugin::RoutesAuthDBI',
-
-=item * B<controller> - module controller name, default 'Admin',
-
-Both above options determining the module controller for web actions on tables routes, roles, users and refs between them.
-
-=item * B<prefix> -is a prefix for admin urls of this module. Default as name of controller lowcase.
-
-=item * B<trust> is a url subprefix for trust admin urls of this module. See defaults below.
-
-=back
-
-=head2 Defaults
-
-    admin = > {
-        namespace => 'Mojolicious::Plugin::RoutesAuthDBI',
-        module => 'Admin',
-        prefix => 'admin', # lc(<module>)
-        trust => $app->secrets->[0],
-        pos => {...}, # sets from plugin options
-    },
-    
-    admin = {}, # empty hashref sets defaults above
-    
-    admin => undef, # disables routing of admin controller
-    
-    admin = > {prefix=>'myadmin', trust => 'foooobaaar'},# admin urls like: /myadmin/foooobaaar/.....
-
-
-
-=head1 METHODS NEEDS IN PLUGIN
-
-=over 4
-
-=item * B<self_routes()> - builtin to this access controller routes. Return array of hashrefs routes records for apply route on app. Depends on conf options I<prefix> and I<trust>.
-
-=back
-
-=head1 SEE ALSO
-
-L<Mojolicious::Plugin::RoutesAuthDBI>
-
-L<Mojolicious::Plugin::RoutesAuthDBI::Sth>
-
-=head1 AUTHOR
-
-Михаил Че (Mikhail Che), C<< <mche [on] cpan.org> >>
-
-=head1 BUGS / CONTRIBUTING
-
-Please report any bugs or feature requests at L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/issues>. Pull requests also welcome.
-
-=head1 COPYRIGHT
-
-Copyright 2016 Mikhail Che.
-
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself.
-
-=cut
 
 sub init_class {# from plugin! init Class vars
 	my $c = shift;
@@ -895,6 +804,97 @@ TABLE
   return @r;
 }
 
-
-
 1;
+
+=pod
+
+=encoding utf8
+
+=head1 Mojolicious::Plugin::RoutesAuthDBI::Admin
+
+¡ ¡ ¡ ALL GLORY TO GLORIA ! ! !
+
+=head1 WARN
+
+More or less complete!
+
+=head1 NAME
+
+Mojolicious::Plugin::RoutesAuthDBI::Admin - is a Mojolicious::Controller for manage admin operations on DBI tables: namespaces, controllers, actions, routes, roles, users.
+
+=head1 DB DESIGN DIAGRAM
+
+See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagram.svg>
+
+=head1 SYNOPSIS
+
+    $app->plugin('RoutesAuthDBI', 
+        ...
+        admin => {< options below >},
+        ...
+    );
+
+
+=over 4
+
+=item * B<namespace> - default 'Mojolicious::Plugin::RoutesAuthDBI',
+
+=item * B<controller> - module controller name, default 'Admin',
+
+Both above options determining the module controller for web actions on tables routes, roles, users and refs between them.
+
+=item * B<prefix> -is a prefix for admin urls of this module. Default as name of controller lowcase.
+
+=item * B<trust> is a url subprefix for trust admin urls of this module. See defaults below.
+
+=back
+
+=head2 Defaults
+
+    admin = > {
+        namespace => 'Mojolicious::Plugin::RoutesAuthDBI',
+        module => 'Admin',
+        prefix => 'admin', # lc(<module>)
+        trust => $app->secrets->[0],
+        pos => {...}, # sets from plugin options
+    },
+    
+    admin = {}, # empty hashref sets defaults above
+    
+    admin => undef, # disables routing of admin controller
+    
+    admin = > {prefix=>'myadmin', trust => 'foooobaaar'},# admin urls like: /myadmin/foooobaaar/.....
+
+
+
+=head1 METHODS NEEDS IN PLUGIN
+
+=over 4
+
+=item * B<self_routes()> - builtin to this access controller routes. Return array of hashrefs routes records for apply route on app. Depends on conf options I<prefix> and I<trust>.
+
+=back
+
+=head1 SEE ALSO
+
+L<Mojolicious::Plugin::RoutesAuthDBI>
+
+L<Mojolicious::Plugin::RoutesAuthDBI::Sth>
+
+=head1 AUTHOR
+
+Михаил Че (Mikhail Che), C<< <mche [on] cpan.org> >>
+
+=head1 BUGS / CONTRIBUTING
+
+Please report any bugs or feature requests at L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/issues>. Pull requests also welcome.
+
+=head1 COPYRIGHT
+
+Copyright 2016 Mikhail Che.
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=cut
+

@@ -1,29 +1,86 @@
 package Mojolicious::Plugin::RoutesAuthDBI;
 use Mojo::Base 'Mojolicious::Plugin::Authentication';
 use Mojo::Loader qw(load_class);
+use Mojo::Util qw(hmac_sha1_sum);
+use Hash::Merge qw( merge );
 
-our $VERSION = '0.448';
+our $VERSION = '0.500';
 
-my $access;# 
 my $pkg = __PACKAGE__;
-my $conf ;# set on ->registrer
-
-my $fail_auth = {format=>'txt', text=>"Deny at auth step. Please sign in!!!\n"};
-my $fail_auth_cb = sub {shift->render(%$fail_auth);};
-my $fail_access_cb = sub {
-  my ($c, $route, $args, $u) = @_;
-  $c->app->log->debug(sprintf "Deny [%s] for user id=[%s]; args=[%s]; defaults=[%s]",
-    $route->pattern->unparsed,
-    $u->{id},
-    $c->dumper($args) =~ s/\s+//gr,
-    $c->dumper($route->pattern->defaults) =~ s/\s+//gr,
-  );
-  $c->render(format=>'txt', text=>"You don`t have access on this route (url, action) !!!\n");
-  
-};
 
 has [qw(app dbh conf)];
-has pos => sub { {schema => 'public', file => 'POS/Pg.pm'} };
+
+has default => sub {
+  my $self = shift;
+  {
+  auth => {
+    stash_key => $pkg,
+    current_user_fn => 'auth_user',
+    load_user => \&load_user,
+    validate_user => \&validate_user,
+    
+    
+  },
+  access => {
+    namespace => $pkg,
+    module => 'Access',
+    fail_auth_cb => sub {shift->render(format=>'txt', text=>"Deny at auth step. Please sign in!!!\n");},
+    fail_access_cb => sub {
+      my ($c, $route, $args, $u) = @_;
+      $c->app->log->debug(sprintf "Deny [%s] for user id=[%s]; args=[%s]; defaults=[%s]",
+        $route->pattern->unparsed,
+        $u->{id},
+        $c->dumper($args) =~ s/\s+//gr,
+        $c->dumper($route->pattern->defaults) =~ s/\s+//gr,
+      );
+      $c->render(format=>'txt', text=>"You don`t have access on this route (url, action) !!!\n");
+    },
+    import => [qw(load_user validate_user)],
+  },
+  admin => {
+    namespace => $pkg,
+    controller => 'Admin',
+    prefix => lc($self->conf->{admin}{controller} || 'admin'),
+    trust => hmac_sha1_sum('admin', $self->app->secrets->[0]),
+  },
+  pos => {namespace => $pkg, module => 'POS::Pg', },
+  template => {schema => 'public'},
+}};
+
+has merge_conf => sub {#hashref
+  my $self = shift;
+  merge($self->conf, $self->default);
+};
+
+has pos => sub {# object
+  my $self = shift;
+  my $pos = $self->merge_conf->{'pos'};
+  my $class = $self->_class($pos);
+  $class->new;
+};
+
+has access => sub {# object
+  my $self = shift;
+  my $access = $self->merge_conf->{'access'};
+  my $class = $self->_class($access);
+  $class->import( @{$access->{import}});
+  bless $access, $class;
+  $access->pos($self->pos);
+  $access->{template} ||= $self->merge_conf->{template};
+  return $access->init;
+};
+
+has admin => sub {
+  my $self = shift;
+  my $admin = $self->merge_conf->{'admin'};
+  $admin->{module} ||= $admin->{controller};
+  my $class = $self->_class($admin);
+  bless $admin, $class;
+  $admin->pos($self->pos);
+  $admin->{template} ||= $self->merge_conf->{template};
+  return $admin->init_class;
+};
+
 
 sub register {
   my $self = shift;
@@ -33,11 +90,8 @@ sub register {
   $self->dbh($self->conf->{dbh} || $self->app->dbh);
   $self->dbh($self->dbh->($self->app))
     if ref($self->dbh) eq 'CODE';
-  die "Plugin must work with dbh, see SYNOPSIS" unless $self->{dbh};
-  $conf->{pos} ||= {};
-  $conf->{pos}{;
-  $conf->{pos}{;
-  
+  die "Plugin must work with dbh, see SYNOPSIS" unless $self->dbh;
+
   $conf->{access} ||= {};
   $conf->{access}{namespace} ||= $pkg unless $conf->{access}{module};
   $conf->{access}{module} ||= 'Access';
@@ -46,14 +100,9 @@ sub register {
   $conf->{access}{fail_access_cb} ||= $fail_access_cb;
   $conf->{access}{pos} ||= $conf->{pos};
   # class obiect
-  $access ||= $self->access_instance($app, $conf->{access});
+  $access = $self->access;
   
-  $conf->{auth} ||= {};
-  $conf->{auth}{stash_key} ||= $pkg;
-  $conf->{auth}{current_user_fn} ||= 'auth_user';
-  $conf->{auth}{load_user} ||= \&load_user;
-  $conf->{auth}{validate_user} ||= \&validate_user;
-  $conf->{auth}{fail_render} ||= $fail_auth;
+
   $self->SUPER::register($app, $conf->{auth});
   
   $app->routes->add_condition(access => \&access);
@@ -79,26 +128,15 @@ sub register {
 
 }
 
-sub access_instance {# auth, routes and access methods
-  my ($self, $app, $conf) = @_;
-  my $class  = _load_mod( $conf->{namespace}, $conf->{module});
-  $class->import( qw(load_user validate_user) );
-  return (bless $conf, $class)->init_class;
-}
-
-sub admin_controller {# web interface :)
-  my ($self, $app, $conf) = @_;
-  my $class  = _load_mod( $conf->{namespace}, $conf->{controller});
-  return (bless $conf, $class)->init_class;
-}
-
-sub _load_mod {
-  my ($ns, $mod) = @_;
-  my $class  = join '::', $ns, $mod;
-  require join '/', $ns =~ s/::/\//gr, $mod.'.pm';
+sub _class {
+  my $self = shift;
+  my $conf = shift;
+  my $class  = join '::', $conf->{namespace}, $conf->{module};
+  #~ require join '/', $ns =~ s/::/\//gr, $mod.'.pm';
+  my $e = load_class($class)# success undef
+    and die $e;
   return $class;
 }
-
 
 # 
 sub access {# add_condition

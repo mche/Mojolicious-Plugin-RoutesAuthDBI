@@ -2,6 +2,32 @@ package Mojolicious::Plugin::RoutesAuthDBI::Sth;
 use Mojo::Base -strict;
 use DBIx::POS::Template;
 
+#~ has [qw(dbh)];
+
+sub new {
+  my $class = shift;
+  my $dbh = shift;
+  my $pos = shift;
+  my %opt = @_;
+  return bless [$dbh, $pos, \%opt], $class;
+}
+
+sub sth {
+  my ($dbh, $sql, $opt) = @{ shift() };
+  my $name = shift;
+  my %arg = @_;
+  die "No such name[$name] in SQL dict!" unless $sql->{$name};
+  my $s = $sql->{$name}->template(%$opt, %arg);
+  my $p = $sql->{$name}->param;
+  #~ $sth->{$name}{md5_hex( encode_utf8($s))} ||= $dbh->prepare($s); # : $sql->{$name}->sql
+  #~ warn "Cached sth [$name]"
+    #~ and
+  return $dbh->prepare_cached($s)
+    if $p && $p->{cached};
+  return $dbh->prepare($s);
+}
+
+1;
 
 =pod
 
@@ -19,8 +45,9 @@ Mojolicious::Plugin::RoutesAuthDBI::Sth - is a DBI statements hub for L<Mojolici
 
     my $sth = Mojolicious::Plugin::RoutesAuthDBI::Sth->new(
       $dbh,
-      file => 'POS/Pg.pm',
-      schema => 'access',
+      $pos, # SQL dict
+      foo => 'bar', # any opts
+      ...,
     );
     my $r = $dbh->selectrow_hashref($sth->sth('foo name'));
 
@@ -28,51 +55,21 @@ Mojolicious::Plugin::RoutesAuthDBI::Sth - is a DBI statements hub for L<Mojolici
 
 Dictionary of DBI statements parses from POS-file.
 
-=head1 OPTIONS on new()
+=head1 new($dbh, $pos, ...)
 
-=head2 $dbh
+=head2 $dbh (first in list)
 
 DBI handle
 
-=head2 file
+=head2 $pos (second in list)
 
-Filename POS perl file, relative from place dir of this package.
+An SQL dictionary object/instance of the L<DBIx::POS::Template>.
 
-=head3 schema
+=head2 <any key=>value pairs>
 
-Postgesql db schema name
 
 =head1 SEE ALSO
 
 L<DBIx::POS::Template>
 
 =cut
-
-our %sql;
-my @path = split(/\//, __FILE__ );
-
-sub new {
-  my $class = shift;
-  my $dbh = shift;
-  my %opt = @_;
-  my $file = join('/', @path[0 .. $#path -1], $opt{file});
-  $sql{$file} ||= DBIx::POS::Template->new($file,);
-  return bless [$dbh, \%opt, $sql{$file}], $class;
-}
-
-sub sth {
-  my ($dbh, $opt, $sql) = @{ shift() };
-  my $name = shift;
-  my %arg = @_;
-  die "No such name[$name] in SQL dict!" unless $sql->{$name};
-  my $s = $sql->{$name}->template(schema => $opt->{schema}, %arg);
-  my $p = $sql->{$name}->param;
-  #~ $sth->{$name}{md5_hex( encode_utf8($s))} ||= $dbh->prepare($s); # : $sql->{$name}->sql
-  #~ warn "Cached sth [$name]"
-    #~ and
-  return $dbh->prepare_cached($s)
-    if $p && $p->{cached};
-  return $dbh->prepare($s);
-}
-
-1;
