@@ -107,7 +107,7 @@ sub register {
   
   $self->SUPER::register($self->app, $self->merge_conf->{auth});
   
-  $self->app->routes->add_condition(access => sub {$self->access(@_)});
+  $self->app->routes->add_condition(access => sub {$self->cond_access(@_)});
   $access->apply_ns();
   $access->apply_route($_) for @{ $access->db_routes };
   
@@ -132,35 +132,39 @@ sub _class {
 }
 
 # 
-sub access {# add_condition
+sub cond_access {# add_condition
   my $self= shift;
   my ($route, $c, $captures, $args) = @_;
-  #~ $c->app->log->debug($c->dumper($route));#$route->pattern->defaults
-  # 1. по паролю выставить куки
-  # 2. по кукам выставить пользователя
   my $conf = $self->merge_conf;
   my $app = $c->app;
   my $access = $self->access;
+  #~ $app->log->debug($c->dumper($route));#$route->pattern->defaults
   
   my $meth = $conf->{auth}{current_user_fn};
   my $u = $c->$meth;
-  if (ref $args eq 'CODE') {
-    $args->($u, @_)
-      or $access->{fail_auth_cb}->($c, )
-      and return undef;
-    return 0x01;
-  }
-  # 3. если не проверять доступ вернуть 1
-  return 1 unless $args->{auth};
+  return 1 # не проверяем доступ
+    unless $args->{auth};
+  
   # не авторизовался
-  $access->{fail_auth_cb}->($c, )
+  $app->log->debug("Deny no auth user")
+    and $access->{fail_auth_cb}->($c, )
     and return undef
     unless $u;
+  
   # допустить если {auth=>'only'}
-  return 1 if lc($args->{auth}) eq 'only';
+  return 1
+    if lc($args->{auth}) eq 'only';
   
   #  получить все группы пользователя
   $access->load_user_roles($u);
+  
+  if (ref $args eq 'CODE') {
+    $args->($u, @_)
+      or $access->{fail_auth_cb}->($c, )
+      and $app->log->debug("Deny user by callback condition")
+      and return undef;
+    return 0x01;
+  }
 
   my $id2 = [$u->{id}, map($_->{id}, grep !$_->{disable},@{$u->{roles}})];
   my $id1 = [grep $_, @$args{qw(id route_id action_id controller_id namespace_id)}];
@@ -255,6 +259,7 @@ sub access {# add_condition
     && return 1;
   
   $access->{fail_access_cb}->($c, $route, $args, $u);
+  #~ $app->log->debug($access->{fail_access_cb});
   return undef;
 }
 

@@ -41,7 +41,7 @@ TXT
     and return
     if $c->is_user_authenticated;
   
-  $c->render(format=>'txt', text=>__PACKAGE__."\n\nYou are not signed!!! To sign in/up go to /sign/<login>/<pass>");
+  $c->render(format=>'txt', text=>__PACKAGE__."\n\nYou are not signed!!!\n\nTo sign in go to /sign/in/<login>/<pass>\n");
 }
 
 sub sign {
@@ -734,7 +734,7 @@ sub self_routes {# from plugin!
   my $trust = $init_conf->{trust};
 
   my $t = <<TABLE;
-/$prefix	index	admin home	1	View main page
+/$prefix	index	admin home	1	Main page
 #
 # Namespaces, controllers, actions
 #
