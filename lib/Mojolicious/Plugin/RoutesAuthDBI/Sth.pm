@@ -1,6 +1,6 @@
 package Mojolicious::Plugin::RoutesAuthDBI::Sth;
 use Mojo::Base -strict;
-use DBIx::POS::Template;
+#~ use DBIx::POS::Template;
 
 #~ has [qw(dbh)];
 

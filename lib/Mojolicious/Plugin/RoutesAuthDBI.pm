@@ -18,8 +18,6 @@ has default => sub {
     current_user_fn => 'auth_user',
     load_user => \&load_user,
     validate_user => \&validate_user,
-    
-    
   },
   access => {
     namespace => $pkg,
@@ -44,6 +42,7 @@ has default => sub {
     trust => hmac_sha1_sum('admin', $self->app->secrets->[0]),
   },
   pos => {namespace => $pkg, module => 'POS::Pg', },
+  sth => {namespace => $pkg, module => 'Sth', },
   template => {schema => 'public'},
 }};
 
@@ -59,14 +58,21 @@ has pos => sub {# object
   $class->new;
 };
 
+has sth => sub {
+  my $self = shift;
+  my $sth = $self->merge_conf->{'sth'};
+  my $class = $self->_class($pos);
+  my $template = $self->merge_conf->{template};
+  $class->new($self->dbh, $self->pos, %$template);
+};
+
 has access => sub {# object
   my $self = shift;
   my $access = $self->merge_conf->{'access'};
   my $class = $self->_class($access);
   $class->import( @{$access->{import}});
   bless $access, $class;
-  $access->pos($self->pos);
-  $access->{template} ||= $self->merge_conf->{template};
+  $access->{sth} = $self->sth;
   return $access->init;
 };
 
@@ -76,9 +82,8 @@ has admin => sub {
   $admin->{module} ||= $admin->{controller};
   my $class = $self->_class($admin);
   bless $admin, $class;
-  $admin->pos($self->pos);
-  $admin->{template} ||= $self->merge_conf->{template};
-  return $admin->init_class;
+  $admin->{sth} = $self->sth;
+  return $admin->init;
 };
 
 
@@ -93,26 +98,14 @@ sub register {
   die "Plugin must work with dbh, see SYNOPSIS" unless $self->dbh;
 
   my $access = $self->access;
-  
-  
-
   $self->SUPER::register($app, $self->merge_conf->{auth});
   
-  $app->routes->add_condition(access => \&access);
-  $access->{'app.routes'} = $app->routes;
+  $app->routes->add_condition(access => sub {$self->access(@_)});
   $access->apply_ns($app);
   $access->apply_route($app, $_) for @{ $access->db_routes };
   
   if ($self->conf->{admin}) {
     my $admin = $self->admin;
-    $conf->{admin}{namespace} ||= $pkg;
-    $conf->{admin}{controller} ||= 'Admin';
-    $conf->{admin}{dbh} = $conf->{dbh};
-    $conf->{admin}{sth} = $access->{sth};
-    $conf->{admin}{prefix} ||= lc($conf->{admin}{controller});
-    $conf->{admin}{trust} ||= $app->secrets->[0];
-    $conf->{admin}{pos} ||= $conf->{pos};
-    my $admin ||= $self->admin_controller($app, $conf->{admin});
     $access->apply_route($app, $_) for $admin->self_routes;
   }
   
@@ -126,7 +119,6 @@ sub _class {
   my $self = shift;
   my $conf = shift;
   my $class  = join '::', $conf->{namespace}, $conf->{module};
-  #~ require join '/', $ns =~ s/::/\//gr, $mod.'.pm';
   my $e = load_class($class)# success undef
     and die $e;
   return $class;
@@ -134,10 +126,12 @@ sub _class {
 
 # 
 sub access {# add_condition
+  my $self= shift;
   my ($route, $c, $captures, $args) = @_;
   #~ $c->app->log->debug($c->dumper($route));#$route->pattern->defaults
   # 1. по паролю выставить куки
   # 2. по кукам выставить пользователя
+  my $conf = $self->merge_conf;
   my $meth = $conf->{auth}{current_user_fn};
   my $u = $c->$meth;
   if (ref $args eq 'CODE') {
@@ -154,6 +148,7 @@ sub access {# add_condition
     unless $u;
   # допустить если {auth=>'only'}
   return 1 if lc($args->{auth}) eq 'only';
+  my $access = $self->access;
   #  получить все группы пользователя
   $access->load_user_roles($u);
 
@@ -184,8 +179,9 @@ sub access {# add_condition
   # implicit access to non db routes
   my $controller = $args->{controller} || ucfirst(lc($route->pattern->defaults->{controller}));
   my $namespace = $args->{namespace} || $route->pattern->defaults->{namespace};
+  my $routes = $self->app->routes;
   if ($controller && !$namespace) {
-    (load_class($_.'::'.$controller) or ($namespace = $_) and last) for @{ $access->{'app.routes'}->namespaces };
+    (load_class($_.'::'.$controller) or ($namespace = $_) and last) for @{ $routes->namespaces };
   }
   $conf->{access}{fail_access_cb}->($c, $route, $args, $u)
     and return undef

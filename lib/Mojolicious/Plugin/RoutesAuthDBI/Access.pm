@@ -1,26 +1,21 @@
 package Mojolicious::Plugin::RoutesAuthDBI::Access;
-use Mojo::Base -strict;
-use Mojolicious::Plugin::RoutesAuthDBI::Sth;#  sth cache
+use Mojo::Base -base;
+#~ use Mojolicious::Plugin::RoutesAuthDBI::Sth;#  sth cache
 use Exporter 'import'; 
 our @EXPORT_OK = qw(load_user validate_user);
 
 
 my $pkg = __PACKAGE__;
 my ($dbh, $sth);
-has [qw(dbh pos)];
-has sth => sub {
-  my $self = shift;
-  Mojolicious::Plugin::RoutesAuthDBI::Sth->new($self->dbh, $self->pos, $self->{template});
-};
+has [qw(dbh sth)];
 
 sub init {# from plugin! init Class vars
   my $self = shift;
   my %args = @_;
 
-  $self->dbh($self->{dbh} || $args{dbh});
-  $dbh = $self->dbh
+  $dbh = $self->dbh($self->{dbh} || $args{dbh})
     or die "Нет DBI handler";
-  $sth = $self->sth;
+  $sth = $self->sth($self->{sth} || $args{sth});
   return $self;
 }
 

@@ -1,7 +1,17 @@
+use Mojo::Base -base;
 use Hash::Merge qw( merge );
 use Data::Dumper;
 #~ &Hash::Merge::set_set_behavior('STORAGE_PRECEDENT');
+
+has a => sub {
+  {a=>\&a,};
+  
+};
+
+my $s = __PACKAGE__->new;
+
 my $a = {
+          has=> $s->a->{a},
             'foo'    => 1,
         'bar'    => [ qw( a b e ) ],
         'querty' => { 'bob' => 'alice' },

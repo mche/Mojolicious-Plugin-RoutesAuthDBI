@@ -1,30 +1,20 @@
 package Mojolicious::Plugin::RoutesAuthDBI::Admin;
 use Mojo::Base 'Mojolicious::Controller';
-use Mojolicious::Plugin::RoutesAuthDBI::Sth;#  sth cache
+#~ use Mojolicious::Plugin::RoutesAuthDBI::Sth;#  sth cache
 
-my $dbh; # one per class
 my $pkg = __PACKAGE__;
-my $init_conf;
-my $sth;#sth hub
+my ($dbh, $sth, $init_conf);
+has [qw(dbh sth)];
 
+sub init {# from plugin! init Class vars
+  my $self = shift;
+  my %args = @_;
 
-sub init_class {# from plugin! init Class vars
-	my $c = shift;
-	my %args = @_;
-  $init_conf ||= $c;
-  $c->{prefix} =~ s/^\///;
-  $c->{trust} =~ s/\W/-/g;
-  $c->{pos} ||= {};
-  $c->{pos}{schema} ||= 'public';
-  #~ $c->{pos}{schema} = qq{"$c->{pos}{schema}".};
-  $c->{pos}{file} ||= 'POS/Pg.pm';
-	$c->{dbh} ||= $dbh ||=  $args{dbh};
-	$dbh ||= $c->{dbh};
-	#~ $c->{sth} ||= $sth ||= $args{sth} ||= (bless [$dbh, {}, $c->{schema},], $c->{namespace}.'::Sth')->init(pos => $c->{pos} || 'POS/Pg.pm');#sth cache
-  $c->{sth} ||= $sth ||= $args{sth} || Mojolicious::Plugin::RoutesAuthDBI::Sth->new($dbh, %{$c->{pos}});
-	$sth ||= $c->{sth};
-    
-	return $c;
+  $dbh = $self->dbh($self->{dbh} || $args{dbh})
+    or die "Нет DBI handler";
+  $sth = $self->sth($self->{sth} || $args{sth});
+  $init_conf = $self;
+  return $self;
 }
 
 

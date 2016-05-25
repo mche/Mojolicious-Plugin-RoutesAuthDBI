@@ -1,5 +1,9 @@
 package Mojolicious::Plugin::RoutesAuthDBI::POS::Pg;
 
+use base qw{DBIx::POS::Template};
+ 
+sub new { shift->SUPER::new(__FILE__); }
+
 =pod
 
 =encoding utf8
