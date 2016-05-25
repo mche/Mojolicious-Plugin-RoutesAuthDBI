@@ -22,16 +22,11 @@ has default => sub {
   access => {
     namespace => $pkg,
     module => 'Access',
-    fail_auth_cb => sub {shift->render(format=>'txt', text=>"Deny at auth step. Please sign in!!!\n");},
+    fail_auth_cb => sub {
+      shift->render(format=>'txt', text=>"Access deny at auth step. Please sign in!!!\n");
+    },
     fail_access_cb => sub {
-      my ($c, $route, $args, $u) = @_;
-      $c->app->log->debug(sprintf "Deny [%s] for user id=[%s]; args=[%s]; defaults=[%s]",
-        $route->pattern->unparsed,
-        $u->{id},
-        $c->dumper($args) =~ s/\s+//gr,
-        $c->dumper($route->pattern->defaults) =~ s/\s+//gr,
-      );
-      $c->render(format=>'txt', text=>"You don`t have access on this route (url, action) !!!\n");
+      shift->render(format=>'txt', text=>"You don`t have access on this route (url, action) !!!\n");
     },
     import => [qw(load_user validate_user)],
   },
@@ -142,11 +137,15 @@ sub cond_access {# add_condition
   
   my $auth_helper = $conf->{auth}{current_user_fn};
   my $u = $c->$auth_helper;
-  return 1 # не проверяем доступ
+  $app->log->debug(sprintf(qq[Access allow [%s] for {auth}=false],
+    $route->pattern->unparsed,
+  ))
+    and return 1 # не проверяем доступ
     unless $args->{auth};
   
   # не авторизовался
-  $app->log->debug("Deny no auth user")
+  #~ $app->log->debug("Access deny for non auth user")
+  $self->deny_log($route, $args, $u)
     and $access->{fail_auth_cb}->($c, )
     and return undef
     unless $u;
@@ -155,7 +154,7 @@ sub cond_access {# add_condition
   $access->load_user_roles($u);
   
   # допустить если {auth=>'only'}
-  $app->log->debug(sprintf(qq[Allow [%s] for {auth}='only'],
+  $app->log->debug(sprintf(qq[Access allow [%s] for {auth}='only'],
     $route->pattern->unparsed,
   ))
     and return 1
@@ -163,10 +162,11 @@ sub cond_access {# add_condition
   
   if (ref $args eq 'CODE') {
     $args->($u, @_)
-      or $access->{fail_auth_cb}->($c, )
-      and $app->log->debug("Deny user by callback condition")
+      or $self->deny_log($route, $args, $u)
+      and $access->{fail_auth_cb}->($c, )
+      #~ and $app->log->debug("Access deny user by callback condition")
       and return undef;
-    $app->log->debug(sprintf(qq[Allow [%s] by callback condition],
+    $app->log->debug(sprintf(qq[Access allow [%s] by callback condition],
       $route->pattern->unparsed,
     ));
     return 0x01;
@@ -178,7 +178,7 @@ sub cond_access {# add_condition
   # explicit acces to route
   scalar @$id1
     && $access->access_explicit($id1, $id2)
-    && $app->log->debug(sprintf "Allow [%s] for roles=[%s] joined id1=%s; args=[%s]; defaults=%s",
+    && $app->log->debug(sprintf "Access allow [%s] for roles=[%s] joined id1=%s; args=[%s]; defaults=%s",
       $route->pattern->unparsed,
       $c->dumper($id2) =~ s/\s+//gr,
       $c->dumper($id1) =~ s/\s+//gr,
@@ -190,7 +190,7 @@ sub cond_access {# add_condition
   # Access to non db route by role
   $args->{role}
     && $access->access_role($args->{role}, $id2)
-    && $app->log->debug(sprintf "Allow [%s] by role [%s] joined roles=[%s]",
+    && $app->log->debug(sprintf "Access allow [%s] by role [%s] joined roles=[%s]",
       $route->pattern->unparsed,
       $args->{role},
     )
@@ -202,12 +202,13 @@ sub cond_access {# add_condition
   if ($controller && !$namespace) {
     (load_class($_.'::'.$controller) or ($namespace = $_) and last) for @{ $app->routes->namespaces };
   }
-  $access->{fail_access_cb}->($c, $route, $args, $u)
+  $self->deny_log($route, $args, $u)
+    and $access->{fail_access_cb}->($c,)
     and return undef
     unless $controller && $namespace;# failed load class
 
   $access->access_namespace($namespace, $id2)
-    && $app->log->debug(sprintf "Allow [%s] for roles=[%s] by namespace=[%s]; args=[%s]; defaults=[%s]",
+    && $app->log->debug(sprintf "Access allow [%s] for roles=[%s] by namespace=[%s]; args=[%s]; defaults=[%s]",
       $route->pattern->unparsed,
       $c->dumper($id2) =~ s/\s+//gr,
       $namespace,
@@ -217,7 +218,7 @@ sub cond_access {# add_condition
     && return 1;
   
   $access->access_controller($namespace, $controller, $id2)
-    && $app->log->debug(sprintf "Allow [%s] for roles=[%s] by namespace=[%s] and controller=[%s]; args=[%s]; defaults=[%s]",
+    && $app->log->debug(sprintf "Access allow [%s] for roles=[%s] by namespace=[%s] and controller=[%s]; args=[%s]; defaults=[%s]",
       $route->pattern->unparsed,
       $c->dumper($id2) =~ s/\s+//gr,
       $namespace, $controller,
@@ -229,7 +230,7 @@ sub cond_access {# add_condition
   # еще раз контроллер, который тут без namespace и в базе без namespace ------> доступ из любого места
   $args->{namespace} || $route->pattern->defaults->{namespace}
     || $access->access_controller(undef, $controller, $id2)
-    && $app->log->debug(sprintf "Allow [%s] for roles=[%s] by controller=[%s] without namespace on db; args=[%s]; defaults=[%s]",
+    && $app->log->debug(sprintf "Access allow [%s] for roles=[%s] by controller=[%s] without namespace on db; args=[%s]; defaults=[%s]",
       $route->pattern->unparsed,
       $c->dumper($id2) =~ s/\s+//gr,
       $controller,
@@ -239,11 +240,12 @@ sub cond_access {# add_condition
     && return 1;
   
   my $action = $args->{action} || $route->pattern->defaults->{action}
-    or $access->{fail_access_cb}->($c, $route, $args, $u)
+    or $self->deny_log($route, $args, $u)
+    and $access->{fail_access_cb}->($c,)
     and return undef;
   
   $access->access_action($namespace, $controller, $action, $id2)
-    && $app->log->debug(sprintf "Allow [%s] for roles=[%s] by namespace=[%s] and controller=[%s] and action=[%s]; args=[%s]; defaults=[%s]",
+    && $app->log->debug(sprintf "Access allow [%s] for roles=[%s] by namespace=[%s] and controller=[%s] and action=[%s]; args=[%s]; defaults=[%s]",
       $route->pattern->unparsed,
       $c->dumper($id2) =~ s/\s+//gr,
       $namespace , $controller, $action,
@@ -255,7 +257,7 @@ sub cond_access {# add_condition
   # еще раз контроллер, который тут без namespace и в базе без namespace ------> доступ из любого места
   $args->{namespace} || $route->pattern->defaults->{namespace}
     && $access->access_action(undef, $controller, $action, $id2)
-    && $app->log->debug(sprintf "Allow [%s] for roles=[%s] by (namespace=[any]) controller=[%s] and action=[%s]; args=[%s]; defaults=[%s]",
+    && $app->log->debug(sprintf "Access allow [%s] for roles=[%s] by (namespace=[any]) controller=[%s] and action=[%s]; args=[%s]; defaults=[%s]",
       $route->pattern->unparsed,
       $c->dumper($id2) =~ s/\s+//gr,
       $controller, $action,
@@ -263,12 +265,23 @@ sub cond_access {# add_condition
       $c->dumper($route->pattern->defaults) =~ s/\s+//gr,
     )
     && return 1;
-  
-  $access->{fail_access_cb}->($c, $route, $args, $u);
-  #~ $app->log->debug($access->{fail_access_cb});
+    
+  $self->deny_log($route, $args, $u);
+  $access->{fail_access_cb}->($c,);
   return undef;
 }
 
+sub deny_log {
+  my $self = shift;
+  my ($route, $args, $u) = @_;
+  my $app = $self->app;
+  $app->log->debug(sprintf "Access deny [%s] for user id=[%s]; args=[%s]; defaults=[%s]",
+    $route->pattern->unparsed,
+    $u ? $u->{id} : 'non auth',
+    $app->dumper($args) =~ s/\s+//gr,
+    $app->dumper($route->pattern->defaults) =~ s/\s+//gr,
+  );
+}
 
 1;
 
