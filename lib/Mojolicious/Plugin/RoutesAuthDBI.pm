@@ -94,14 +94,15 @@ sub register {
   $self->app(shift);
   $self->conf(shift); # global
   
-  die $self->app->dumper($self->merge_conf);
-  
   $self->dbh($self->conf->{dbh} || $self->app->dbh);
   $self->dbh($self->dbh->($self->app))
     if ref($self->dbh) eq 'CODE';
   die "Plugin must work with dbh, see SYNOPSIS" unless $self->dbh;
-
+  
   my $access = $self->access;
+  
+  #~ die $self->app->dumper($access);
+  
   $self->SUPER::register($self->app, $self->merge_conf->{auth});
   
   $self->app->routes->add_condition(access => sub {$self->access(@_)});
@@ -288,10 +289,13 @@ First of all you will see L<SVG|https://github.com/mche/Mojolicious-Plugin-Route
     access => {...},
     admin => {...},
     pos => {...},
+    template => {...},
   );
 
 
 =head2 PLUGIN OPTIONS
+
+One option C<dbh> is mandatory, all other - optional.
 
 =head3 dbh
 
@@ -359,7 +363,9 @@ See L<Mojolicious::Plugin::RoutesAuthDBI::Admin> for detail options list.
 
 Hashref options for POS-dictionary instance. See L<Mojolicious::Plugin::RoutesAuthDBI::Sth>.
 
-=back
+=head3 template
+
+Hashref options for template of POS-dictionary. See L<Mojolicious::Plugin::RoutesAuthDBI::POS::Pg>.
 
 =head1 INSTALL
 

@@ -70,6 +70,8 @@ An SQL dictionary object/instance of the L<DBIx::POS::Template>.
 
 =head1 SEE ALSO
 
+L<Mojolicious::Plugin::RoutesAuthDBI::POS::Pg>
+
 L<DBIx::POS::Template>
 
 =cut

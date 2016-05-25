@@ -26,12 +26,18 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
 
 =head1 SYNOPSIS
 
-    use DBIx::POS::Template;
     
-    my @path = split(/\//, __FILE__ );
-    my $file = join('/', @path[0 .. $#path -1], 'POS/Pg.pm');
-    my $pos = DBIx::POS::Template->new($file,);
+    my $pos = Mojolicious::Plugin::RoutesAuthDBI::POS::Pg->new;
+    
     my $sth = $dbh->prepare($pos->{'user'});
+
+=head1 Methods
+
+One new()
+
+=head2 new()
+
+None input args for new.
 
 =head1 SEE ALSO
 
