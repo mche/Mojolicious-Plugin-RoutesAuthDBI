@@ -140,8 +140,8 @@ sub cond_access {# add_condition
   my $access = $self->access;
   #~ $app->log->debug($c->dumper($route));#$route->pattern->defaults
   
-  my $meth = $conf->{auth}{current_user_fn};
-  my $u = $c->$meth;
+  my $auth_helper = $conf->{auth}{current_user_fn};
+  my $u = $c->$auth_helper;
   return 1 # не проверяем доступ
     unless $args->{auth};
   
@@ -151,18 +151,24 @@ sub cond_access {# add_condition
     and return undef
     unless $u;
   
-  # допустить если {auth=>'only'}
-  return 1
-    if lc($args->{auth}) eq 'only';
-  
   #  получить все группы пользователя
   $access->load_user_roles($u);
+  
+  # допустить если {auth=>'only'}
+  $app->log->debug(sprintf(qq[Allow [%s] for {auth}='only'],
+    $route->pattern->unparsed,
+  ))
+    and return 1
+    if lc($args->{auth}) eq 'only';
   
   if (ref $args eq 'CODE') {
     $args->($u, @_)
       or $access->{fail_auth_cb}->($c, )
       and $app->log->debug("Deny user by callback condition")
       and return undef;
+    $app->log->debug(sprintf(qq[Allow [%s] by callback condition],
+      $route->pattern->unparsed,
+    ));
     return 0x01;
   }
 
