@@ -24,7 +24,7 @@ sub init {# from plugin! init Class vars
 
 sub index {
   my $c = shift;
-  
+  no warnings;
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 

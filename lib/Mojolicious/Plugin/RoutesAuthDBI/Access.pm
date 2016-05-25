@@ -98,7 +98,7 @@ sub db_routes {
 sub load_user_roles {
   my ($self, $user) = @_;
   $user->{roles} ||= $dbh->selectall_arrayref($sth->sth('user roles'), { Slice => {} }, ($user->{id}))
-    and $app->log->debug($app->dumper($user->{roles}) =~ s/\s+//gr,);
+    and $app->log->debug("Loading user roles:", $app->dumper($user->{roles}) =~ s/\s+//gr,);
   
 }
 
