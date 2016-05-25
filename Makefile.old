@@ -19,7 +19,7 @@
 #     MIN_PERL_VERSION => q[5.014]
 #     NAME => q[Mojolicious::Plugin::RoutesAuthDBI]
 #     PL_FILES => {  }
-#     PREREQ_PM => { DBI=>q[1.6], DBIx::POS::Template=>q[0.001], Hash::Merge=>q[0.2], Mojolicious=>q[6], Mojolicious::Plugin::Authentication=>q[1.29], Test::More=>q[0] }
+#     PREREQ_PM => { DBI=>q[1.6], DBIx::POS::Template=>q[0.0002], Hash::Merge=>q[0.2], Mojolicious=>q[6], Mojolicious::Plugin::Authentication=>q[1.29], Test::More=>q[0] }
 #     TEST_REQUIRES => {  }
 #     VERSION_FROM => q[lib/Mojolicious/Plugin/RoutesAuthDBI.pm]
 #     dist => { COMPRESS=>q[gzip -9f], SUFFIX=>q[gz] }
@@ -579,7 +579,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '    - inc' >> META_new.yml
 	$(NOECHO) $(ECHO) 'requires:' >> META_new.yml
 	$(NOECHO) $(ECHO) '  DBI: '\''1.6'\''' >> META_new.yml
-	$(NOECHO) $(ECHO) '  DBIx::POS::Template: '\''0.001'\''' >> META_new.yml
+	$(NOECHO) $(ECHO) '  DBIx::POS::Template: '\''0.0002'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Hash::Merge: '\''0.2'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Mojolicious: '\''6'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Mojolicious::Plugin::Authentication: '\''1.29'\''' >> META_new.yml
@@ -623,7 +623,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '      "runtime" : {' >> META_new.json
 	$(NOECHO) $(ECHO) '         "requires" : {' >> META_new.json
 	$(NOECHO) $(ECHO) '            "DBI" : "1.6",' >> META_new.json
-	$(NOECHO) $(ECHO) '            "DBIx::POS::Template" : "0.001",' >> META_new.json
+	$(NOECHO) $(ECHO) '            "DBIx::POS::Template" : "0.0002",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "Hash::Merge" : "0.2",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "Mojolicious" : "6",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "Mojolicious::Plugin::Authentication" : "1.29",' >> META_new.json
@@ -940,7 +940,7 @@ ppd :
 	$(NOECHO) $(ECHO) '    <IMPLEMENTATION>' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <PERLCORE VERSION="5,014,0,0" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="DBI::" VERSION="1.6" />' >> $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '        <REQUIRE NAME="DBIx::POS::Template" VERSION="0.001" />' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '        <REQUIRE NAME="DBIx::POS::Template" VERSION="0.0002" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Hash::Merge" VERSION="0.2" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Mojolicious::" VERSION="6" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Mojolicious::Plugin::Authentication" VERSION="1.29" />' >> $(DISTNAME).ppd
