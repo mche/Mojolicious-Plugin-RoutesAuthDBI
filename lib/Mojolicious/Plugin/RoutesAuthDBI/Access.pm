@@ -13,10 +13,14 @@ sub init {# from plugin! init Class vars
   my $self = shift;
   my %args = @_;
 
-  $dbh = $self->dbh($self->{dbh} || $args{dbh})
+  $self->dbh($self->{dbh} || $args{dbh});
+  $dbh = $self->dbh
     or die "Нет DBI handler";
-  $sth = $self->sth($self->{sth} || $args{sth});
-  $app = $self->app($self->{app} || $args{app});
+  $self->sth($self->{sth} || $args{sth});
+  $sth = $self->sth
+    or die "Нет STH";
+  $self->app($self->{app} || $args{app});
+  $app = $self->app;
   return $self;
 }
 

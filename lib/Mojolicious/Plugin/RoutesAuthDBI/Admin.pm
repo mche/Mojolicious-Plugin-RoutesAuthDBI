@@ -10,9 +10,12 @@ sub init {# from plugin! init Class vars
   my $self = shift;
   my %args = @_;
 
-  $dbh = $self->dbh($self->{dbh} || $args{dbh})
+  $self->dbh($self->{dbh} || $args{dbh});
+  $dbh = $self->dbh
     or die "Нет DBI handler";
-  $sth = $self->sth($self->{sth} || $args{sth});
+  $self->sth($self->{sth} || $args{sth});
+  $sth = $self->sth
+    or die "Нет STH";
   #~ $app = $self->app($self->{app} || $args{app});
   $init_conf = $self;
   return $self;

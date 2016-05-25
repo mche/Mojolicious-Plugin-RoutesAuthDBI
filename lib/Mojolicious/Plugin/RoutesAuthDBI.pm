@@ -72,6 +72,7 @@ has access => sub {# object
   my $class = $self->_class($access);
   $class->import( @{$access->{import}});
   bless $access, $class;
+  $access->{dbh} = $self->dbh;
   $access->{sth} = $self->sth;
   $access->{app} = $self->app;
   return $access->init;
@@ -83,6 +84,7 @@ has admin => sub {
   $admin->{module} ||= $admin->{controller};
   my $class = $self->_class($admin);
   bless $admin, $class;
+  $admin->{dbh} = $self->dbh;
   $admin->{sth} = $self->sth;
   
   return $admin->init;
