@@ -19,7 +19,7 @@
           dbh=>sub{ shift->dbh->{'main'}},
           auth=>{current_user_fn=>'auth_user'},
           #access=> {},
-          admin=>{prefix=>'myadmin', trust=>'fooobaaar'},
+          admin=>{prefix=>'myadmin', trust00=>'fooobaaar'},
       ],
       #~ ['HeaderCondition'],
       #~ ['ParamsArray'],

@@ -776,10 +776,10 @@ sub self_routes {# from plugin!
 /$prefix/users	users	$prefix view users	1	View users table
 /$prefix/users/:role	role_users	$prefix users of role	1	View users of :role by id|name
 #
-get foo /sign/in	sign	signin form	0	Login&pass form
-post /sign/in	sign	signin params	0	Auth by params
-/sign/in/:login/:pass	sign	signin stash	0	Auth by stash
-/sign/out	signout	go away	1	Exit
+#get foo /sign/in	sign	signin form	0	Login&pass form
+#post /sign/in	sign	signin params	0	Auth by params
+/$prefix/sign/in/:login/:pass	sign	signin stash	0	Auth by stash
+/$prefix/sign/out	signout	go away	1	Exit
 #
 /$prefix/$trust/admin/new/:login/:pass	trust_new_user	$prefix/$trust !trust create user!	0	Add new user by :login & :pass and auto assign to role 'Admin' and assign to access this controller!
 

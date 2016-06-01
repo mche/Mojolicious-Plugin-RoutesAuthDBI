@@ -73,7 +73,7 @@ has access => sub {# object
   return $access->init;
 };
 
-has admin => sub {
+has admin => sub {# object
   my $self = shift;
   my $admin = $self->merge_conf->{'admin'};
   $admin->{module} ||= $admin->{controller};
@@ -97,8 +97,6 @@ sub register {
   die "Plugin must work with dbh, see SYNOPSIS" unless $self->dbh;
   
   my $access = $self->access;
-  
-  #~ die $self->app->dumper($access);
   
   $self->SUPER::register($self->app, $self->merge_conf->{auth});
   
@@ -190,7 +188,7 @@ sub cond_access {# add_condition
   # Access to non db route by role
   $args->{role}
     && $access->access_role($args->{role}, $id2)
-    && $app->log->debug(sprintf "Access allow [%s] by role [%s] joined roles=[%s]",
+    && $app->log->debug(sprintf "Access allow [%s] by role [%s]",
       $route->pattern->unparsed,
       $args->{role},
     )
