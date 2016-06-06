@@ -71,11 +71,11 @@ sub new_user {
   my ($login, $pass) = $c->vars('login', 'pass');
   
   my $r;
-  ($r = $dbh->selectrow_hashref($sth->sth('user'), undef, (undef, $login)))
+  ($r = $dbh->selectrow_hashref($sth->sth('profile'), undef, (undef, $login)))
     and $c->render(format=>'txt', text=><<TXT)
 $pkg
 
-User already exists
+Profile/User already exists
 ===
 
 @{[$c->dumper( $r)]}
@@ -83,17 +83,23 @@ TXT
     and ($r->{not_new} = '!')
     and return $r;
   
-  $r = $dbh->selectrow_hashref($sth->sth('new user'), undef, ($login, $pass));
+  $r = $dbh->selectrow_hashref($sth->sth('new login'), undef, ($login, $pass));
+  
+  my $p =  $dbh->selectrow_hashref($sth->sth('new profile'), undef, ([$login],));
+  
+  $c->ref($p->{id} => $r->{id});
+  
+  @$p{qw(login pass)} = @$r{qw(login pass)};
   
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
-Success sign up new user
+Success sign up new profile/user
 ===
 
-@{[$c->dumper( $r)]}
+@{[$c->dumper( $p)]}
 TXT
-  return $r;
+  return $p;
 }
 
 sub trust_new_user {
@@ -106,7 +112,7 @@ sub trust_new_user {
   $rl ||= $dbh->selectrow_hashref($sth->sth('new role'), undef, ('admin'));
   
   # REF role->user
-  my $ru = $c->ref($rl->{id}, $u->{id});
+  my $ru = $c->ref($rl->{id} => $u->{id});
   
   # CONTROLLER
   my $cc = $dbh->selectrow_hashref($sth->sth('controller', where=>"where controller=? and (namespace=? or (?::varchar is null and namespace is null))"), undef, ($init_conf->{controller}, ($init_conf->{namespace}) x 2,));
@@ -174,31 +180,33 @@ TXT
 
 sub user_roles {
   my $c = shift;
-  my ($user) = $c->vars('user');
-  my $u =  $dbh->selectrow_hashref($sth->sth('user'), undef, ($user =~ /\D/ ? (undef, $user) : ($user, undef,)));
+  my ($user) = $c->vars('user') || $c->vars('login');
+  my $u =  $dbh->selectrow_hashref($sth->sth('profile'), undef, ($user =~ /\D/ ? (undef, $user) : ($user, undef,)));
   
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
-No such user [$user]
+No such profile.id/login [$user]
 ===
 
 TXT
     and return
     unless $u;
   
-  my $r = $dbh->selectall_arrayref($sth->sth('user roles'), { Slice => {} }, ($u->{id}));
+  my $r = $dbh->selectall_arrayref($sth->sth('profile roles'), { Slice => {} }, ($u->{id}));
   
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
-List of user roles (@{[scalar @$r]})
-===
-
-USER
+PROFILE+LOGIN
+---
 @{[$c->dumper( $u)]}
 
+List of profile/login roles (@{[scalar @$r]})
+===
+
 ROLES
+---
 @{[$c->dumper( $r)]}
 
 TXT
@@ -222,24 +230,24 @@ TXT
     unless $r && $role =~ /\w/;
   $r ||= $dbh->selectrow_hashref($sth->sth('new role'), undef, ($role)) ;
   
-  my $user = $c->stash('user') || $c->param('user');
-  my $u =  $dbh->selectrow_hashref($sth->sth('user'), undef, ($user =~ /\D/ ? (undef, $user) : ($user, undef,)));
+  my ($user) = $c->vars('user');
+  my $u =  $dbh->selectrow_hashref($sth->sth('profile'), undef, ($user =~ /\D/ ? (undef, $user) : ($user, undef,)));
   
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
-No such user [$user]
+No such profile.id/login [$user]
 ===
 
 TXT
     and return
     unless $u;
   
-  my $ref = $dbh->selectrow_hashref($sth->sth('ref'), undef, ($r->{id}, $u->{id}));
+  my $ref = $c->refs($r->{id} => $u->{id});
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
-Allready ref ROLE -> USER
+Allready ref ROLE[$r->{name}] -> USER [@{[$c->dumper( $u) =~ s/\s+//gr]}]
 ===
 
 @{[$c->dumper( $ref)]}
@@ -247,12 +255,12 @@ TXT
     and return
     if $ref;
   
-  $ref = $c->ref($r->{id}, $u->{id});
+  $ref = $c->ref($r->{id} => $u->{id});
   
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
-Success create ref ROLE -> USER
+Success create ref ROLE[$r->{name}] -> USER [@{[$c->dumper( $u) =~ s/\s+//gr]}]
 ===
 
 @{[$c->dumper( $ref)]}
@@ -752,8 +760,8 @@ sub self_routes {# from plugin!
 /$prefix/role/dsbl/:role	disable_role	$prefix disable role->user	1	Disable :role by role.id|role.name.
 /$prefix/role/enbl/:role	enable_role	$prefix enable role->user	1	Enable :role by role.id|role.name.
 /$prefix/roles	roles	$prefix view roles	1	View roles table
-/$prefix/roles/:user	user_roles	$prefix roles of user	1	View roles of :user by id|login
-/$prefix/role/:role/:user	new_role_user	$prefix create ref role->user	1	Assign :user to :role by user.id|user.login and role.id|role.name.
+/$prefix/roles/:user	user_roles	$prefix roles of user	1	View roles of :user by profile.id|login
+/$prefix/role/:role/:user	new_role_user	$prefix create ref role->profile	1	Assign :user to :role by profile.id|login and role.id|role.name.
 #
 # Последовательный ввод нового маршрута
 #
@@ -769,7 +777,7 @@ sub self_routes {# from plugin!
 /$prefix/routes/:role	role_routes	$prefix routes of role	1	All routes of :role by id|name
 /$prefix/route/:route/:role	ref	$prefix create ref route->role	1	Assign :route with :role by route.id and role.id|role.name
 #
-# Пользователи
+# Пользователи/профили
 #
 /$prefix/user/new	new_user	$prefix create user	1	Add new user by params: login,pass,...
 /$prefix/user/new/:login/:pass	new_user	$prefix create user st	1	Add new user by :login & :pass

@@ -69,7 +69,7 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
 
 =name routes
 
-=desc
+=desc маршруты
 
 =sql
 
@@ -91,7 +91,7 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
 
 =name namespaces
 
-=desc
+=desc спейсы
 
 =sql
 
@@ -111,7 +111,7 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
 
 =name controllers
 
-=desc
+=desc контроллеры
 
 =sql
 
@@ -160,7 +160,7 @@ Its logins table
 
 =name profiles
 
-=desc 
+=desc профили
 
 =sql
 
@@ -175,7 +175,7 @@ Its logins table
 
 =name roles
 
-=desc
+=desc роли
 
 =sql
 
