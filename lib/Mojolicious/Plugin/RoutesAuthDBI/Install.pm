@@ -26,7 +26,7 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
 
 =head1 Manual
 
-  $ read -d '' CODE <<PERL; perl -e "$CODE" get /man
+  $ read -d '' CODE <<PERL; perl -Ilib -e "$CODE" get /man
   use Mojo::Base 'Mojolicious';
   sub startup {
     shift->routes->route('/man')
@@ -38,7 +38,7 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
 
 =head1 View schema (define the postgresql schema name)
 
-  $ read -d '' CODE <<PERL; perl -e "$CODE" get /schema/<name> #
+  $ read -d '' CODE <<PERL; perl -Ilib -e "$CODE" get /schema/<name> #
   use Mojo::Base 'Mojolicious';
   sub startup {
     shift->routes->route('/schema/:schema')
@@ -50,7 +50,7 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
 
 =head1 Apply schema (define the postgresql schema name)
 
-  $ read -d '' CODE <<PERL; perl -e "$CODE" get /schema/<name> 2>/dev/null | psql -d <dbname> #
+  $ read -d '' CODE <<PERL; perl -Ilib -e "$CODE" get /schema/<name> 2>/dev/null | psql -d <dbname> #
   use Mojo::Base 'Mojolicious';
   sub startup {
     shift->routes->route('/schema/:schema')
@@ -62,7 +62,7 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
 
 =head1 Sample app
 
-  $ read -d '' CODE <<PERL; perl -e "$CODE" get /app 2>/dev/null > test-app.pl
+  $ read -d '' CODE <<PERL; perl -Ilib -e "$CODE" get /app 2>/dev/null > test-app.pl
   use Mojo::Base 'Mojolicious';
   sub startup {
     shift->routes->route('/app')

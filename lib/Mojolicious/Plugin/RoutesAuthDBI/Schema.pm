@@ -51,7 +51,7 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
 
   
   CREATE SCHEMA IF NOT EXISTS "{% $schema %}";
-  set local search_path = "{% $schema %}";
+  -- set local search_path = "{% $schema %}";
 
 =head2 Sequence
 
@@ -231,6 +231,8 @@ sub schema {
   my $c = shift;
   #~ $c->render(format=>'txt', text => join '', <Mojolicious::Plugin::RoutesAuthDBI::Install::DATA>);
   my $template = $c->_vars;
+  
+  $c->app->log->debug($c->dumper($template));
   
   #~ my $schema2 = qq{"$schema".} if $schema;
   $c->render(format=>'txt', text => <<TXT);
