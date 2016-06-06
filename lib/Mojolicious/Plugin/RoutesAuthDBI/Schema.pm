@@ -10,7 +10,7 @@ my $defaults = {
     refs=>'refs',
     users => 'users',
     profiles => 'profiles',
-    roles =>'roles';
+    roles =>'roles',
     actions => 'actions',
     controllers => 'controllers',
     namespaces => 'namespaces',
@@ -207,29 +207,50 @@ Its logins table
 =cut
 
 
+sub _vars {
+  my $c = shift;
+  my $template = {};
+
+  for my $var (keys %$defaults) {
+    $template->{$var} = $c->stash($var) || $c->param($var)
+      and next
+      unless  ref $defaults->{$var};
+      
+      $template->{$var} = { map {
+      my $val = $c->stash($_) || $c->param($_);
+      $val ? ($_ => $val) : ();
+    
+    } keys %{$defaults->{$var}}  };
+  }
+  $template;
+}
+
 sub schema {
   my $c = shift;
   #~ $c->render(format=>'txt', text => join '', <Mojolicious::Plugin::RoutesAuthDBI::Install::DATA>);
-  my $schema = $c->stash('schema') || $c->param('schema') || 'public';
+  my $template = $c->_vars;
+  
   #~ my $schema2 = qq{"$schema".} if $schema;
   $c->render(format=>'txt', text => <<TXT);
-@{[$schema ? $sql->{'schema'}->template(schema => $schema) : '']}
+@{[$sql->{'schema'}->template(%$template)]}
 
-@{[$sql->{'sequence'}->template(schema => $schema)]}
+@{[$sql->{'sequence'}->template(%$template)]}
 
-@{[$sql->{'routes'}->template(schema => $schema)]}
+@{[$sql->{'routes'}->template(%$template)]}
 
-@{[$sql->{'namespaces'}->template(schema => $schema)]}
+@{[$sql->{'namespaces'}->template(%$template)]}
 
-@{[$sql->{'controllers'}->template(schema => $schema)]}
+@{[$sql->{'controllers'}->template(%$template)]}
 
-@{[$sql->{'actions'}->template(schema => $schema)]}
+@{[$sql->{'actions'}->template(%$template)]}
 
-@{[$sql->{'users'}->template(schema => $schema)]}
+@{[$sql->{profiles}->template(%$template)]}
 
-@{[$sql->{'roles'}->template(schema => $schema)]}
+@{[$sql->{'users'}->template(%$template)]}
 
-@{[$sql->{'refs'}->template(schema => $schema)]}
+@{[$sql->{'roles'}->template(%$template)]}
+
+@{[$sql->{'refs'}->template(%$template)]}
 
 TXT
 }
@@ -259,10 +280,10 @@ TXT
 
 sub schema_drop {
   my $c = shift;
-  my $schema = $c->stash('schema') || $c->param('schema');
+  my $template = $c->_vars;
   #~ $schema = qq{"$schema".} if $schema;
   $c->render(format=>'txt', text => <<TXT);
-@{[$sql->{'drop'}->template(schema => $schema)]}
+@{[$sql->{'drop'}->template(%$template)]}
 
 TXT
 }
@@ -291,11 +312,10 @@ TXT
 
 sub schema_flush {
   my $c = shift;
-  my $schema = $c->stash('schema') || $c->param('schema');
-  $schema = qq{"$schema".} if $schema;
+  my $template = $c->_vars;
   $c->render(format=>'txt', text => <<TXT);
 
-@{[$sql->{'flush'}->template(schema => $schema)]}
+@{[$sql->{'flush'}->template(%$template)]}
 
 TXT
 }
