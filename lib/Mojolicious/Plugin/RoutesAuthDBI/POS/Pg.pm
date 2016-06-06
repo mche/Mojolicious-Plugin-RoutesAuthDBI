@@ -485,6 +485,20 @@ L<DBIx::POS::Template>
   values (?,?,?)
   returning *;
 
+=item * B<profiles> 
+
+=name profiles
+
+=sql
+
+  select p.*, l.login, l.pass
+  from "{% $schema %}"."{% $tables{profiles} %}" p
+  left join (
+    select l.*, r.id1
+    from "{% $schema %}"."{% $tables{refs} %}" r 
+      join "{% $schema %}"."{% $tables{logins} %}" l on l.id=r.id2
+  ) l on p.id=l.id1
+
 
 =item * B<тест> 
 

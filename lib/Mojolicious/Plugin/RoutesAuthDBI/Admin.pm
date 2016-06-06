@@ -65,6 +65,21 @@ sub signout {
   
 }
 
+sub users {
+  my $c = shift;
+  
+  my $p = $dbh->selectall_arrayref($sth->sth('profiles'), {Slice=>{}},);
+  $c->render(format=>'txt', text=><<TXT);
+$pkg
+
+Profiles
+===
+
+@{[$c->dumper( $p)]}
+TXT
+
+}
+
 sub new_user {
   my $c = shift;
   
@@ -72,14 +87,7 @@ sub new_user {
   
   my $r;
   ($r = $dbh->selectrow_hashref($sth->sth('profile'), undef, (undef, $login)))
-    and $c->render(format=>'txt', text=><<TXT)
-$pkg
-
-Profile/User already exists
-===
-
-@{[$c->dumper( $r)]}
-TXT
+    and 
     and ($r->{not_new} = '!')
     and return $r;
   
@@ -367,11 +375,11 @@ TXT
     and return
     unless $r;
   
-  my $u = $dbh->selectall_arrayref($sth->sth('role users'), { Slice => {} }, ($r->{id}));
+  my $u = $dbh->selectall_arrayref($sth->sth('role profiles'), { Slice => {} }, ($r->{id}));
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
-All @{[scalar @$u]} users by role [$r->{name}]
+All @{[scalar @$u]} profile/users by role [$r->{name}]
 ===
 
 @{[$c->dumper( $u)]}
