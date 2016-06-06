@@ -16,8 +16,8 @@ has default => sub {
   auth => {
     stash_key => $pkg,
     current_user_fn => 'auth_user',
-    load_user => \&load_user,
-    validate_user => \&validate_user,
+    load_user => \&load_profile,
+    validate_user => \&validate_login,
   },
   access => {
     namespace => $pkg,
@@ -28,7 +28,7 @@ has default => sub {
     fail_access_cb => sub {
       shift->render(format=>'txt', text=>"You don`t have access on this route (url, action) !!!\n");
     },
-    import => [qw(load_user validate_user)],
+    import => [qw(load_profile validate_login)],
   },
   admin => {
     namespace => $pkg,
@@ -317,7 +317,6 @@ First of all you will see L<SVG|https://github.com/mche/Mojolicious-Plugin-Route
     access => {...},
     admin => {...},
     pos => {...},
-    template => {...},
   );
 
 
@@ -327,7 +326,7 @@ One option C<dbh> is mandatory, all other - optional.
 
 =head3 dbh
 
-Handler DBI connection where are tables: controllers, actions, routes, users, roles, refs.
+Handler DBI connection where are tables: controllers, actions, routes, logins, profiles, roles, refs.
 
   dbh => $app->dbh,
   # or
@@ -342,7 +341,7 @@ By default the option:
     
 The options:
 
-  load_user => \&load_user,
+  load_user => \&load_profile,
   validate_user => \&validate_user,
 
 are imported from package access module. See below.
@@ -368,7 +367,7 @@ See L<Mojolicious::Plugin::RoutesAuthDBI::Access> for detail options list.
 
 =head3 admin
 
-Hashref options for admin controller for actions on SQL tables routes, roles, users. By default the builtin module:
+Hashref options for admin controller for actions on SQL tables routes, roles, profiles, logins. By default the builtin module:
 
   admin => {
     controller => 'Access',
@@ -391,9 +390,6 @@ See L<Mojolicious::Plugin::RoutesAuthDBI::Admin> for detail options list.
 
 Hashref options for POS-dictionary instance. See L<Mojolicious::Plugin::RoutesAuthDBI::Sth>.
 
-=head3 template
-
-Hashref options for template of POS-dictionary. See L<Mojolicious::Plugin::RoutesAuthDBI::POS::Pg>.
 
 =head1 INSTALL
 

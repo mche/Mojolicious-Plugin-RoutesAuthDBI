@@ -19,9 +19,7 @@ sub sth {
   die "No such name[$name] in SQL dict!" unless $sql->{$name};
   my $s = $sql->{$name}->template(%$opt, %arg);
   my $p = $sql->{$name}->param;
-  #~ $sth->{$name}{md5_hex( encode_utf8($s))} ||= $dbh->prepare($s); # : $sql->{$name}->sql
-  #~ warn "Cached sth [$name]"
-    #~ and
+
   return $dbh->prepare_cached($s)
     if $p && $p->{cached};
   return $dbh->prepare($s);

@@ -58,9 +58,9 @@ L<DBIx::POS::Template>
 
 =over 4
 
-=item * B<user> 
+=item * B<profile> 
 
-=name user
+=name profile
 
 =desc
 
@@ -70,9 +70,15 @@ L<DBIx::POS::Template>
 
 =sql
 
-  select *
-  from "{% $schema %}"."{% $tables{users} %}"
-  where id = ? or login=?
+  select p.*, l.login, l.pass
+  from "{% $schema %}"."{% $tables{profiles} %}" p
+  left join (
+    select l.*, r.id1
+    from "{% $schema %}"."{% $tables{refs} %}" r 
+      join "{% $schema %}"."{% $tables{logins} %}" l on l.id=r.id2
+  ) l on p.id=l.id1
+  
+  where p.id=? or l.login=?
 
 =item * B<apply routes> 
 
@@ -100,11 +106,11 @@ L<DBIx::POS::Template>
     ) ac on rf.id2=ac.id
   order by r.ts - (coalesce(r.interval_ts, 0::int)::varchar || ' second')::interval;
 
-=item * B<user roles> 
+=item * B<profile roles> 
 
-=name user roles
+=name profile roles
 
-=desc Роли пользователя
+=desc Роли пользователя(профиля)
 
 =param
 
@@ -209,15 +215,26 @@ L<DBIx::POS::Template>
 
 =over 4
 
-=item * B<new user> 
+=item * B<new profile> 
 
-=name new user
+=name new profile
 
 =desc
 
 =sql
 
-  insert into "{% $schema %}"."{% $tables{users} %}" (login, pass) values (?,?)
+  insert into "{% $schema %}"."{% $tables{profiles} %}" (names) values (?)
+  returning *;
+
+=item * B<new login> 
+
+=name new login
+
+=desc
+
+=sql
+
+  insert into "{% $schema %}"."{% $tables{logins} %}" (login, pass) values (?,?)
   returning *;
 
 =item * B<role> 
@@ -356,18 +373,18 @@ L<DBIx::POS::Template>
   values (?,?,?,?,?,?)
   returning *;
 
-=item * B<role users> 
+=item * B<role profiles> 
 
-=name role users
+=name role profiles
 
 =desc Пользователи роли
 
 =sql
 
-  select u.*
+  select p.*
   from
-    "{% $schema %}"."{% $tables{users} %}" u
-    join "{% $schema %}"."{% $tables{refs} %}" r on u.id=r.id2
+    "{% $schema %}"."{% $tables{profiles} %}" p
+    join "{% $schema %}"."{% $tables{refs} %}" r on p.id=r.id2
   where r.id1=?;
 
 =item * B<role routes> 

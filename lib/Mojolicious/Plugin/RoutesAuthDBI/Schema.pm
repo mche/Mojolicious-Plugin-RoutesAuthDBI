@@ -8,7 +8,7 @@ our $defaults = {
   tables => {
     routes => 'routes',
     refs=>'refs',
-    users => 'users',
+    logins => 'logins',
     profiles => 'profiles',
     roles =>'roles',
     actions => 'actions',
@@ -51,7 +51,7 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
 
   
   CREATE SCHEMA IF NOT EXISTS "{% $schema %}";
-  -- set local search_path = "{% $schema %}";
+  -- set search_path = "{% $schema %}";
 
 =head2 Sequence
 
@@ -138,9 +138,9 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
     descr text null
   );
 
-=head2 Users table
+=head2 Logins table
 
-=name users
+=name logins
 
 =desc
 
@@ -148,7 +148,7 @@ Its logins table
 
 =sql
 
-  create table "{% $schema %}"."{% $tables{users} %}" (
+  create table "{% $schema %}"."{% $tables{logins} %}" (
     id int default nextval('{% $sequence %}'::regclass) not null  primary key,
     ts timestamp without time zone default now() not null,
     login varchar not null unique,
@@ -167,6 +167,7 @@ Its logins table
   create table "{% $schema %}"."{% $tables{profiles} %}" (
     id int default nextval('{% $sequence %}'::regclass) not null  primary key,
     ts timestamp without time zone default now() not null,
+    names text[] not null,
     disable bit(1)
   );
 
@@ -250,7 +251,7 @@ sub schema {
 
 @{[$sql->{profiles}->template(%$template)]}
 
-@{[$sql->{'users'}->template(%$template)]}
+@{[$sql->{'logins'}->template(%$template)]}
 
 @{[$sql->{'roles'}->template(%$template)]}
 
@@ -270,7 +271,7 @@ TXT
 =sql
 
     drop table "{% $schema %}"."{% $tables{refs} %}";
-    drop table "{% $schema %}"."{% $tables{users} %}";
+    drop table "{% $schema %}"."{% $tables{logins} %}";
     drop table "{% $schema %}"."{% $tables{profiles} %}";
     drop table "{% $schema %}"."{% $tables{roles} %}";
     drop table "{% $schema %}"."{% $tables{routes} %}";
@@ -303,7 +304,7 @@ TXT
 =sql
 
   delete from "{% $schema %}"."{% $tables{refs} %}";
-  delete from "{% $schema %}"."{% $tables{users} %}";
+  delete from "{% $schema %}"."{% $tables{logins} %}";
   delete from "{% $schema %}"."{% $tables{profiles} %}";
   delete from "{% $schema %}"."{% $tables{roles} %}";
   delete from "{% $schema %}"."{% $tables{routes} %}";

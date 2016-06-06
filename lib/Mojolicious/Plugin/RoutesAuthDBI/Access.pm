@@ -24,19 +24,19 @@ sub init {# from plugin! init Class vars
   return $self;
 }
 
-sub load_user {# import for Mojolicious::Plugin::Authentication
+sub load_profile {# import for Mojolicious::Plugin::Authentication
   my ($c, $uid) = @_;
-  my $u = $dbh->selectrow_hashref($sth->sth('user'), undef, ($uid, undef));
-  $c->app->log->debug("Loading user by id=$uid ". ($u ? 'success' : 'failed'));
-  $u->{pass} = '**********************' if $u;
-  return $u;
+  my $p = $dbh->selectrow_hashref($sth->sth('profile'), undef, ($uid, undef));
+  $c->app->log->debug("Loading profile by id=$uid ". ($p ? 'success' : 'failed'));
+  $p->{pass} = '**********************' if $p;
+  return $p;
 }
 
-sub validate_user {# import for Mojolicious::Plugin::Authentication
+sub validate_login {# import for Mojolicious::Plugin::Authentication
   my ($c, $login, $pass, $extradata) = @_;
-  if (my $u = $dbh->selectrow_hashref($sth->sth('user'), undef, (undef, $login))) {
-    return $u->{id}
-      if $u->{pass} eq $pass  && !$u->{disable};
+  if (my $p = $dbh->selectrow_hashref($sth->sth('profile'), undef, (undef, $login))) {
+    return $p->{id}
+      if $p->{pass} eq $pass  && !$p->{disable};
   }
   return undef;
 }
@@ -220,9 +220,9 @@ This callback invoke when request need auth route but access was failure. $route
 
 =over 4
 
-=item * B<load_user($c, $uid)> - fetch user record from table users by COOKIES. Import for Mojolicious::Plugin::Authentication. Required.
+=item * B<load_user($c, $uid)> - fetch user record from table profiles by COOKIES. Import for Mojolicious::Plugin::Authentication. Required.
 
-=item * B<validate_user($c, $login, $pass, $extradata)> - fetch user record from table users by Mojolicious::Plugin::Authentication. Required.
+=item * B<validate_user($c, $login, $pass, $extradata)> - fetch login record from table logins by Mojolicious::Plugin::Authentication. Required.
 
 =back
 
