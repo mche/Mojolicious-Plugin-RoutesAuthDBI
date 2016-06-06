@@ -146,14 +146,13 @@ sub cond_access {# add_condition
     unless $args->{auth};
   
   # не авторизовался
-  #~ $app->log->debug("Access deny for non auth user")
   $self->deny_log($route, $args, $u)
     and $access->{fail_auth_cb}->($c, )
     and return undef
     unless $u;
   
-  #  получить все группы пользователя
-  $access->load_user_roles($u);
+  #  получить все группы
+  $access->load_profile_roles($u);
   
   # допустить если {auth=>'only'}
   $app->log->debug(sprintf(qq[Access allow [%s] for {auth}='only'],
@@ -166,7 +165,6 @@ sub cond_access {# add_condition
     $args->($u, @_)
       or $self->deny_log($route, $args, $u)
       and $access->{fail_auth_cb}->($c, )
-      #~ and $app->log->debug("Access deny user by callback condition")
       and return undef;
     $app->log->debug(sprintf(qq[Access allow [%s] by callback condition],
       $route->pattern->unparsed,
@@ -277,7 +275,7 @@ sub deny_log {
   my $self = shift;
   my ($route, $args, $u) = @_;
   my $app = $self->app;
-  $app->log->debug(sprintf "Access deny [%s] for user id=[%s]; args=[%s]; defaults=[%s]",
+  $app->log->debug(sprintf "Access deny [%s] for profile id=[%s]; args=[%s]; defaults=[%s]",
     $route->pattern->unparsed,
     $u ? $u->{id} : 'non auth',
     $app->dumper($args) =~ s/\s+//gr,
@@ -413,7 +411,7 @@ Heart of this plugin! This condition apply for all db routes even if column auth
   # same as
   # $r->route('/foo')->...->over(authenticated => 1)->...; # see Mojolicious::Plugin::Authentication
 
-=item * Route accessible if user roles assigned to either B<loadable> namespace or controller 'Bar.pm' (which assigned neither namespece on db or assigned to that loadable namespace) or action 'bar' on controller Bar.pm (action record in db table actions):
+=item * Route accessible if profile roles assigned to either B<loadable> namespace or controller 'Bar.pm' (which assigned neither namespece on db or assigned to that loadable namespace) or action 'bar' on controller Bar.pm (action record in db table actions):
 
   $r->route('/bar-bar-any-namespace')->to('bar#bar',)->over(access=>{auth=>1})->...;
 
@@ -437,15 +435,15 @@ Heart of this plugin! This condition apply for all db routes even if column auth
 
   $r->route('/bar-cX-aX')->to('bar#bar',)->over(access=>{auth=>1, controller=>'BarX', action=>'barX'})->...;
 
-=item * Route accessible if user roles list has defined role (admin):
+=item * Route accessible if profile roles list has defined role (admin):
 
   $r->route('/bar-role-admin')->to('bar#bar',)->over(access=>{auth=>1, role=> 'admin'})->...;
   
 =item * Pass callback to access condition
 
-The callback will get parameters: $user, $route, $c, $captures, $args (this callback ref). Callback must returns true or false for restrict access. Example simple auth access:
+The callback will get parameters: $profile, $route, $c, $captures, $args (this callback ref). Callback must returns true or false for restrict access. Example simple auth access:
 
-  $r->route('/check-auth')->over(access=>sub {my ($user, $route, $c, $captures, $args) = @_; return $user;})->to(cb=>sub {my $c =shift; $c->render(format=>'txt', text=>"Hi @{[$c->auth_user->{login}]}!\n\nYou have access!");});
+  $r->route('/check-auth')->over(access=>sub {my ($profile, $route, $c, $captures, $args) = @_; return $profile;})->to(cb=>sub {my $c =shift; $c->render(format=>'txt', text=>"Hi @{[$c->auth_user->{names}]}!\n\nYou have access!");});
 
 =back
 

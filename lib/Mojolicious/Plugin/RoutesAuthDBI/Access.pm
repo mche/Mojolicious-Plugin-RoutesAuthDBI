@@ -95,7 +95,7 @@ sub db_routes {
   $dbh->selectall_arrayref($sth->sth('apply routes'), { Slice => {} },);
 }
 
-sub load_user_roles {
+sub load_profile_roles {
   my ($self, $user) = @_;
   $user->{roles} ||= $dbh->selectall_arrayref($sth->sth('user roles'), { Slice => {} }, ($user->{id}))
     and $app->log->debug("Loading user roles:", $app->dumper($user->{roles}) =~ s/\s+//gr,);
@@ -172,7 +172,7 @@ There are two ways of flow: explicit and implicit.
 
 =item * Explicit access
 
-Check by tables ids: routes, actions, controllers, namespaces. Check refs to user roles ids.
+Check by tables ids: routes, actions, controllers, namespaces. Check refs to profile roles ids.
 
 =item * Implicit access
 
@@ -246,7 +246,7 @@ Heart of routes generation from db tables and not only. Insert to app->routes an
 
 Fetch records for apply_routes. Must return arrayref of hashrefs routes.
 
-=item * B<load_user_roles($user)>
+=item * B<load_profile_roles($user)>
 
 Fetch records roles for session user.
 
@@ -256,19 +256,19 @@ Check access to route ($id1 arrayref - either route id or action id or controlle
 
 =item * B<access_namespace($namespace, $id2)>
 
-Check implicit access to route by $namespace for user roles ids ($id2 arrayref). Must return false for deny access or true - allow access to all actions of this namespace.
+Check implicit access to route by $namespace for profile roles ids ($id2 arrayref). Must return false for deny access or true - allow access to all actions of this namespace.
 
 =item * B<access_controller($namespace, $controller, $id2)>
 
-Check implicit access to route by $namespace and $controller for user roles ids ($id2 arrayref). Must return false for deny access or true - allow access to all actions of this controller.
+Check implicit access to route by $namespace and $controller for profile roles ids ($id2 arrayref). Must return false for deny access or true - allow access to all actions of this controller.
 
 =item * B<access_action($namespace, $controller, $action, $id2)>
 
-Check implicit access to route by $namespace and $controller and $action for user roles ids ($id2 arrayref). Must return false for deny access or true - allow access to this action.
+Check implicit access to route by $namespace and $controller and $action for profile roles ids ($id2 arrayref). Must return false for deny access or true - allow access to this action.
 
 =item * B<access_role($role, $id2)>
 
-Check implicit access to route by $role (id|name) and user roles ids ($id2 arrayref). Must return false for deny access or true - allow access.
+Check implicit access to route by $role (id|name) and profile roles ids ($id2 arrayref). Must return false for deny access or true - allow access.
 
 =back
 
