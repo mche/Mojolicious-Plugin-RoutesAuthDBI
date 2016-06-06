@@ -1,6 +1,6 @@
 package Mojolicious::Plugin::RoutesAuthDBI::Admin;
 use Mojo::Base 'Mojolicious::Controller';
-#~ use Mojolicious::Plugin::RoutesAuthDBI::Sth;#  sth cache
+
 
 my $pkg = __PACKAGE__;
 my ($dbh, $sth, $init_conf);
@@ -69,7 +69,7 @@ sub users {
   my $c = shift;
   
   my $p = $dbh->selectall_arrayref($sth->sth('profiles'), {Slice=>{}},);
-  $c->render(format=>'txt', text=><<TXT);
+  $c->render(format=>'txt', text=><<TXT)
 $pkg
 
 Profiles
@@ -77,7 +77,6 @@ Profiles
 
 @{[$c->dumper( $p)]}
 TXT
-
 }
 
 sub new_user {
@@ -87,7 +86,14 @@ sub new_user {
   
   my $r;
   ($r = $dbh->selectrow_hashref($sth->sth('profile'), undef, (undef, $login)))
-    and 
+    and $c->render(format=>'txt', text=><<TXT)
+$pkg
+
+Profile/User already exists
+===
+
+@{[$c->dumper( $r)]}
+TXT
     and ($r->{not_new} = '!')
     and return $r;
   
@@ -310,7 +316,7 @@ TXT
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
-Success delete ref ROLE[$r->{name}] -> USER[@{[$c->dumper( $u) =~ s/\s+//gr]
+Success delete ref ROLE[$r->{name}] -> USER[@{[$c->dumper( $u) =~ s/\s+//gr]}]
 ===
 
 @{[$c->dumper( $ref)]}
@@ -321,7 +327,7 @@ TXT
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
-There is no ref ROLE[$r->{name}] -> USER[@{[$c->dumper( $u) =~ s/\s+//gr]
+There is no ref ROLE[$r->{name}] -> USER[@{[$c->dumper( $u) =~ s/\s+//gr]}]
 
 TXT
   
