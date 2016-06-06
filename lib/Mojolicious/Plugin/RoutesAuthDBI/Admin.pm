@@ -285,13 +285,13 @@ TXT
     and return
     unless $r;
 
-  my $user = $c->stash('user') || $c->param('user');
-  my $u =  $dbh->selectrow_hashref($sth->sth('user'), undef, ($user =~ /\D/ ? (undef, $user) : ($user, undef,)));
+  my ($user) = $c->vars('user');
+  my $u =  $dbh->selectrow_hashref($sth->sth('profile'), undef, ($user =~ /\D/ ? (undef, $user) : ($user, undef,)));
   
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
-No such user [$user]
+No such profile.id/login [$user]
 ===
 
 TXT
@@ -302,7 +302,7 @@ TXT
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
-Success delete ref ROLE[$role] -> USER[$user]
+Success delete ref ROLE[$r->{name}] -> USER[@{[$c->dumper( $u) =~ s/\s+//gr]
 ===
 
 @{[$c->dumper( $ref)]}
@@ -313,7 +313,7 @@ TXT
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
-There is no ref ROLE[$role] -> USER[$user]
+There is no ref ROLE[$r->{name}] -> USER[@{[$c->dumper( $u) =~ s/\s+//gr]
 
 TXT
   
