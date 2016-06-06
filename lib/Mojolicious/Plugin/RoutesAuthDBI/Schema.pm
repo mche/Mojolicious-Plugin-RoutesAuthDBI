@@ -212,15 +212,17 @@ sub _vars {
   my $template = {};
 
   for my $var (keys %$defaults) {
-    $template->{$var} = $c->stash($var) || $c->param($var)
+    my $val = $c->stash($var) || $c->param($var);
+    $template->{$var} = $val
       and next
-      unless  ref $defaults->{$var};
+      if $val;
       
-      $template->{$var} = { map {
+    $template->{$var} = { map {
       my $val = $c->stash($_) || $c->param($_);
       $val ? ($_ => $val) : ();
     
-    } keys %{$defaults->{$var}}  };
+    } keys %{$defaults->{$var}}  }
+      if ref $defaults->{$var};
   }
   $template;
 }
