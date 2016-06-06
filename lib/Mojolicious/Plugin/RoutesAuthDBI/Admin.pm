@@ -32,7 +32,7 @@ You are signed as:
 @{[$c->dumper( $c->auth_user)]}
 
 
-ADMIN ROUTES
+ADMIN ROUTES (this controller)
 ===
 
 @{[map "$_->{request}\t\t$_->{descr}\n", $c->self_routes]}
