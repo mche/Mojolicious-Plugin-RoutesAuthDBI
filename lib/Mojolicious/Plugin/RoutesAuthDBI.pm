@@ -342,7 +342,7 @@ By default the option:
 The options:
 
   load_user => \&load_profile,
-  validate_user => \&validate_user,
+  validate_user => \&validate_login,
 
 are imported from package access module. See below.
 

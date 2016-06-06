@@ -2,7 +2,7 @@ package Mojolicious::Plugin::RoutesAuthDBI::Access;
 use Mojo::Base -base;
 #~ use Mojolicious::Plugin::RoutesAuthDBI::Sth;#  sth cache
 use Exporter 'import'; 
-our @EXPORT_OK = qw(load_user validate_user);
+our @EXPORT_OK = qw(load_profile validate_login);
 
 
 my $pkg = __PACKAGE__;
@@ -220,9 +220,9 @@ This callback invoke when request need auth route but access was failure. $route
 
 =over 4
 
-=item * B<load_user($c, $uid)> - fetch user record from table profiles by COOKIES. Import for Mojolicious::Plugin::Authentication. Required.
+=item * B<load_profile($c, $uid)> - fetch user record from table profiles by COOKIES. Import for Mojolicious::Plugin::Authentication. Required.
 
-=item * B<validate_user($c, $login, $pass, $extradata)> - fetch login record from table logins by Mojolicious::Plugin::Authentication. Required.
+=item * B<validate_login($c, $login, $pass, $extradata)> - fetch login record from table logins by Mojolicious::Plugin::Authentication. Required.
 
 =back
 
