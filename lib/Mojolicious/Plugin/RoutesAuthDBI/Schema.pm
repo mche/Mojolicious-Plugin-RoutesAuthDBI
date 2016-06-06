@@ -1,8 +1,23 @@
-package Mojolicious::Plugin::RoutesAuthDBI::DB;
+package Mojolicious::Plugin::RoutesAuthDBI::Schema;
 use Mojo::Base 'Mojolicious::Controller';
 use DBIx::POS::Template;
 
-my $sql = DBIx::POS::Template->new(__FILE__);
+my $defaults = {
+  schema => "public",
+  sequence => '"public"."ID"',
+  tables => {
+    routes => 'routes',
+    refs=>'refs',
+    users => 'users',
+    profiles => 'profiles',
+    roles =>'roles';
+    actions => 'actions',
+    controllers => 'controllers',
+    namespaces => 'namespaces',
+  },
+  
+};
+my $sql = DBIx::POS::Template->new(__FILE__, template=>$defaults,);
 
 =pod
 
@@ -12,13 +27,13 @@ my $sql = DBIx::POS::Template->new(__FILE__);
 
 B<POD ERRORS> here is normal because DBIx::POS::Template used.
 
-=head1 Mojolicious::Plugin::RoutesAuthDBI::DB
+=head1 Mojolicious::Plugin::RoutesAuthDBI::Schema
 
 ¡ ¡ ¡ ALL GLORY TO GLORIA ! ! !
 
 =head1 NAME
 
-Mojolicious::Plugin::RoutesAuthDBI::DB - DB schema (PostgreSQL).
+Mojolicious::Plugin::RoutesAuthDBI::Schema - DB schema (PostgreSQL).
 
 =head1 DB DESIGN DIAGRAM
 
@@ -48,7 +63,7 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
 
   -- you may change schema name for PostgreSQL objects
   
-  CREATE SEQUENCE "{% $schema %}".ID;-- one sequence for all tables id
+  CREATE SEQUENCE {% $sequence %};-- one sequence for all tables id
 
 =head2 Routes table
 
@@ -58,16 +73,18 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
 
 =sql
 
-  CREATE TABLE "{% $schema %}".routes (
-    id integer default nextval('"{% $schema %}".ID'::regclass) not null primary key,
+  CREATE TABLE "{% $schema %}"."{% $tables{routes} %}" (
+    id integer default nextval('{% $sequence %}'::regclass) not null primary key,
     ts timestamp without time zone default now() not null,
     request character varying not null,
     name character varying not null unique,
     descr text null,
-    auth varchar null,-- was bit(1): alter table "{% $schema %}".routes alter column auth type varchar;
+    auth varchar null,
+    -- was bit(1): alter table "{% $schema %}"."{% $tables{routes} %}" alter column auth type varchar;
     disable bit(1) null,
     -- interval_ts - смещение ts (seconds) для приоритета маршрута, т.е. влияет на сортровку маршрутов
-    interval_ts int null -- was order_by int null; alter table "{% $schema %}".routes rename column order_by to interval_ts;
+    interval_ts int null
+    -- was order_by int null; alter table "{% $schema %}"."{% $tables{routes} %}" rename column order_by to interval_ts;
   );
 
 =head2 Namespaces table
@@ -78,14 +95,16 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
 
 =sql
 
-  create table "{% $schema %}".namespaces (
-    id integer default nextval('"{% $schema %}".ID'::regclass) not null primary key,
+  create table "{% $schema %}"."{% $tables{namespaces} %}" (
+    id integer default nextval('{% $sequence %}'::regclass) not null primary key,
     ts timestamp without time zone default now() not null,
     namespace character varying not null unique,
     descr text null,
-    app_ns bit(1) null, -- alter table "{% $schema %}".namespaces add column app_ns bit(1) null;
+    -- alter table "{% $schema %}"."{% $tables{namespaces} %}" add column app_ns bit(1) null;
+    app_ns bit(1) null,
     -- interval_ts - смещение ts (seconds) для приоритета namespace
-    interval_ts int null -- alter table "{% $schema %}".namespaces add column interval_ts int null;
+    interval_ts int null
+    -- alter table "{% $schema %}"."{% $tables{namespaces} %}" add column interval_ts int null;
   );
 
 =head2 Controllers table
@@ -96,8 +115,8 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
 
 =sql
 
-  create table "{% $schema %}".controllers (
-    id integer default nextval('"{% $schema %}".ID'::regclass) not null primary key,
+  create table "{% $schema %}"."{% $tables{controllers} %}" (
+    id integer default nextval('{% $sequence %}'::regclass) not null primary key,
     ts timestamp without time zone default now() not null,
     controller character varying not null,
     descr text null
@@ -111,8 +130,8 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
 
 =sql
 
-  create table "{% $schema %}".actions (
-    id integer default nextval('"{% $schema %}".ID'::regclass) not null primary key,
+  create table "{% $schema %}"."{% $tables{actions} %}" (
+    id integer default nextval('{% $sequence %}'::regclass) not null primary key,
     ts timestamp without time zone default now() not null,
     action character varying not null,
     callback text null,
@@ -125,13 +144,29 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
 
 =desc
 
+Its logins table
+
 =sql
 
-  create table "{% $schema %}".users (
-    id int default nextval('"{% $schema %}".ID'::regclass) not null  primary key,
+  create table "{% $schema %}"."{% $tables{users} %}" (
+    id int default nextval('{% $sequence %}'::regclass) not null  primary key,
     ts timestamp without time zone default now() not null,
     login varchar not null unique,
     pass varchar not null,
+    disable bit(1)
+  );
+
+=head2 Profiles table
+
+=name profiles
+
+=desc 
+
+=sql
+
+  create table "{% $schema %}"."{% $tables{profiles} %}" (
+    id int default nextval('{% $sequence %}'::regclass) not null  primary key,
+    ts timestamp without time zone default now() not null,
     disable bit(1)
   );
 
@@ -143,8 +178,8 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
 
 =sql
 
-  create table "{% $schema %}".roles (
-    id int default nextval('"{% $schema %}".ID'::regclass) not null  primary key,
+  create table "{% $schema %}"."{% $tables{roles} %}" (
+    id int default nextval('{% $sequence %}'::regclass) not null  primary key,
     ts timestamp without time zone default now() not null,
     name varchar not null unique,
     disable bit(1)
@@ -156,10 +191,12 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
 
 =desc
 
+Связи
+
 =sql
 
-  create table "{% $schema %}".refs (
-    id int default nextval('"{% $schema %}".ID'::regclass) not null  primary key,
+  create table "{% $schema %}"."{% $tables{refs} %}" (
+    id int default nextval('{% $sequence %}'::regclass) not null  primary key,
     ts timestamp without time zone default now() not null,
     id1 int not null,
     id2 int not null,
@@ -207,14 +244,15 @@ TXT
 
 =sql
 
-    drop table "{% $schema %}".refs;
-    drop table "{% $schema %}".users;
-    drop table "{% $schema %}".roles;
-    drop table "{% $schema %}".routes;
-    drop table "{% $schema %}".controllers;
-    drop table "{% $schema %}".actions;
-    drop table "{% $schema %}".namespaces;
-    drop sequence "{% $schema %}".ID;
+    drop table "{% $schema %}"."{% $tables{refs} %}";
+    drop table "{% $schema %}"."{% $tables{users} %}";
+    drop table "{% $schema %}"."{% $tables{profiles} %}";
+    drop table "{% $schema %}"."{% $tables{roles} %}";
+    drop table "{% $schema %}"."{% $tables{routes} %}";
+    drop table "{% $schema %}"."{% $tables{controllers} %}";
+    drop table "{% $schema %}"."{% $tables{actions} %}";
+    drop table "{% $schema %}"."{% $tables{namespaces} %}";
+    drop sequence {% $sequence %};
 
 
 =cut
@@ -222,7 +260,7 @@ TXT
 sub schema_drop {
   my $c = shift;
   my $schema = $c->stash('schema') || $c->param('schema');
-  $schema = qq{"$schema".} if $schema;
+  #~ $schema = qq{"$schema".} if $schema;
   $c->render(format=>'txt', text => <<TXT);
 @{[$sql->{'drop'}->template(schema => $schema)]}
 
@@ -239,13 +277,14 @@ TXT
 
 =sql
 
-  delete from "{% $schema %}".refs;
-  delete from "{% $schema %}".users;
-  delete from "{% $schema %}".roles;
-  delete from "{% $schema %}".routes;
-  delete from "{% $schema %}".controllers;
-  delete from "{% $schema %}".namespaces;
-  delete from "{% $schema %}".actions;
+  delete from "{% $schema %}"."{% $tables{refs} %}";
+  delete from "{% $schema %}"."{% $tables{users} %}";
+  delete from "{% $schema %}"."{% $tables{profiles} %}";
+  delete from "{% $schema %}"."{% $tables{roles} %}";
+  delete from "{% $schema %}"."{% $tables{routes} %}";
+  delete from "{% $schema %}"."{% $tables{controllers} %}";
+  delete from "{% $schema %}"."{% $tables{namespaces} %}";
+  delete from "{% $schema %}"."{% $tables{actions} %}";
 
 
 =cut

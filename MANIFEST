@@ -4,7 +4,7 @@ lib/Mojolicious/Plugin/RoutesAuthDBI/Admin.pm
 lib/Mojolicious/Plugin/RoutesAuthDBI/Access.pm
 lib/Mojolicious/Plugin/RoutesAuthDBI/Install.pm
 lib/Mojolicious/Plugin/RoutesAuthDBI/Sth.pm
-lib/Mojolicious/Plugin/RoutesAuthDBI/DB.pm
+lib/Mojolicious/Plugin/RoutesAuthDBI/Schema.pm
 lib/Mojolicious/Plugin/RoutesAuthDBI/POS/Pg.pm
 README.pod
 Makefile.PL

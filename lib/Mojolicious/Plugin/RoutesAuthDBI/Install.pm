@@ -42,7 +42,7 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
   use Mojo::Base 'Mojolicious';
   sub startup {
     shift->routes->route('/schema/:schema')
-      ->to('DB#schema', namespace=>'Mojolicious::Plugin::RoutesAuthDBI');
+      ->to('Schema#schema', namespace=>'Mojolicious::Plugin::RoutesAuthDBI');
   }
   __PACKAGE__->new()->start();
   PERL
@@ -54,7 +54,7 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
   use Mojo::Base 'Mojolicious';
   sub startup {
     shift->routes->route('/schema/:schema')
-      ->to('DB#schema', namespace=>'Mojolicious::Plugin::RoutesAuthDBI');
+      ->to('Schema#schema', namespace=>'Mojolicious::Plugin::RoutesAuthDBI');
   }
   __PACKAGE__->new()->start();
   PERL
