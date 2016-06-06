@@ -39,7 +39,7 @@ has default => sub {
   pos => {
     namespace => $pkg,
     module => 'POS::Pg',
-    template => {schema => 'vinyl', tables},
+    #~ template => {schema => 'vinyl', tables=>{profiles=>'профили'}},
     
   },
   sth => {namespace => $pkg, module => 'Sth', },
@@ -54,15 +54,15 @@ has pos => sub {# object DBIx::POS::Template
   my $self = shift;
   my $pos = $self->merge_conf->{'pos'};
   my $class = $self->_class($pos);
-  $class->new;
+  $class->new($pos->{template} ? (template=>$pos->{template}) : ());
 };
 
 has sth => sub {# object Sth
   my $self = shift;
   my $sth = $self->merge_conf->{'sth'};
   my $class = $self->_class($sth);
-  my $template = $self->merge_conf->{template};
-  $class->new($self->dbh, $self->pos, %$template);
+  #~ my $template = $self->merge_conf->{template};
+  $class->new($self->dbh, $self->pos,); #%$template
 };
 
 has access => sub {# object

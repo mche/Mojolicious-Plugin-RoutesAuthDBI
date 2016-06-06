@@ -20,6 +20,7 @@
           auth=>{current_user_fn=>'auth_user'},
           #access=> {},
           admin=>{prefix=>'myadmin', trust00=>'fooobaaar'},
+          pos=>{ template => {schema => 'vinyl', tables=>{profiles=>'профили'}},},
       ],
       #~ ['HeaderCondition'],
       #~ ['ParamsArray'],
