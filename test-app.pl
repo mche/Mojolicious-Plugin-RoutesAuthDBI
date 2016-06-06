@@ -2,12 +2,7 @@
 # find ~/perl5/lib/ -type f -exec grep -Hni 'is not a controller' {} \;
 
 package TestApp;
-use Mojo::Base 'Mojolicious::Che';
-
-
-use FindBin;
-use lib "$FindBin::Bin/lib";
-
+use Mojo::Base::Che 'Mojolicious::Che' -lib qw(lib);
 
 sub startup {# 
   my $app = shift;
