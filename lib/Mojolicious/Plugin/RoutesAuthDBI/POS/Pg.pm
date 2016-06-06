@@ -1,9 +1,15 @@
 package Mojolicious::Plugin::RoutesAuthDBI::POS::Pg;
-
 use base qw{DBIx::POS::Template};
+use Hash::Merge qw(merge);
+use Mojolicious::Plugin::RoutesAuthDBI::Schema;
 
+my $defaults = $Mojolicious::Plugin::RoutesAuthDBI::Schema::defaults;
 
-sub new { shift->SUPER::new(__FILE__, @_); }
+sub new {
+  my $class= shift;
+  my %arg = @_;
+  $arg{template} = $arg{template} ? merge($arg{template}, $defaults) : $defaults;
+  ->SUPER::new(__FILE__, %arg); }
 
 =pod
 

@@ -2,7 +2,7 @@ package Mojolicious::Plugin::RoutesAuthDBI::Schema;
 use Mojo::Base 'Mojolicious::Controller';
 use DBIx::POS::Template;
 
-my $defaults = {
+our $defaults = {
   schema => "public",
   sequence => '"public"."ID"',
   tables => {

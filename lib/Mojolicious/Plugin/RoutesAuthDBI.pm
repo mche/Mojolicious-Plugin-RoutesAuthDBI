@@ -4,7 +4,7 @@ use Mojo::Loader qw(load_class);
 use Mojo::Util qw(hmac_sha1_sum);
 use Hash::Merge qw( merge );
 
-our $VERSION = '0.502';
+our $VERSION = '0.550';
 
 my $pkg = __PACKAGE__;
 
@@ -36,9 +36,13 @@ has default => sub {
     prefix => lc($self->conf->{admin}{controller} || 'admin'),
     trust => hmac_sha1_sum('admin', $self->app->secrets->[0]),
   },
-  pos => {namespace => $pkg, module => 'POS::Pg', },
+  pos => {
+    namespace => $pkg,
+    module => 'POS::Pg',
+    template => {schema => 'vinyl', tables},
+    
+  },
   sth => {namespace => $pkg, module => 'Sth', },
-  template => {schema => 'public'},
 }};
 
 has merge_conf => sub {#hashref
@@ -295,7 +299,7 @@ sub deny_log {
 
 =head1 VERSION
 
-0.502
+0.550
 
 =head1 NAME
 
