@@ -4,7 +4,7 @@ use Mojo::Loader qw(load_class);
 use Mojo::Util qw(hmac_sha1_sum);
 use Hash::Merge qw( merge );
 
-our $VERSION = '0.550';
+our $VERSION = '0.551';
 
 my $pkg = __PACKAGE__;
 
@@ -145,9 +145,11 @@ sub cond_access {# add_condition
     and return 1 # не проверяем доступ
     unless $args->{auth};
   
+  my $fail_auth_cb = $access->{fail_auth_cb};
+  
   # не авторизовался
   $self->deny_log($route, $args, $u)
-    and $access->{fail_auth_cb}->($c, )
+    and $c->$fail_auth_cb()
     and return undef
     unless $u;
   
@@ -164,7 +166,7 @@ sub cond_access {# add_condition
   if (ref $args eq 'CODE') {
     $args->($u, @_)
       or $self->deny_log($route, $args, $u)
-      and $access->{fail_auth_cb}->($c, )
+      and $c->$fail_auth_cb()
       and return undef;
     $app->log->debug(sprintf(qq[Access allow [%s] by callback condition],
       $route->pattern->unparsed,
@@ -202,8 +204,11 @@ sub cond_access {# add_condition
   if ($controller && !$namespace) {
     (load_class($_.'::'.$controller) or ($namespace = $_) and last) for @{ $app->routes->namespaces };
   }
+  
+  my $fail_access_cb = $access->{fail_access_cb};
+  
   $self->deny_log($route, $args, $u)
-    and $access->{fail_access_cb}->($c,)
+    and $c->$fail_access_cb()
     and return undef
     unless $controller && $namespace;# failed load class
 
@@ -241,7 +246,7 @@ sub cond_access {# add_condition
   
   my $action = $args->{action} || $route->pattern->defaults->{action}
     or $self->deny_log($route, $args, $u)
-    and $access->{fail_access_cb}->($c,)
+    and $c->$fail_access_cb()
     and return undef;
   
   $access->access_action($namespace, $controller, $action, $id2)
@@ -267,7 +272,7 @@ sub cond_access {# add_condition
     && return 1;
     
   $self->deny_log($route, $args, $u);
-  $access->{fail_access_cb}->($c,);
+  $c->$fail_access_cb();
   return undef;
 }
 
@@ -297,7 +302,7 @@ sub deny_log {
 
 =head1 VERSION
 
-0.550
+0.551
 
 =head1 NAME
 
