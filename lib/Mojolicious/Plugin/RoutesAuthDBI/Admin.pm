@@ -677,6 +677,7 @@ TXT
   my $list2 = $act->{id} ? $dbh->selectall_arrayref($sth->sth('action routes', where=>'where action_id is null'), { Slice => {} }, ())
     : [];
   
+  no warnings;
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
