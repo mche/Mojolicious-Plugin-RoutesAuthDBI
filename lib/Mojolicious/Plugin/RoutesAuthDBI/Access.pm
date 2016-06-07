@@ -34,6 +34,10 @@ sub load_user {# import for Mojolicious::Plugin::Authentication
 
 sub validate_login {# import for Mojolicious::Plugin::Authentication
   my ($c, $login, $pass, $extradata) = @_;
+  
+  return $extradata->{id}
+    if $extradata && $extradata->{id};
+    
   if (my $p = $dbh->selectrow_hashref($sth->sth('profile'), undef, (undef, $login))) {
     return $p->{id}
       if $p->{pass} eq $pass  && !$p->{disable};
