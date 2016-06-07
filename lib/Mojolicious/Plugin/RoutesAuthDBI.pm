@@ -16,7 +16,7 @@ has default => sub {
   auth => {
     stash_key => $pkg,
     current_user_fn => 'auth_user',
-    load_user => \&load_profile,
+    load_user => \&load_user,
     validate_user => \&validate_login,
   },
   access => {
@@ -28,7 +28,7 @@ has default => sub {
     fail_access_cb => sub {
       shift->render(format=>'txt', text=>"You don`t have access on this route (url, action) !!!\n");
     },
-    import => [qw(load_profile validate_login)],
+    import => [qw(load_user validate_login)],
   },
   admin => {
     namespace => $pkg,
@@ -39,7 +39,7 @@ has default => sub {
   pos => {
     namespace => $pkg,
     module => 'POS::Pg',
-    #~ template => {schema => 'vinyl', tables=>{profiles=>'профили'}},
+    #~ template => {schema => 'polyv', tables=>{profiles=>'профили'}},
     
   },
   sth => {namespace => $pkg, module => 'Sth', },
@@ -152,7 +152,7 @@ sub cond_access {# add_condition
     unless $u;
   
   #  получить все группы
-  $access->load_profile_roles($u);
+  $access->load_user_roles($u);
   
   # допустить если {auth=>'only'}
   $app->log->debug(sprintf(qq[Access allow [%s] for {auth}='only'],
@@ -315,6 +315,7 @@ First of all you will see L<SVG|https://github.com/mche/Mojolicious-Plugin-Route
     access => {...},
     admin => {...},
     pos => {...},
+    sth => {...},
   );
 
 
@@ -339,7 +340,7 @@ By default the option:
     
 The options:
 
-  load_user => \&load_profile,
+  load_user => \&load_user,
   validate_user => \&validate_login,
 
 are imported from package access module. See below.
@@ -386,7 +387,11 @@ See L<Mojolicious::Plugin::RoutesAuthDBI::Admin> for detail options list.
 
 =head3 pos
 
-Hashref options for POS-dictionary instance. See L<Mojolicious::Plugin::RoutesAuthDBI::Sth>.
+Hashref options for POS-dictionary. See L<Mojolicious::Plugin::RoutesAuthDBI::POS::Pg>.
+
+=head3 sth
+
+Hashref options for DBI statements hub. See L<Mojolicious::Plugin::RoutesAuthDBI::Sth>.
 
 
 =head1 INSTALL

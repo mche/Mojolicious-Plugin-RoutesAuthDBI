@@ -2,7 +2,7 @@ package Mojolicious::Plugin::RoutesAuthDBI::Access;
 use Mojo::Base -base;
 #~ use Mojolicious::Plugin::RoutesAuthDBI::Sth;#  sth cache
 use Exporter 'import'; 
-our @EXPORT_OK = qw(load_profile validate_login);
+our @EXPORT_OK = qw(load_user validate_login);
 
 
 my $pkg = __PACKAGE__;
@@ -24,7 +24,7 @@ sub init {# from plugin! init Class vars
   return $self;
 }
 
-sub load_profile {# import for Mojolicious::Plugin::Authentication
+sub load_user {# import for Mojolicious::Plugin::Authentication
   my ($c, $uid) = @_;
   my $p = $dbh->selectrow_hashref($sth->sth('profile'), undef, ($uid, undef));
   $c->app->log->debug("Loading profile by id=$uid ". ($p ? 'success' : 'failed'));
@@ -95,7 +95,7 @@ sub db_routes {
   $dbh->selectall_arrayref($sth->sth('apply routes'), { Slice => {} },);
 }
 
-sub load_profile_roles {
+sub load_user_roles {
   my ($self, $user) = @_;
   $user->{roles} ||= $dbh->selectall_arrayref($sth->sth('user roles'), { Slice => {} }, ($user->{id}))
     and $app->log->debug("Loading user roles:", $app->dumper($user->{roles}) =~ s/\s+//gr,);
@@ -220,7 +220,7 @@ This callback invoke when request need auth route but access was failure. $route
 
 =over 4
 
-=item * B<load_profile($c, $uid)> - fetch user record from table profiles by COOKIES. Import for Mojolicious::Plugin::Authentication. Required.
+=item * B<load_user($c, $uid)> - fetch user record from table profiles by COOKIES. Import for Mojolicious::Plugin::Authentication. Required.
 
 =item * B<validate_login($c, $login, $pass, $extradata)> - fetch login record from table logins by Mojolicious::Plugin::Authentication. Required.
 
@@ -246,7 +246,7 @@ Heart of routes generation from db tables and not only. Insert to app->routes an
 
 Fetch records for apply_routes. Must return arrayref of hashrefs routes.
 
-=item * B<load_profile_roles($user)>
+=item * B<load_user_roles($user)>
 
 Fetch records roles for session user.
 

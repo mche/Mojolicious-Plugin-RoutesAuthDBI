@@ -20,7 +20,7 @@
           auth=>{current_user_fn=>'auth_user'},
           #access=> {},
           admin=>{prefix=>'myadmin', trust00=>'fooobaaar'},
-          pos=>{ template => {schema => 'vinyl', tables=>{profiles=>'профили'}},},
+          pos=>{ template => {schema => 'poliv', tables=>{profiles=>'профили'}},},
       ],
       #~ ['HeaderCondition'],
       #~ ['ParamsArray'],
@@ -30,7 +30,7 @@
   #~ mojo_hooks=>{
     #~ before_dispatch => sub {1;},
   #~ },
-  # Хазы (не катят в Plugin::ApplyConfig)
+  # Хазы
   #~ mojo_has => {
     #~ foo=>sub {my $app = shift; },
   #~ },

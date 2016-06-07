@@ -51,7 +51,7 @@ Mojolicious::Plugin::RoutesAuthDBI::Sth - is a DBI statements hub for L<Mojolici
 
 =head1 DESCRIPTION
 
-Dictionary of DBI statements parses from POS-file.
+Dictionary of DBI statements.
 
 =head1 new($dbh, $pos, ...)
 
@@ -64,6 +64,8 @@ DBI handle
 An SQL dictionary object/instance of the L<DBIx::POS::Template>.
 
 =head2 <any key=>value pairs>
+
+Used for templates of $pos.
 
 
 =head1 SEE ALSO
