@@ -10,7 +10,7 @@ sub new {
   my %arg = @_;
   $arg{template} = $arg{template} ? merge($arg{template}, $defaults) : $defaults;
   #~ $class->SUPER::new(__FILE__, %arg);
-  DBIx::POS::Template->new(__FILE__, %arg);
+  DBIx::POS::Template->instance(__FILE__, %arg);
 }
 
 =pod

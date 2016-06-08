@@ -14,6 +14,8 @@ our $defaults = {
     actions => 'actions',
     controllers => 'controllers',
     namespaces => 'namespaces',
+    oauth_sites => 'oauth.sites',
+    oauth_users => 'oauth.users',
   },
   
 };
@@ -204,6 +206,42 @@ Its logins table
     unique(id1, id2)
   );
   create index on "{% $schema %}".refs (id2);
+
+=head2 Oauth sites
+
+=name oauth_sites
+
+=desc
+
+Конфиг внешних сайтов, используемых в проекте
+
+=sql
+
+  create table IF NOT EXISTS "{% $schema %}"."{% $tables{oauth_sites} %}"  (
+    id integer not null primary key,-- not sequence!
+    name varchar not null unique,
+    conf jsonb not null -- тут ключи приложений
+  );
+
+=head2 Oauth users
+
+=name oauth_users
+
+=desc
+
+Oauth пользователи
+
+=sql
+
+  create table IF NOT EXISTS "{% $schema %}"."{% $tables{oauth_users} %}" (
+    id integer NOT NULL DEFAULT nextval('{% $sequence %}'::regclass) primary key,
+    ts timestamp without time zone NOT NULL DEFAULT now(),
+    site_id int not null,
+    user_id varchar not null, --
+    profile jsonb,
+    profile_ts timestamp without time zone NOT NULL DEFAULT now(),
+    unique (site_id, user_id)
+  );
 
 =cut
 
