@@ -50,17 +50,6 @@ has profile_urls => sub { {
   },
 }};
 
-#~ has admin => sub {
-  #~ require Mojolicious::Plugin::RoutesAuthDBI::Admin;
-  #~ bless {}, 'Mojolicious::Plugin::RoutesAuthDBI::Admin';
-#~ };
-
-has row_sites => sub {<<SQL};
-select *
-from @{[shift->oauth_sites]}
-where id =? or name =?;
-SQL
-
 has ua => sub {shift->app->ua->connect_timeout(30);};
 
 
@@ -95,6 +84,7 @@ sub init {# from plugin
   die "Plugin OAuth2 already loaded"
     if $self->app->renderer->helpers->{'oauth2.get_token'};
   $self->app->plugin("OAuth2" => merge $self->{providers}, $self->providers);
+  
   $init_conf = $self;
   return $self;
   
@@ -112,6 +102,8 @@ sub login {
   
   die "OAuth provider ", $site_name, " does not configured"
     unless $site->{id};
+    
+  my $fail_auth_cb = $init_conf->{fail_auth_cb};
 
   $c->delay(
     sub { # шаг авторизации
@@ -127,8 +119,6 @@ sub login {
       $err .= json_enc($auth->{error})
         if $auth->{error};
       $c->app->log->debug("Автоизация $site_name:", $err, $c->dumper($auth));
-      
-      my $fail_auth_cb = $init_conf->{fail_auth_cb};
       
       return $c->$fail_auth_cb($err.' Нет access_token')
         unless $auth->{access_token};
@@ -171,7 +161,7 @@ sub login {
         || $dbh->selectrow_hashref($sth->sth('profile by oauth user'), undef, ($u->{id}))
 
 
-        || $dbh->selectrow_hashref($self->admin->sth->sth('new profile'), undef, ([$profile->{first_name} || $profile->{given_name}, $profile->{last_name} || $profile->{family_name},]));
+        || $dbh->selectrow_hashref($c->admin->sth->sth('new profile'), undef, ([$profile->{first_name} || $profile->{given_name}, $profile->{last_name} || $profile->{family_name},]));
 
       my $r = $c->admin->ref($профиль->{id}, $u->{id},);
       
@@ -206,7 +196,7 @@ sub _routes {# from plugin!
     action => 'login',
     name => 'oauth-login',
   },
-  {route =>'/log/out', to=>'oauth#out', name=>'oauth-out'],
+  {route =>'/log/out',
     namespace=>$init_conf->{namespace},
     controller=>$init_conf->{controller} || $init_conf->{module},
     action => 'out',

@@ -1,11 +1,15 @@
 Changes
-lib/Mojolicious/Plugin/RoutesAuthDBI.pm
+lib/Mojolicious/Plugin/RoutesAuthDBI/Util.pm
+lib/Mojolicious/Plugin/RoutesAuthDBI/OAuth2.pm
+lib/Mojolicious/Plugin/RoutesAuthDBI/Schema.pm
+lib/Mojolicious/Plugin/RoutesAuthDBI/Sth.pm
+lib/Mojolicious/Plugin/RoutesAuthDBI/POS/OAuth2.pm
+lib/Mojolicious/Plugin/RoutesAuthDBI/POS/Admin.pm
+lib/Mojolicious/Plugin/RoutesAuthDBI/POS/Access.pm
+lib/Mojolicious/Plugin/RoutesAuthDBI/Install.pm
 lib/Mojolicious/Plugin/RoutesAuthDBI/Admin.pm
 lib/Mojolicious/Plugin/RoutesAuthDBI/Access.pm
-lib/Mojolicious/Plugin/RoutesAuthDBI/Install.pm
-lib/Mojolicious/Plugin/RoutesAuthDBI/Sth.pm
-lib/Mojolicious/Plugin/RoutesAuthDBI/Schema.pm
-lib/Mojolicious/Plugin/RoutesAuthDBI/POS/Pg.pm
+lib/Mojolicious/Plugin/RoutesAuthDBI.pm
 README.pod
 Makefile.PL
 MANIFEST			This list of files

@@ -12,18 +12,15 @@
   # mode принудительно production если увидит $ENV{PLACK_ENV}
   mojo_log_level => 'debug',#$ENV{PLACK_ENV} ? 'error' : 'debug', 
   mojo_plugins=>[ # map $self->plugin($_)
-      #~ ['PODRenderer'], # Documentation browser under "/perldoc"
       [charset => { charset => 'UTF-8' }, ],
       ['EDumper', helper =>'dumper'],
       ['RoutesAuthDBI',
           dbh=>sub{ shift->dbh->{'main'}},
           auth=>{current_user_fn=>'auth_user'},
-          #access=> {},
+          access=> { pos=>{ template => {schema => 'poliv', tables=>{profiles=>'профили'}},},},
           admin=>{prefix=>'myadmin', trust00=>'fooobaaar'},
-          pos=>{ template => {schema => 'poliv', tables=>{profiles=>'профили'}},},
+         
       ],
-      #~ ['HeaderCondition'],
-      #~ ['ParamsArray'],
   ],
   mojo_session => {cookie_name => 'ELK'},
   # Хуки
