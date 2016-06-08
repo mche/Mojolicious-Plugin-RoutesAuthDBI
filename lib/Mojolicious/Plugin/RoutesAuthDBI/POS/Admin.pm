@@ -8,7 +8,7 @@ my $defaults = $Mojolicious::Plugin::RoutesAuthDBI::Schema::defaults;
 sub new {
   my $class= shift;
   my %arg = @_;
-  $arg{template} = $arg{template} ? merge($arg{template}, $defaults) : $defaults;
+  #~ $arg{template} = $arg{template} ? merge($arg{template}, $defaults) : $defaults;
   #~ $class->SUPER::new(__FILE__, %arg);
   DBIx::POS::Template->instance(__FILE__, %arg);
 }
