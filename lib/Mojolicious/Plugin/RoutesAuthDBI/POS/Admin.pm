@@ -46,7 +46,11 @@ One new()
 
 =head2 new()
 
-None input args for new.
+Input args for new:
+
+=head3 template - hashref
+
+Vars for template system of POS-statements.
 
 =head1 SEE ALSO
 

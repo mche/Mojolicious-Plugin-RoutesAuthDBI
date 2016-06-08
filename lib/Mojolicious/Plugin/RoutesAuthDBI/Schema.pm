@@ -268,7 +268,6 @@ sub _vars {
 
 sub schema {
   my $c = shift;
-  #~ $c->render(format=>'txt', text => join '', <Mojolicious::Plugin::RoutesAuthDBI::Install::DATA>);
   my $template = $c->_vars;
   
   $c->app->log->debug($c->dumper($template));
@@ -295,6 +294,10 @@ sub schema {
 
 @{[$sql->{'refs'}->template(%$template)]}
 
+@{[$sql->{'oauth_sites'}->template(%$template)]}
+
+@{[$sql->{'oauth_users'}->template(%$template)]}
+
 TXT
 }
 
@@ -308,15 +311,17 @@ TXT
 
 =sql
 
-    drop table "{% $schema %}"."{% $tables{refs} %}";
-    drop table "{% $schema %}"."{% $tables{logins} %}";
-    drop table "{% $schema %}"."{% $tables{profiles} %}";
-    drop table "{% $schema %}"."{% $tables{roles} %}";
-    drop table "{% $schema %}"."{% $tables{routes} %}";
-    drop table "{% $schema %}"."{% $tables{controllers} %}";
-    drop table "{% $schema %}"."{% $tables{actions} %}";
-    drop table "{% $schema %}"."{% $tables{namespaces} %}";
-    drop sequence {% $sequence %};
+  drop table "{% $schema %}"."{% $tables{refs} %}";
+  drop table "{% $schema %}"."{% $tables{logins} %}";
+  drop table "{% $schema %}"."{% $tables{profiles} %}";
+  drop table "{% $schema %}"."{% $tables{roles} %}";
+  drop table "{% $schema %}"."{% $tables{routes} %}";
+  drop table "{% $schema %}"."{% $tables{controllers} %}";
+  drop table "{% $schema %}"."{% $tables{actions} %}";
+  drop table "{% $schema %}"."{% $tables{namespaces} %}";
+  drop table "{% $schema %}"."{% $tables{oauth_sites} %}";
+  drop table "{% $schema %}"."{% $tables{oauth_users} %}";
+  drop sequence {% $sequence %};
 
 
 =cut
@@ -349,6 +354,8 @@ TXT
   delete from "{% $schema %}"."{% $tables{controllers} %}";
   delete from "{% $schema %}"."{% $tables{namespaces} %}";
   delete from "{% $schema %}"."{% $tables{actions} %}";
+  delete from "{% $schema %}"."{% $tables{oauth_sites} %}";
+  delete from "{% $schema %}"."{% $tables{oauth_users} %}";
 
 
 =cut
