@@ -197,7 +197,7 @@ sub _routes {# from plugin!
     action => 'login',
     name => 'oauth-login',
   },
-  {request =>'/log/out',
+  {request =>'/logout',
     namespace=>$init_conf->{namespace},
     controller=>$init_conf->{controller} || $init_conf->{module},
     action => 'out',
