@@ -2,7 +2,7 @@ package Mojolicious::Plugin::RoutesAuthDBI::Access;
 use Mojo::Base -base;
 #~ use Mojolicious::Plugin::RoutesAuthDBI::Sth;#  sth cache
 use Exporter 'import'; 
-our @EXPORT_OK = qw(load_user validate_login);
+our @EXPORT_OK = qw(load_user validate_user);
 
 
 my $pkg = __PACKAGE__;
@@ -32,7 +32,7 @@ sub load_user {# import for Mojolicious::Plugin::Authentication
   return $p;
 }
 
-sub validate_login {# import for Mojolicious::Plugin::Authentication
+sub validate_user {# import for Mojolicious::Plugin::Authentication
   my ($c, $login, $pass, $extradata) = @_;
   
   return $extradata->{id}
@@ -210,6 +210,15 @@ See detail L<Mojolicious::Plugin::RoutesAuthDBI#access>
 
 Both above options determining the module which will play as manager of authentication, accessing and generate routing from DBI source.
 
+=item * B<pos> - hashref, default:
+
+  pos => {
+    namespace => 'Mojolicious::Plugin::RoutesAuthDBI',
+    module => 'POS::Access',
+  },
+
+SQL-dictionary for DBI statements. See L<Mojolicious::Plugin::RoutesAuthDBI::POS::Access>.
+
 =item * B<fail_auth_cb> = sub {my $c = shift;...}
 
 This callback invoke when request need auth route but authentication was failure.
@@ -226,7 +235,7 @@ This callback invoke when request need auth route but access was failure. $route
 
 =item * B<load_user($c, $uid)> - fetch user record from table profiles by COOKIES. Import for Mojolicious::Plugin::Authentication. Required.
 
-=item * B<validate_login($c, $login, $pass, $extradata)> - fetch login record from table logins by Mojolicious::Plugin::Authentication. Required.
+=item * B<validate_user($c, $login, $pass, $extradata)> - fetch login record from table logins by Mojolicious::Plugin::Authentication. Required. If hashref $extradata->{id} then no fetch and $extradata->{id} will return.
 
 =back
 

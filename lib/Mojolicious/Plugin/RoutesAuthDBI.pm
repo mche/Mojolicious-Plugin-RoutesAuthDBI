@@ -17,7 +17,7 @@ has default => sub {
     stash_key => $pkg,
     current_user_fn => 'auth_user',
     load_user => \&load_user,
-    validate_user => \&validate_login,
+    validate_user => \&validate_user,
   },
   access => {
     namespace => $pkg,
@@ -28,7 +28,7 @@ has default => sub {
     fail_access_cb => sub {
       shift->render(format=>'txt', text=>"You don`t have access on this route (url, action).\n");
     },
-    import => [qw(load_user validate_login)],
+    import => [qw(load_user validate_user)],
     pos => {
       namespace => $pkg,
       module => 'POS::Access',
@@ -362,7 +362,7 @@ First of all you will see L<SVG|https://github.com/mche/Mojolicious-Plugin-Route
     auth => {...},
     access => {...},
     admin => {...},
-    pos => {...},
+    oauth => {...},
     sth => {...},
   );
 
@@ -389,7 +389,7 @@ By default the option:
 The options:
 
   load_user => \&load_user,
-  validate_user => \&validate_login,
+  validate_user => \&validate_user,
 
 are imported from package access module. See below.
 
