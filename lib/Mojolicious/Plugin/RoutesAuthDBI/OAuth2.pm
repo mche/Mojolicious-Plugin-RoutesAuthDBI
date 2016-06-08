@@ -190,13 +190,13 @@ sub _routes {# from plugin!
   
   return (
   
-  {route=>'/login/:site',
+  {request=>'/login/:site',
     namespace=>$init_conf->{namespace},
     controller=>$init_conf->{controller} || $init_conf->{module},
     action => 'login',
     name => 'oauth-login',
   },
-  {route =>'/log/out',
+  {request =>'/log/out',
     namespace=>$init_conf->{namespace},
     controller=>$init_conf->{controller} || $init_conf->{module},
     action => 'out',
