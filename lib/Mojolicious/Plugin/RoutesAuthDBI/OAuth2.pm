@@ -63,6 +63,7 @@ has sites => sub {
     my $site = $dbh->selectrow_hashref($sth->sth('update oauth site'), undef, ( json_enc($val), $name,))
       || $dbh->selectrow_hashref($sth->sth('new oauth site'), undef, ($name, json_enc($val)));
     $val->{id} = $site->{id};
+    $val->{name} = $name;
   }
   $c->{providers};
 };
@@ -98,9 +99,9 @@ sub login {
   my $site_name = $c->stash('site');
 
   my $site = $c->oauth2->providers->{$site_name}
-    or die "No such oauth provider", $site_name;
+    or die "No such oauth provider [$site_name]" ;
   
-  die "OAuth provider ", $site_name, " does not configured"
+  die "OAuth provider [$site_name] does not configured"
     unless $site->{id};
     
   my $fail_auth_cb = $init_conf->{fail_auth_cb};
