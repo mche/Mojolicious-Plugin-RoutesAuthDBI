@@ -143,6 +143,9 @@ sub register {
   
   my $access = $self->access;
   
+  die "Plugin [Authentication] already loaded"
+    if $self->app->renderer->helpers->{'authenticate'};
+  
   $self->SUPER::register($self->app, $self->merge_conf->{auth});
   
   $self->app->routes->add_condition(access => sub {$self->cond_access(@_)});

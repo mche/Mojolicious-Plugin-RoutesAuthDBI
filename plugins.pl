@@ -2,7 +2,9 @@ use Mojo::Base 'Mojolicious';
 
 sub startup {
   my $app = shift;
-  $app->routes->get('/')->to(cb=>sub {shift->render(text=>$app->dumper($app->plugins))});
+  $app->helper('foo'=>sub {shift;});
+  #~ say $app->can('foo');
+  $app->routes->get('/')->to(cb=>sub {my $c =shift; $c->render(text=>$app->dumper($app->renderer->helpers))});
   
 }
 

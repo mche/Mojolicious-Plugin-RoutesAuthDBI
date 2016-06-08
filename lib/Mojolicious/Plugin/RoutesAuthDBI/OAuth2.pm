@@ -92,6 +92,8 @@ sub init {# from plugin
   $self->admin($self->{admin} || $args{admin});
   
   $self->sites;
+  die "Plugin OAuth2 already loaded"
+    if $self->app->renderer->helpers->{'oauth2.get_token'};
   $self->app->plugin("OAuth2" => merge $self->{providers}, $self->providers);
   $init_conf = $self;
   return $self;
