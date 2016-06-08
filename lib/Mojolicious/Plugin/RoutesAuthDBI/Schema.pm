@@ -5,7 +5,7 @@ use DBIx::POS::Template;
 our $defaults = {
   schema => "public",
   sequence => '"public"."id"',
-  tables => { # no quotes!
+  tables => { # no quotes! one schema!
     routes => 'routes',
     refs=>'refs',
     logins => 'logins',
