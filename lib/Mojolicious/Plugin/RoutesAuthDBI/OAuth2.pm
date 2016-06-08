@@ -98,26 +98,11 @@ sub init {# from plugin
   
 }
 
-sub new {
-  my $c = shift->SUPER::new(@_);
-
-    if $site;
-  return $c;
-}
-
-
-
-sub sign {
-  my $c = shift;
-  #sort($a->{id} <=> $b->{id}, 
-  #~ die $c->dumper();
-  #~ $c->stash(sites=>[grep($_->{id}, values %{$c->oauth2->providers})]);# || $dbh->selectall_arrayref("select * from @{[$c->oauth_sites]} order by id", {Slice=>{}},));
-}
 
 sub out {# выход
   my $c = shift;
   $c->logout;
-  $c->redirect_to('home');
+  $c->redirect_to($c->param('redirect') || 'home');
 }
 
 sub login {
@@ -130,7 +115,7 @@ sub login {
   my $site = $c->oauth2->providers->{$site_name}
     or die "No such oauth provider", $site_name;
   
-  die "Oauth provider", $site_name, "does not configured"
+  die "OAuth provider ", $site_name, " does not configured"
     unless $site->{id};
 
   $c->delay(
@@ -208,7 +193,115 @@ sub login {
   
 }
 
-
-
+sub _routes {# from plugin!
+  my $self = shift;
+  
+  return (
+  
+  {route=>'/login/:site',
+    namespace=>$init_conf->{namespace},
+    controller=>$init_conf->{controller} || $init_conf->{module},
+    action => 'login',
+    name => 'oauth-login',
+  },
+  {route =>'/log/out', to=>'oauth#out', name=>'oauth-out'],
+    namespace=>$init_conf->{namespace},
+    controller=>$init_conf->{controller} || $init_conf->{module},
+    action => 'logout',
+    name => 'logout',
+  }
+  
+  );
+  
+}
 
 1;
+
+=pod
+
+=encoding utf8
+
+=head1 Mojolicious::Plugin::RoutesAuthDBI::OAuth2
+
+¡ ¡ ¡ ALL GLORY TO GLORIA ! ! !
+
+=head1 NAME
+
+Mojolicious::Plugin::RoutesAuthDBI::OAuth - is a Mojolicious::Controller for oauth2 logins to project. Its has two route: for login and logout.
+
+=head1 DB DESIGN DIAGRAM
+
+See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagram.svg>
+
+=head1 SYNOPSIS
+
+    $app->plugin('RoutesAuthDBI', 
+        ...
+        oauth => {< options below >},
+        ...
+    );
+
+
+=over 4
+
+=item * B<namespace> - default 'Mojolicious::Plugin::RoutesAuthDBI',
+
+=item * B<controller> - module controller name, default 'OAuth2',
+
+
+=item * B<providers> - hashref. required.
+
+  providers => {google=>{key=> ..., secret=>..., }, ...},
+
+
+=item * B<pos> - hashref
+
+SQL-dictionary for DBI statements. See L<Mojolicious::Plugin::RoutesAuthDBI::POS::OAuth2>.
+
+=back
+
+=head2 Defaults
+
+  oauth = > {
+    namespace => 'Mojolicious::Plugin::RoutesAuthDBI',
+    module => 'OAuth2',
+    pos => {
+      namespace => 'Mojolicious::Plugin::RoutesAuthDBI',
+      module => 'POS::OAuth2',
+    },
+  },
+  
+  oauth => undef, # disable oauth
+  
+
+=head1 METHODS NEEDS IN PLUGIN
+
+=over 4
+
+=item * B<_routes()> - this oauth controller routes. Return array of hashrefs routes records for apply route on app.
+
+=back
+
+=head1 SEE ALSO
+
+L<Mojolicious::Plugin::RoutesAuthDBI>
+
+L<Mojolicious::Plugin::RoutesAuthDBI::Admin>
+
+=head1 AUTHOR
+
+Михаил Че (Mikhail Che), C<< <mche [on] cpan.org> >>
+
+=head1 BUGS / CONTRIBUTING
+
+Please report any bugs or feature requests at L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/issues>. Pull requests also welcome.
+
+=head1 COPYRIGHT
+
+Copyright 2016 Mikhail Che.
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=cut
+

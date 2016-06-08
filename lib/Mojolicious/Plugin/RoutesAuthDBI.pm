@@ -149,14 +149,14 @@ sub register {
   $access->apply_ns();
   $access->apply_route($_) for @{ $access->db_routes };
   
+  if ($self->conf->{oauth}) {
+    my $oauth = $self->oauth;
+    $access->apply_route($_) for $oauth->_routes;
+  }
+  
   if ($self->conf->{admin}) {
     my $admin = $self->admin;
     $access->apply_route($_) for $admin->self_routes;
-  }
-  
-  if ($self->conf->{oauth}) {
-    my $oauth = $self->oauth;
-    $access->apply_route($_) for $oauth->self_routes;
   }
   
   $self->app->helper('access', sub {$access});
@@ -168,9 +168,9 @@ sub register {
 sub _class {
   my $self = shift;
   my $conf = shift;
-  my $class  = join '::', $conf->{namespace}, $conf->{module}
+  my $class  = join '::', $conf->{namespace}, $conf->{module} || $conf->{controller}
     if $conf->{namespace};
-  $class ||= $conf->{module};
+  $class ||= $conf->{module} || $conf->{controller};
   
   my $e; $e = load_class($class)# success undef
     and die $e;

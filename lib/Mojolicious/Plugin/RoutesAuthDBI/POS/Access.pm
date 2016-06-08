@@ -27,7 +27,7 @@ B<POD ERRORS> here is normal because DBIx::POS::Template used.
 
 =head1 NAME
 
-Mojolicious::Plugin::RoutesAuthDBI::POS::Access - POS for access statements L<Mojolicious::Plugin::RoutesAuthDBI::Access>.
+Mojolicious::Plugin::RoutesAuthDBI::POS::Access - POS-dict for access statements L<Mojolicious::Plugin::RoutesAuthDBI::Access>.
 
 =head1 DB DESIGN DIAGRAM
 

@@ -27,7 +27,7 @@ B<POD ERRORS> here is normal because DBIx::POS::Template used.
 
 =head1 NAME
 
-Mojolicious::Plugin::RoutesAuthDBI::POS::Admin - POS for PostgreSQL.
+Mojolicious::Plugin::RoutesAuthDBI::POS::Admin - POS-dict for admin actions Admin.pm.
 
 =head1 DB DESIGN DIAGRAM
 
