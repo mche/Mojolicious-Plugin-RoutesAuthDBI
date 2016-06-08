@@ -38,7 +38,7 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
     
     my $pos = Mojolicious::Plugin::RoutesAuthDBI::POS::Admin->new(template=>{tables=>{...}});
     
-    my $sth = $dbh->prepare($pos->{'user'});
+    my $sth = $dbh->prepare($pos->{'foo'});
 
 =head1 Methods
 

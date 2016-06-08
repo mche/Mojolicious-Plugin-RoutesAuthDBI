@@ -208,8 +208,18 @@ SQL
 }
 
 sub _save_conf {
+  my $c = shift;
+  my $ins = $dbh->prepare(<<SQL);
+insert into $table (id,name,conf) values (?,?,?)
+returning *
+;
+SQL
   
   
+  while (my ($name, $val) = each %{$c->providers}) {
+    $dbh->selectrow_hashref($sth->sth('update oauth site'), undef, ( json_enc($val), $name,))
+      || $dbh->selectrow_hashref($sth->sth('new oauth site'), undef, ($val->{id}, $name, json_enc($val)));
+  }
 }
 
 

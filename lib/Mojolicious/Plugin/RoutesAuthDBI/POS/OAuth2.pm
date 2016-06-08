@@ -1,4 +1,4 @@
-package Mojolicious::Plugin::RoutesAuthDBI::POS::Admin;
+package Mojolicious::Plugin::RoutesAuthDBI::POS::OAuth2;
 use DBIx::POS::Template;
 use Hash::Merge qw(merge);
 use Mojolicious::Plugin::RoutesAuthDBI::Schema;
@@ -8,9 +8,9 @@ my $defaults = $Mojolicious::Plugin::RoutesAuthDBI::Schema::defaults;
 sub new {
   my $class= shift;
   my %arg = @_;
-  #~ $arg{template} = $arg{template} ? merge($arg{template}, $defaults) : $defaults;
+  $arg{template} = $arg{template} ? merge($arg{template}, $defaults) : $defaults;
   #~ $class->SUPER::new(__FILE__, %arg);
-  DBIx::POS::Template->instance(__FILE__, %arg);
+  DBIx::POS::Template->new(__FILE__, %arg);
 }
 
 =pod
@@ -21,13 +21,13 @@ sub new {
 
 B<POD ERRORS> here is normal because DBIx::POS::Template used.
 
-=head1 Mojolicious::Plugin::RoutesAuthDBI::POS::Admin
+=head1 Mojolicious::Plugin::RoutesAuthDBI::POS::OAuth2
 
 ¡ ¡ ¡ ALL GLORY TO GLORIA ! ! !
 
 =head1 NAME
 
-Mojolicious::Plugin::RoutesAuthDBI::POS::Admin - POS for PostgreSQL.
+Mojolicious::Plugin::RoutesAuthDBI::POS::OAuth2 - POS dict for OAuth2.
 
 =head1 DB DESIGN DIAGRAM
 
@@ -36,9 +36,9 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
 =head1 SYNOPSIS
 
     
-    my $pos = Mojolicious::Plugin::RoutesAuthDBI::POS::Admin->new(template=>{tables=>{...}});
+    my $pos = Mojolicious::Plugin::RoutesAuthDBI::POS::OAuth2->new(template=>{tables=>{...}});
     
-    my $sth = $dbh->prepare($pos->{'user'});
+    my $sth = $dbh->prepare($pos->{'foo'});
 
 =head1 Methods
 
@@ -58,26 +58,28 @@ L<DBIx::POS::Template>
 
 =head1 SQL definitions
 
-=head2 new profile
+=head2 update oauth site
 
-=name new profile
+=name update oauth site
 
 =desc
 
 =sql
 
-  insert into "{% $schema %}"."{% $tables{profiles} %}" (names) values (?)
+  update "{% $schema %}"."{% $tables{oauth_sites} %}"
+  set conf = ?
+  where name =?
   returning *;
 
-=head2 new login
+=head2 new oauth site
 
-=name new login
+=name new oauth site
 
 =desc
 
 =sql
 
-  insert into "{% $schema %}"."{% $tables{logins} %}" (login, pass) values (?,?)
+  insert into "{% $schema %}"."{% $tables{oauth_sites} %}" (name,conf) values (?,?)
   returning *;
 
 =head2 role
