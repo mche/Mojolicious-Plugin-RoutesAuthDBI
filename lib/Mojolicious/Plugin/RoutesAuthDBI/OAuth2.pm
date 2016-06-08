@@ -75,7 +75,7 @@ has sites => sub {
       || $dbh->selectrow_hashref($sth->sth('new oauth site'), undef, ($name, json_enc($val)));
     $val->{id} = $site->{id};
   }
-  
+  $c->{providers};
 };
 
 sub init {# from plugin
@@ -96,13 +96,6 @@ sub init {# from plugin
   $init_conf = $self;
   return $self;
   
-}
-
-
-sub out {# выход
-  my $c = shift;
-  $c->logout;
-  $c->redirect_to($c->param('redirect') || 'home');
 }
 
 sub login {
@@ -193,6 +186,13 @@ sub login {
   
 }
 
+
+sub out {# выход
+  my $c = shift;
+  $c->logout;
+  $c->redirect_to($c->param('redirect') || 'home');
+}
+
 sub _routes {# from plugin!
   my $self = shift;
   
@@ -207,7 +207,7 @@ sub _routes {# from plugin!
   {route =>'/log/out', to=>'oauth#out', name=>'oauth-out'],
     namespace=>$init_conf->{namespace},
     controller=>$init_conf->{controller} || $init_conf->{module},
-    action => 'logout',
+    action => 'out',
     name => 'logout',
   }
   
