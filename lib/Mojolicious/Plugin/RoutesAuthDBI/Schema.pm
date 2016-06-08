@@ -218,7 +218,7 @@ Its logins table
 =sql
 
   create table IF NOT EXISTS "{% $schema %}"."{% $tables{oauth_sites} %}"  (
-    id integer not null primary key,-- not sequence!
+    id integer not null DEFAULT nextval('{% $sequence %}'::regclass) primary key,-- sequence!
     name varchar not null unique,
     conf jsonb not null -- тут ключи приложений
   );
