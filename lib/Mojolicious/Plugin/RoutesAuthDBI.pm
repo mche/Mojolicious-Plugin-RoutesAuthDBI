@@ -4,7 +4,7 @@ use Mojo::Loader qw(load_class);
 use Mojo::Util qw(hmac_sha1_sum);
 use Hash::Merge qw( merge );
 
-our $VERSION = '0.551';
+our $VERSION = '0.600';
 
 my $pkg = __PACKAGE__;
 
@@ -23,25 +23,40 @@ has default => sub {
     namespace => $pkg,
     module => 'Access',
     fail_auth_cb => sub {
-      shift->render(format=>'txt', text=>"Access deny at auth step. Please sign in!!!\n");
+      shift->render(format=>'txt', text=>"Deny access at auth step. Please sign in.\n");
     },
     fail_access_cb => sub {
-      shift->render(format=>'txt', text=>"You don`t have access on this route (url, action) !!!\n");
+      shift->render(format=>'txt', text=>"You don`t have access on this route (url, action).\n");
     },
     import => [qw(load_user validate_login)],
+    pos => {
+      namespace => $pkg,
+      module => 'POS::Access',
+    },
   },
   admin => {
     namespace => $pkg,
     controller => 'Admin',
     prefix => lc($self->conf->{admin}{controller} || 'admin'),
     trust => hmac_sha1_sum('admin', $self->app->secrets->[0]),
+    pos => {
+      namespace => $pkg,
+      module => 'POS::Admin',
+    },
   },
-  pos => {
+  oauth => {
     namespace => $pkg,
-    module => 'POS::Pg',
-    #~ template => {schema => 'polyv', tables=>{profiles=>'профили'}},
-    
+    controller => 'OAuth',
+    pos => {
+      namespace => $pkg,
+      module => 'POS::OAuth',
+    },
   },
+  #~ pos => {
+    #~ namespace => $pkg,
+    #~ module => 'POS::Pg',
+    #~ template => {schema => 'pv', tables=>{profiles=>'профили'}},
+  #~ },
   sth => {namespace => $pkg, module => 'Sth', },
 }};
 
@@ -50,19 +65,20 @@ has merge_conf => sub {#hashref
   merge($self->conf, $self->default);
 };
 
-has pos => sub {# object DBIx::POS::Template
-  my $self = shift;
-  my $pos = $self->merge_conf->{'pos'};
-  my $class = $self->_class($pos);
-  $class->new($pos->{template} ? (template=>$pos->{template}) : ());
-};
+#~ has pos => sub {# object DBIx::POS::Template
+  #~ my $self = shift;
+  #~ my $pos = $self->merge_conf->{'pos'};
+  #~ my $class = $self->_class($pos);
+  #~ $class->new($pos->{template} ? (template=>$pos->{template}) : ());
+#~ };
 
 has sth => sub {# object Sth
   my $self = shift;
   my $sth = $self->merge_conf->{'sth'};
-  my $class = $self->_class($sth);
+  #~ my $class = 
+  $self->_class($sth);
   #~ my $template = $self->merge_conf->{template};
-  $class->new($self->dbh, $self->pos,); #%$template
+  #~ $class->new($self->dbh, $self->pos,); #%$template
 };
 
 has access => sub {# object
@@ -72,7 +88,11 @@ has access => sub {# object
   $class->import( @{$access->{import}});
   bless $access, $class;
   $access->{dbh} = $self->dbh;
-  $access->{sth} = $self->sth;
+  my $pos = $access->{pos};
+  $access->{sth} = $self->sth->new(
+    $self->dbh,
+    $self->_class($pos)->new($pos->{template} ? (template=>$pos->{template}) : ())
+  );
   $access->{app} = $self->app;
   return $access->init;
 };
@@ -84,9 +104,27 @@ has admin => sub {# object
   my $class = $self->_class($admin);
   bless $admin, $class;
   $admin->{dbh} = $self->dbh;
-  $admin->{sth} = $self->sth;
+  my $pos = $admin->{pos};
+  $admin->{sth} = $self->sth->new(
+    $self->dbh,
+    $self->_class($pos)->new($pos->{template} ? (template=>$pos->{template}) : ())
+  );
   
   return $admin->init;
+};
+
+has oauth => {
+  my $self = shift;
+  my $oauth = $self->merge_conf->{'oauth'};
+  my $class = $self->_class($oauth);
+  bless $oauth, $class;
+  $oauth->{dbh} = $self->dbh;
+  my $pos = $oauth->{pos};
+  $oauth->{sth} = $self->sth->new(
+    $self->dbh,
+    $self->_class($pos)->new($pos->{template} ? (template=>$pos->{template}) : ())
+  );
+  return $oauth->init;
 };
 
 
@@ -111,6 +149,11 @@ sub register {
   if ($self->conf->{admin}) {
     my $admin = $self->admin;
     $access->apply_route($_) for $admin->self_routes;
+  }
+  
+  if ($self->conf->{oauth}) {
+    my $oauth = $self->oauth;
+    $oauth->apply_route($_) for $oauth->self_routes;
   }
   
   $self->app->helper('access', sub {$access});
@@ -302,7 +345,7 @@ sub deny_log {
 
 =head1 VERSION
 
-0.551
+0.600
 
 =head1 NAME
 
