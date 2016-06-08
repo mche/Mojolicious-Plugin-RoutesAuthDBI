@@ -50,10 +50,10 @@ has profile_urls => sub { {
   },
 }};
 
-has admin => sub {
-  require Mojolicious::Plugin::RoutesAuthDBI::Admin;
-  bless {}, 'Mojolicious::Plugin::RoutesAuthDBI::Admin';
-};
+#~ has admin => sub {
+  #~ require Mojolicious::Plugin::RoutesAuthDBI::Admin;
+  #~ bless {}, 'Mojolicious::Plugin::RoutesAuthDBI::Admin';
+#~ };
 
 has row_sites => sub {<<SQL};
 select *
@@ -65,7 +65,7 @@ has ua => sub {shift->app->ua->connect_timeout(30);};
 
 
 my ($dbh, $sth, $init_conf);
-has [qw(dbh sth site)];
+has [qw(app dbh sth site admin)];
 
 sub init {# from plugin
   my $self = shift;
@@ -77,9 +77,10 @@ sub init {# from plugin
   $self->sth($self->{sth} || $args{sth});
   $sth = $self->sth
     or die "Нет STH";
-  #~ $app = $self->app($self->{app} || $args{app});
+  $self->app($self->{app} || $args{app});
+  $self->admin($self->{admin} || $args{admin});
   
-  
+  $self->app->plugin("OAuth2" => merge $self->{providers}, $self->providers);
   $init_conf = $self;
   return $self;
   
@@ -203,6 +204,11 @@ SQL
     },
   );
   $c->app->log->debug("Login delay done");
+  
+}
+
+sub _save_conf {
+  
   
 }
 

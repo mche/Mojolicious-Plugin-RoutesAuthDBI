@@ -124,6 +124,8 @@ has oauth => sub {
     $self->dbh,
     $self->_class($pos)->new($pos->{template} ? (template=>$pos->{template}) : ()),
   );
+  $oauth->{app} = $self->app;
+  $oauth->{admin} = $self->admin;
   return $oauth->init;
 };
 
