@@ -107,13 +107,13 @@ has admin => sub {# object
   my $pos = $admin->{pos};
   $admin->{sth} = $self->sth->new(
     $self->dbh,
-    $self->_class($pos)->new($pos->{template} ? (template=>$pos->{template}) : ())
+    $self->_class($pos)->new($pos->{template} ? (template=>$pos->{template}) : ()),
   );
   
   return $admin->init;
 };
 
-has oauth => {
+has oauth => sub {
   my $self = shift;
   my $oauth = $self->merge_conf->{'oauth'};
   my $class = $self->_class($oauth);
@@ -122,7 +122,7 @@ has oauth => {
   my $pos = $oauth->{pos};
   $oauth->{sth} = $self->sth->new(
     $self->dbh,
-    $self->_class($pos)->new($pos->{template} ? (template=>$pos->{template}) : ())
+    $self->_class($pos)->new($pos->{template} ? (template=>$pos->{template}) : ()),
   );
   return $oauth->init;
 };
@@ -153,7 +153,7 @@ sub register {
   
   if ($self->conf->{oauth}) {
     my $oauth = $self->oauth;
-    $oauth->apply_route($_) for $oauth->self_routes;
+    $access->apply_route($_) for $oauth->self_routes;
   }
   
   $self->app->helper('access', sub {$access});
@@ -165,7 +165,10 @@ sub register {
 sub _class {
   my $self = shift;
   my $conf = shift;
-  my $class  = join '::', $conf->{namespace}, $conf->{module};
+  my $class  = join '::', $conf->{namespace}, $conf->{module}
+    if $conf->{namespace};
+  $class ||= $conf->{module};
+  
   my $e; $e = load_class($class)# success undef
     and die $e;
   return $class;
@@ -433,9 +436,26 @@ You might define your own controller by passing options:
 
 See L<Mojolicious::Plugin::RoutesAuthDBI::Admin> for detail options list.
 
-=head3 pos
+=head3 oauth
 
-Hashref options for POS-dictionary. See L<Mojolicious::Plugin::RoutesAuthDBI::POS::Pg>.
+Hashref options for oauth controller. By default the builtin module:
+
+  oauth => {
+    module => 'OAuth',
+    namespace => 'Mojolicious::Plugin::RoutesAuthDBI',
+    ...,
+  },
+
+
+You might define your own controller by passing options:
+
+  oauth => {
+    module => 'Foo::Bar::Baz',
+    namespace => '',
+    ...,
+  },
+
+See L<Mojolicious::Plugin::RoutesAuthDBI::OAuth> for detail options list.
 
 =head3 sth
 

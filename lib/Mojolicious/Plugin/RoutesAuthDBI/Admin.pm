@@ -864,23 +864,30 @@ Both above options determining the module controller for web actions on tables r
 
 =item * B<trust> is a url subprefix for trust admin urls of this module. See defaults below.
 
+=item * B<pos> - hashref
+
+SQL-dictionary for DBI statements. See L<Mojolicious::Plugin::RoutesAuthDBI::POS::Admin>.
+
 =back
 
 =head2 Defaults
 
-    admin = > {
-        namespace => 'Mojolicious::Plugin::RoutesAuthDBI',
-        module => 'Admin',
-        prefix => 'admin', # lc(<module>)
-        trust => $app->secrets->[0],
-        pos => {...}, # sets from plugin options
-    },
+  admin = > {
+    namespace => 'Mojolicious::Plugin::RoutesAuthDBI',
+    module => 'Admin',
+    prefix => 'admin', # lc(<module>)
+    trust => hmac_sha1_sum('admin', $app->secrets->[0]),
+    pos => {
+      namespace => 'Mojolicious::Plugin::RoutesAuthDBI',
+      module => 'POS::Admin',
+    }, 
+  },
     
-    admin = {}, # empty hashref sets defaults above
-    
-    admin => undef, # disables routing of admin controller
-    
-    admin = > {prefix=>'myadmin', trust => 'foooobaaar'},# admin urls like: /myadmin/foooobaaar/.....
+  admin = {}, # empty hashref sets defaults above
+  
+  admin => undef, # disable admin controller
+  
+  admin = > {prefix=>'myadmin', trust => 'foooobaaar'},# admin urls like: /myadmin/foooobaaar/
 
 
 
