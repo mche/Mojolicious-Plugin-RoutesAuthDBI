@@ -82,39 +82,43 @@ L<DBIx::POS::Template>
   insert into "{% $schema %}"."{% $tables{oauth_sites} %}" (name,conf) values (?,?)
   returning *;
 
-=head2 role
+=head2 update oauth user
 
-=name role
-
-=desc
-
-=sql
-
-  select *
-  from "{% $schema %}"."{% $tables{roles} %}"
-  where id=? or lower(name)=?
-
-=head2 new role
-
-=name new role
+=name update oauth user
 
 =desc
 
 =sql
 
-  insert into "{% $schema %}"."{% $tables{roles} %}" (name) values (?)
-  returning *;
+  update "{% $schema %}"."{% $tables{oauth_users} %}"
+  set profile = ?, profile_ts=now()
+  where site_id =? and user_id=?
+  returning 1::int as "old", *;
 
-=head2 dsbl/enbl role
+=head2 new oauth user
 
-=name dsbl/enbl role
+=name new oauth user
 
 =desc
 
 =sql
 
-  update "{% $schema %}"."{% $tables{roles} %}" set disable=?::bit where id=? or lower(name)=?
-  returning *;
+  insert into "{% $schema %}"."{% $tables{oauth_users} %}" (profile, site_id, user_id) values (?,?,?)
+  returning 1::int as "new", *;
+
+=head2 profile by oauth user
+
+=name profile by oauth user
+
+=desc
+
+=sql
+
+  select p.*
+  from "{% $schema %}"."{% $tables{profiles} %}" p
+    join "{% $schema %}"."{% $tables{refs} %}" r on p.id=r.id1
+
+  where r.id2=?;
 
 =head2 ref
 

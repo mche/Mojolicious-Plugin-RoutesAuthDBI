@@ -65,7 +65,18 @@ has ua => sub {shift->app->ua->connect_timeout(30);};
 
 
 my ($dbh, $sth, $init_conf);
-has [qw(app dbh sth site admin)];
+has [qw(app dbh sth sites admin)];
+
+has sites => sub {
+  my $c = shift;
+  
+  while (my ($name, $val) = each %{$c->{providers}}) {
+    my $site = $dbh->selectrow_hashref($sth->sth('update oauth site'), undef, ( json_enc($val), $name,))
+      || $dbh->selectrow_hashref($sth->sth('new oauth site'), undef, ($name, json_enc($val)));
+    $val->{id} = $site->{id};
+  }
+  
+};
 
 sub init {# from plugin
   my $self = shift;
@@ -80,6 +91,7 @@ sub init {# from plugin
   $self->app($self->{app} || $args{app});
   $self->admin($self->{admin} || $args{admin});
   
+  $self->sites;
   $self->app->plugin("OAuth2" => merge $self->{providers}, $self->providers);
   $init_conf = $self;
   return $self;
@@ -88,9 +100,7 @@ sub init {# from plugin
 
 sub new {
   my $c = shift->SUPER::new(@_);
-  $c->dbh($dbh ||= $c->app->dbh->{'main'});
-  my $site = $c->vars('site');
-  $c->site($c->oauth2->providers->{$site} || $dbh->selectrow_hashref($dbh->prepare_cached($c->row_sites), undef, ($site =~ /\D/ ? (undef, $site) : ($site, undef))))
+
     if $site;
   return $c;
 }
@@ -112,27 +122,40 @@ sub out {# выход
 
 sub login {
   my $c = shift;
-  my $site = $c->site
-    or return;
+  
+  my $redirect = $c->param('redirect') || 'profile';
+  
+  my $site_name = $c->stash('site');
+
+  my $site = $c->oauth2->providers->{$site_name}
+    or die "No such oauth provider", $site_name;
+  
+  die "Oauth provider", $site_name, "does not configured"
+    unless $site->{id};
+
   $c->delay(
     sub { # шаг авторизации
       my $delay = shift;
       my $args = {
-        redirect_uri => $c->url_for('oauth-login', site=>$site->{name})->userinfo(undef)->to_abs,
+        redirect_uri => $c->url_for('oauth-login', site=>$site_name)->userinfo(undef)->to_abs,
         $site->{authorize_query} ? (authorize_query => $site->{authorize_query}) : (),
       };
-      $c->oauth2->get_token($site->{name} => $args, $delay->begin);
+      $c->oauth2->get_token($site_name => $args, $delay->begin);
     },
     sub {# ну-ка профиль
       my ($delay, $err, $auth) = @_;
       $err .= json_enc($auth->{error})
         if $auth->{error};
-      $c->app->log->debug("Автоизация $site->{name}:", $err, $c->dumper($auth));
-      return $c->render("oauth/sign", error => $err.' Нет access_token')
+      $c->app->log->debug("Автоизация $site_name:", $err, $c->dumper($auth));
+      
+      my $fail_auth_cb = $init_conf->{fail_auth_cb};
+      
+      return $c->$fail_auth_cb($err.' Нет access_token')
         unless $auth->{access_token};
-      my $url = $c->${ \$c->profile_urls->{$site->{name}} }(Mojo::URL->new($site->{profile_url}), $auth)
-        #~ or die "Нет ссылки для профиля $site->{name}";
-        or return $c->render("oauth/sign", error => "Нет ссылки для профиля $site->{name}");
+      
+      my $url = $c->${ \$c->profile_urls->{$site_name} }(Mojo::URL->new($site->{profile_url}), $auth)
+        or return $c->$fail_auth_cb("Нет ссылки для профиля $site_name");
+      
       $c->ua->get($url, $delay->begin);
       $delay->pass($auth);
     },
@@ -141,29 +164,22 @@ sub login {
       my ($profile, $err) = $c->oauth2->process_tx($tx);
       $err .= json_enc($profile->{error})
         if $profile->{error};
-      $c->app->log->debug("Профиль $site->{name}:", $err, $c->dumper($profile));
-      return $c->render("oauth/sign", error => $err)
+      $c->app->log->debug("Профиль $site_name:", $err, $c->dumper($profile));
+      return $c->$fail_auth_cb($err)
         if $err;
         
       $profile = $profile->{response}
         if $profile->{response};
+      
       $profile = shift @$profile
         if ref $profile eq 'ARRAY';
       @$profile{keys %$auth} = values %$auth;
       
-      my $table = $c->oauth_users;
       my @bind = (json_enc($profile), $site->{id}, $auth->{uid} || $auth->{user_id} || $profile->{uid} || $profile->{id});
-      my $u = $dbh->selectrow_hashref(<<SQL, undef, @bind)
-update $table
-set profile = ?, profile_ts=now()
-where site_id =? and user_id=?
-returning 1::int as "old", *;
-SQL
-      || $dbh->selectrow_hashref(<<SQL, undef, @bind);
-insert into $table (profile, site_id, user_id) values (?,?,?)
-returning 1::int as new, *;
-SQL
-      $c->app->log->debug("$table: ", $c->dumper($u));
+      my $u = $dbh->selectrow_hashref($sth->sth('update oauth user'), undef, @bind)
+      || $dbh->selectrow_hashref($sth->sth('new oauth user'), undef, @bind);
+
+      $c->app->log->debug("Oauth user row: ", $c->dumper($u));
       
       my $current_auth = $c->auth_user;
       #~ $c->app->log->debug("Текущий пользователь: ", $c->dumper($current_auth));
@@ -207,20 +223,7 @@ SQL
   
 }
 
-sub _save_conf {
-  my $c = shift;
-  my $ins = $dbh->prepare(<<SQL);
-insert into $table (id,name,conf) values (?,?,?)
-returning *
-;
-SQL
-  
-  
-  while (my ($name, $val) = each %{$c->providers}) {
-    $dbh->selectrow_hashref($sth->sth('update oauth site'), undef, ( json_enc($val), $name,))
-      || $dbh->selectrow_hashref($sth->sth('new oauth site'), undef, ($val->{id}, $name, json_enc($val)));
-  }
-}
+
 
 
 1;

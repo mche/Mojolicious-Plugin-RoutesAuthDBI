@@ -51,6 +51,7 @@ has default => sub {
       namespace => $pkg,
       module => 'POS::OAuth2',
     },
+    fail_auth_cb => sub {shift->render(format=>'txt', text=>"@_")},
   },
   #~ pos => {
     #~ namespace => $pkg,
