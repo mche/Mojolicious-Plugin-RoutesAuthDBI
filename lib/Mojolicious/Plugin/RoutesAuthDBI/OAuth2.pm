@@ -188,35 +188,20 @@ sub login {
       
         $current_auth
         
-        || $dbh->selectrow_hashref(<<SQL, undef, ($u->{id}))
-select p.*
-from vinylhub."профили" p
-  join vinylhub.refs r on p.id=r.id1
-  -- join $table o on o.id=r.id2
+        || $dbh->selectrow_hashref($sth->sth('profile by oauth user'), undef, ($u->{id}))
 
-where r.id2=?;
-SQL
 
-        || $dbh->selectrow_hashref(<<SQL, undef, ([$profile->{first_name} || $profile->{given_name}, $profile->{last_name} || $profile->{family_name},]));
-insert into  vinylhub."профили" (names) values(?)
-returning 1::int as new, *;
-SQL
+        || $dbh->selectrow_hashref($self->admin->sth->sth('new profile'), undef, ([$profile->{first_name} || $profile->{given_name}, $profile->{last_name} || $profile->{family_name},]));
 
-      #~ my $r = $dbh->selectrow_hashref(<<SQL, undef, ($профиль->{id}, $u->{id}))
-#~ insert into vinylhub.refs (id1, id2) values (?,?)
-#~ returning *;
-#~ ;
-#~ SQL
-        #~ if $профиль->{new};
       my $r = $c->admin->ref($профиль->{id}, $u->{id},);
       
       $c->authenticate(undef, undef, $профиль)
         unless $current_auth;
 
 
-      $c->app->log->debug("Профиль винилхаба:", $c->dumper($профиль));
+      $c->app->log->debug("Профиль: ", $c->dumper($профиль));
       #~ return $c->session(token => $c->redirect_to('profile'));
-      return $c->redirect_to('oauth-sign');
+      return $c->redirect_to($redirect);
     },
   );
   $c->app->log->debug("Login delay done");
