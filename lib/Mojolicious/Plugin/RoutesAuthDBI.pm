@@ -46,10 +46,10 @@ has default => sub {
   },
   oauth => {
     namespace => $pkg,
-    controller => 'OAuth',
+    controller => 'OAuth2',
     pos => {
       namespace => $pkg,
-      module => 'POS::OAuth',
+      module => 'POS::OAuth2',
     },
   },
   #~ pos => {
@@ -441,7 +441,7 @@ See L<Mojolicious::Plugin::RoutesAuthDBI::Admin> for detail options list.
 Hashref options for oauth controller. By default the builtin module:
 
   oauth => {
-    module => 'OAuth',
+    module => 'OAuth2',
     namespace => 'Mojolicious::Plugin::RoutesAuthDBI',
     ...,
   },
@@ -451,11 +451,10 @@ You might define your own controller by passing options:
 
   oauth => {
     module => 'Foo::Bar::Baz',
-    namespace => '',
     ...,
   },
 
-See L<Mojolicious::Plugin::RoutesAuthDBI::OAuth> for detail options list.
+See L<Mojolicious::Plugin::RoutesAuthDBI::OAuth2> for detail options list.
 
 =head3 sth
 
