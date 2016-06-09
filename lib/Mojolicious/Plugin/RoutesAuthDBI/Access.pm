@@ -61,9 +61,9 @@ sub apply_route {# meth in Plugin
     and return undef
     if $r_hash->{disable};
   
-  $r_hash->{request} ||= $r_hash->{route};
+  $r_hash->{request} //= $r_hash->{route};
   
-  $app->log->debug("Skip route id=[$r_hash->{id}] empty request")
+  $app->log->debug("Skip route @{[$app->dumper($r_hash) =~ s/\s+//gr]}: empty request")
     and return undef
     unless $r_hash->{request};
   
@@ -72,7 +72,8 @@ sub apply_route {# meth in Plugin
     if $r_hash->{request} =~ /^#/;
   
   my @request = grep /\S/, split /\s+/, $r_hash->{request}
-    or return;
+    or $app->log->debug("Skip route @{[$app->dumper($r_hash) =~ s/\s+//gr]}: bad request")
+    and return;
   my $nr = $r->route(pop @request);
   $nr->via(@request) if @request;
   
