@@ -114,7 +114,7 @@ has admin => sub {# object
     $self->dbh,
     $self->_class($pos)->new($pos->{template} ? (template=>$pos->{template}) : ()),
   );
-  
+  $admin->{plugin} = $self;
   return $admin->init;
 };
 
@@ -130,7 +130,8 @@ has oauth => sub {
     $self->_class($pos)->new($pos->{template} ? (template=>$pos->{template}) : ()),
   );
   $oauth->{app} = $self->app;
-  $oauth->{admin} = $self->admin;
+  $oauth->{plugin} = $self;
+  #~ $oauth->{admin} = $self->admin;
   return $oauth->init;
 };
 

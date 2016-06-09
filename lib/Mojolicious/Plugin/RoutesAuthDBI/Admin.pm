@@ -4,7 +4,7 @@ use Mojo::Base 'Mojolicious::Controller';
 
 my $pkg = __PACKAGE__;
 my ($dbh, $sth, $init_conf);
-has [qw(dbh sth)];
+has [qw(dbh sth plugin)];
 
 sub init {# from plugin! init Class vars
   my $self = shift;
@@ -17,6 +17,7 @@ sub init {# from plugin! init Class vars
   $sth = $self->sth
     or die "Нет STH";
   #~ $app = $self->app($self->{app} || $args{app});
+  $self->plugin($self->{plugin} || $args{plugin});
   $init_conf = $self;
   return $self;
 }

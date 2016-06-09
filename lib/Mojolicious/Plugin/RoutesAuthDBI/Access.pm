@@ -7,7 +7,7 @@ our @EXPORT_OK = qw(load_user validate_user);
 
 my $pkg = __PACKAGE__;
 my ($dbh, $sth, $app);
-has [qw(dbh sth app)];
+has [qw(dbh sth app plugin)];
 
 sub init {# from plugin! init Class vars
   my $self = shift;
@@ -20,6 +20,7 @@ sub init {# from plugin! init Class vars
   $sth = $self->sth
     or die "Нет STH";
   $self->app($self->{app} || $args{app});
+  $self->plugin($self->{plugin} || $args{plugin});
   $app = $self->app;
   return $self;
 }

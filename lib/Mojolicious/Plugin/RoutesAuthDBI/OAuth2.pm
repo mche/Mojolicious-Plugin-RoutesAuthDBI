@@ -5,7 +5,7 @@ use Hash::Merge qw( merge );
 use Digest::MD5 qw(md5_hex);
 
 my ($dbh, $sth, $init_conf);
-has [qw(app dbh sth sites admin)];
+has [qw(app dbh sth plugin)];
 
 has _providers => sub {# default
   {
@@ -101,7 +101,7 @@ sub init {# from plugin
   $sth = $self->sth
     or die "Нет STH";
   $self->app($self->{app} || $args{app});
-  $self->admin($self->{admin} || $args{admin});
+  $self->plugin($self->{plugin} || $args{plugin});
   
   die "Plugin OAuth2 already loaded"
     if $self->app->renderer->helpers->{'oauth2.get_token'};
@@ -175,7 +175,7 @@ sub login {
       || $dbh->selectrow_hashref($sth->sth('new oauth user'), undef, @bind);
 
       #~ $c->app->log->debug("Oauth user row: ", $c->dumper($u));
-      my $auth_user_helper = $c->access->{plugin}->merge_conf->{auth}{current_user_fn};
+      my $auth_user_helper = $init_conf->plugin->merge_conf->{auth}{current_user_fn};
       
       my $current_auth = $c->$auth_user_helper;
       
@@ -186,9 +186,9 @@ sub login {
         || $dbh->selectrow_hashref($sth->sth('profile by oauth user'), undef, ($u->{id}))
 
 
-        || $dbh->selectrow_hashref($init_conf->admin->sth->sth('new profile'), undef, ([$profile->{first_name} || $profile->{given_name}, $profile->{last_name} || $profile->{family_name},]));
+        || $dbh->selectrow_hashref($init_conf->plugin->admin->sth->sth('new profile'), undef, ([$profile->{first_name} || $profile->{given_name}, $profile->{last_name} || $profile->{family_name},]));
 
-      my $r = $init_conf->admin->ref($профиль->{id}, $u->{id},);
+      my $r = $init_conf->plugin->admin->ref($профиль->{id}, $u->{id},);
       
       $c->authenticate(undef, undef, $профиль)
         unless $current_auth;
@@ -227,7 +227,7 @@ sub _routes {# from plugin!
     action => 'out',
     name => 'logout',
   },
-  {request =>'/'.$init_conf->admin->{trust}."/oauth/conf",
+  {request =>'/'.$init_conf->plugin->admin->{trust}."/oauth/conf",
     namespace=>$init_conf->{namespace},
     controller=>$init_conf->{controller} || $init_conf->{module},
     action => 'conf',
