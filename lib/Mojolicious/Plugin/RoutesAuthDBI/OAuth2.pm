@@ -203,7 +203,7 @@ sub _routes {# from plugin!
     controller=>$init_conf->{controller} || $init_conf->{module},
     action => 'out',
     name => 'logout',
-  }
+  },
   {request =>'/'.$self->admin->{trust}."/oauth/conf",
     namespace=>$init_conf->{namespace},
     controller=>$init_conf->{controller} || $init_conf->{module},
