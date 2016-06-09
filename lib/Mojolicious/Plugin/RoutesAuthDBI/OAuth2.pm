@@ -162,9 +162,9 @@ sub login {
         || $dbh->selectrow_hashref($sth->sth('profile by oauth user'), undef, ($u->{id}))
 
 
-        || $dbh->selectrow_hashref($c->admin->sth->sth('new profile'), undef, ([$profile->{first_name} || $profile->{given_name}, $profile->{last_name} || $profile->{family_name},]));
+        || $dbh->selectrow_hashref($init_conf->admin->sth->sth('new profile'), undef, ([$profile->{first_name} || $profile->{given_name}, $profile->{last_name} || $profile->{family_name},]));
 
-      my $r = $c->admin->ref($профиль->{id}, $u->{id},);
+      my $r = $init_conf->admin->ref($профиль->{id}, $u->{id},);
       
       $c->authenticate(undef, undef, $профиль)
         unless $current_auth;
@@ -203,7 +203,7 @@ sub _routes {# from plugin!
     action => 'out',
     name => 'logout',
   },
-  {request =>'/'.$self->admin->{trust}."/oauth/conf",
+  {request =>'/'.$init_conf->admin->{trust}."/oauth/conf",
     namespace=>$init_conf->{namespace},
     controller=>$init_conf->{controller} || $init_conf->{module},
     action => 'conf',
