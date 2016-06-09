@@ -4,7 +4,15 @@ use Mojo::Loader qw(load_class);
 use Mojo::Util qw(hmac_sha1_sum);
 use Hash::Merge qw( merge );
 
-our $VERSION = '0.602';
+our $VERSION = '0.603';
+
+=pod
+
+=head1 VERSION
+
+0.603
+
+=cut
 
 my $pkg = __PACKAGE__;
 
@@ -351,10 +359,6 @@ sub deny_log {
 =head1 Mojolicious::Plugin::RoutesAuthDBI
 
 ¡ ¡ ¡ ALL GLORY TO GLORIA ! ! !
-
-=head1 VERSION
-
-0.602
 
 =head1 NAME
 
