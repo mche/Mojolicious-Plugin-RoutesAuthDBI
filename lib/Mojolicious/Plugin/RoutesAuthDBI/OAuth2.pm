@@ -62,7 +62,7 @@ has sites => sub {
   while (my ($name, $val) = each %{$c->{providers}}) {
     my $site = $dbh->selectrow_hashref($sth->sth('update oauth site'), undef, ( json_enc($val), $name,))
       || $dbh->selectrow_hashref($sth->sth('new oauth site'), undef, ($name, json_enc($val)));
-    @$val{qw(id title)} = @$site{qw(id title)};
+    @$val{qw(id)} = @$site{qw(id)};
     $val->{name} = $name;
   }
   $c->{providers};
