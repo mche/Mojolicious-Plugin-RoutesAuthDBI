@@ -81,12 +81,11 @@ sub init {# from plugin
   $self->app($self->{app} || $args{app});
   $self->admin($self->{admin} || $args{admin});
   
-  $self->sites;
   die "Plugin OAuth2 already loaded"
     if $self->app->renderer->helpers->{'oauth2.get_token'};
   $self->app->plugin("OAuth2" => $self->providers);
   
-  $self->app->log->debug($self->app->dumper([values %{$self->oauth2->providers}]));
+  #~ $self->app->log->debug($self->app->dumper([values %{$self->oauth2->providers}]));
   
   $init_conf = $self;
   return $self;
@@ -205,9 +204,23 @@ sub _routes {# from plugin!
     action => 'out',
     name => 'logout',
   }
+  {request =>'/'.$self->admin->{trust}."/oauth/conf",
+    namespace=>$init_conf->{namespace},
+    controller=>$init_conf->{controller} || $init_conf->{module},
+    action => 'conf',
+    name => 'oauth-conf',
+  }
   
   );
   
+}
+
+sub conf {
+  my $c = shift;
+    $c->render(format=>'txt', text=>
+     "PROVIDERS\n---\n"
+    . $c->dumper(($c->oauth2->providers))
+  );
 }
 
 1;
