@@ -16,7 +16,7 @@ sub sth {
   my ($dbh, $sql, $opt) = @{ shift() };
   my $name = shift;
   my %arg = @_;
-  die "No such name[$name] in SQL dict!" unless $sql->{$name};
+  die "No such name[$name] in SQL dict! @{[ join ':', keys %$sql  ]}" unless $sql->{$name};
   my $s = $sql->{$name}->template(%$opt, %arg);
   my $p = $sql->{$name}->param;
 

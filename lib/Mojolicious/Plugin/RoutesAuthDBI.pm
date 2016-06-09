@@ -4,13 +4,13 @@ use Mojo::Loader qw(load_class);
 use Mojo::Util qw(hmac_sha1_sum);
 use Hash::Merge qw( merge );
 
-our $VERSION = '0.610';
+our $VERSION = '0.611';
 
 =pod
 
 =head1 VERSION
 
-0.610
+0.611
 
 =cut
 
