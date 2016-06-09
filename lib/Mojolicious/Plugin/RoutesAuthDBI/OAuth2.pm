@@ -30,6 +30,14 @@ has _providers => sub {# default
       token_url => "https://oauth.yandex.ru/token",
       profile_url=> "https://login.yandex.ru/info",
     },
+    mailru => {
+      key=>'z..........q',
+      secret => '',
+      authorize_url=>"https://connect.mail.ru/oauth/authorize",
+      token_url => "https://connect.mail.ru/oauth/token",
+      profile_url=> ""
+      #~ https://www.appsmail.ru/platform/api?method=users.getInfo&app_id=423004&session_key=be6ef89965d58e56dec21acb9b62bdaa&sig=f82efdd230e45e58e4fa327fdf92135d&uids=15410773191172635989
+    }
   }
   
 };
@@ -146,7 +154,7 @@ sub login {
         if ref $profile eq 'ARRAY';
       @$profile{keys %$auth} = values %$auth;
       
-      my @bind = (json_enc($profile), $site->{id}, $auth->{uid} || $auth->{user_id} || $profile->{uid} || $profile->{id});
+      my @bind = (json_enc($profile), $site->{id}, $auth->{uid} || $auth->{user_id} || $profile->{uid} || $profile->{id} );
       my $u = $dbh->selectrow_hashref($sth->sth('update oauth user'), undef, @bind)
       || $dbh->selectrow_hashref($sth->sth('new oauth user'), undef, @bind);
 
