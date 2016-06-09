@@ -34,7 +34,7 @@ has _providers => sub {# default
     mailru => {
       key=>'z..........q',
       secret => '1...............9',
-      authorize_url=>"https://connect.mail.ru/oauth/authorize",
+      authorize_url=>"https://connect.mail.ru/oauth/authorize?response_type=code",
       token_url => "https://connect.mail.ru/oauth/token",
       profile_url=> "https://www.appsmail.ru/platform/api"
 
