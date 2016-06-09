@@ -79,10 +79,10 @@ has profile_urls => sub { {
       method=>'users.getInfo',
       app_id=>$init_conf->config->{mailru}{key},
       session_key=>$auth->{access_token},
-      uids=>$auth->{x_mailru_vid},
+      #~ uids=>$auth->{x_mailru_vid},
       secure=>1,
     };
-    $param->{sig} = md5_hex map "$_=$param->{$_}", sort keys %$param;
+    $param->{sig} = md5_hex map("$_=$param->{$_}", sort keys %$param), $init_conf->config->{mailru}{secret};
     $profile_url
       ->query($param);
   },
