@@ -157,14 +157,14 @@ sub login {
       my ($delay, $tx, $auth) = @_;
       my ($profile, $err) = $c->oauth2->process_tx($tx);
       $err .= json_enc($profile->{error})
-        if $profile->{error};
+        if ref($profile) eq 'HASH' && $profile->{error};
+      
       $c->app->log->debug("Профиль $site_name:", $err && $c->dumper($tx->req), $c->dumper($profile), );
       return $c->$fail_auth_cb($err)
         if $err;
         
       $profile = $profile->{response}
-        if $profile->{response};
-      
+        if ref($profile) eq 'HASH' && $profile->{response};
       $profile = shift @$profile
         if ref $profile eq 'ARRAY';
       @$profile{keys %$auth} = values %$auth;
