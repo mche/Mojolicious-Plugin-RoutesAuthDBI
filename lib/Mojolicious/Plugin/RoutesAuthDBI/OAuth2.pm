@@ -83,7 +83,7 @@ sub init {# from plugin
   die "Plugin OAuth2 already loaded"
     if $self->app->renderer->helpers->{'oauth2.get_token'};
   
-  $self->app->log->debug($self->app->dumper($self->config));
+  #~ $self->app->log->debug($self->app->dumper($self->config));
   $self->app->plugin("OAuth2" => $self->config);
   
   $init_conf = $self;
