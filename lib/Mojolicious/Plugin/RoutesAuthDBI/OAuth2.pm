@@ -86,6 +86,8 @@ sub init {# from plugin
     if $self->app->renderer->helpers->{'oauth2.get_token'};
   $self->app->plugin("OAuth2" => merge $self->{providers}, $self->providers);
   
+  $self->app->debug($self->app->dumper([values %{$self->oauth2->providers}]));
+  
   $init_conf = $self;
   return $self;
   
