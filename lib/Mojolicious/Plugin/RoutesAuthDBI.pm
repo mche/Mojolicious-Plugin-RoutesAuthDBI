@@ -4,13 +4,13 @@ use Mojo::Loader qw(load_class);
 use Mojo::Util qw(hmac_sha1_sum);
 use Hash::Merge qw( merge );
 
-our $VERSION = '0.618';
+our $VERSION = '0.620';
 
 =pod
 
 =head1 VERSION
 
-0.618
+0.620
 
 =cut
 
@@ -61,11 +61,6 @@ has default => sub {
     },
     fail_auth_cb => sub {shift->render(format=>'txt', text=>"@_")},
   },
-  #~ pos => {
-    #~ namespace => $pkg,
-    #~ module => 'POS::Pg',
-    #~ template => {schema => 'pv', tables=>{profiles=>'профили'}},
-  #~ },
   sth => {namespace => $pkg, module => 'Sth', },
 }};
 

@@ -142,13 +142,14 @@ sub login {
       my ($delay, $err, $auth) = @_;
       $err .= json_enc($auth->{error})
         if $auth->{error};
-      $c->app->log->debug("Автоизация $site_name:", $err, $c->dumper($auth));
       
-      return $c->$fail_auth_cb($err.' Нет access_token')
+      $c->app->log->error("Автоизация $site_name:", $err, $c->dumper($auth))
+        and return $c->$fail_auth_cb($err.' Нет access_token')
         unless $auth->{access_token};
       
       my $url = $c->${ \$c->profile_urls->{$site_name} }(Mojo::URL->new($site->{profile_url}), $auth)
-        or return $c->$fail_auth_cb("Нет ссылки для профиля $site_name");
+        or $c->app->log->error("Нет ссылки для профиля $site_name")
+        and return $c->$fail_auth_cb("Нет ссылки для профиля $site_name");
       
       $c->ua->get($url, $delay->begin);
       $delay->pass($auth);
@@ -159,8 +160,8 @@ sub login {
       $err .= json_enc($profile->{error})
         if ref($profile) eq 'HASH' && $profile->{error};
       
-      $c->app->log->debug("Профиль $site_name:", $err && $c->dumper($tx->req), $c->dumper($profile), );
-      return $c->$fail_auth_cb($err)
+      $c->app->log->error("Профиль $site_name:", $err, $tx->req->url, $c->dumper($tx->res), $c->dumper($profile), )
+        and return $c->$fail_auth_cb($err)
         if $err;
         
       $profile = $profile->{response}
@@ -173,7 +174,7 @@ sub login {
       my $u = $dbh->selectrow_hashref($sth->sth('update oauth user'), undef, @bind)
       || $dbh->selectrow_hashref($sth->sth('new oauth user'), undef, @bind);
 
-      $c->app->log->debug("Oauth user row: ", $c->dumper($u));
+      #~ $c->app->log->debug("Oauth user row: ", $c->dumper($u));
       
       my $current_auth = $c->auth_user;
       #~ $c->app->log->debug("Текущий пользователь: ", $c->dumper($current_auth));
@@ -193,12 +194,12 @@ sub login {
         unless $current_auth;
 
 
-      $c->app->log->debug("Профиль: ", $c->dumper($профиль));
+      #~ $c->app->log->debug("Профиль: ", $c->dumper($профиль));
       #~ return $c->session(token => $c->redirect_to('profile'));
       return $c->redirect_to($redirect);
     },
   );
-  $c->app->log->debug("Login delay done");
+  #~ $c->app->log->debug("Login delay done");
   
 }
 
@@ -288,6 +289,10 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
 
 SQL-dictionary for DBI statements. See L<Mojolicious::Plugin::RoutesAuthDBI::POS::OAuth2>.
 
+=item * B<fail_auth_cb> - coderef
+
+Invokes on diffrent api errors
+
 =back
 
 =head2 Defaults
@@ -299,6 +304,7 @@ SQL-dictionary for DBI statements. See L<Mojolicious::Plugin::RoutesAuthDBI::POS
       namespace => 'Mojolicious::Plugin::RoutesAuthDBI',
       module => 'POS::OAuth2',
     },
+    fail_auth_cb => sub {shift->render(format=>'txt', text=>"@_")},
   },
   
   oauth => undef, # disable oauth
