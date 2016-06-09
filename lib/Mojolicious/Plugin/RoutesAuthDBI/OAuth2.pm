@@ -158,7 +158,7 @@ sub login {
       my ($profile, $err) = $c->oauth2->process_tx($tx);
       $err .= json_enc($profile->{error})
         if $profile->{error};
-      $c->app->log->debug("Профиль $site_name:", $err && $tx->req, $c->dumper($profile), );
+      $c->app->log->debug("Профиль $site_name:", $err && $c->dumper($tx->req), $c->dumper($profile), );
       return $c->$fail_auth_cb($err)
         if $err;
         
