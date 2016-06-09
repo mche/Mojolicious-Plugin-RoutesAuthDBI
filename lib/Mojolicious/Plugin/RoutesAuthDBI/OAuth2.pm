@@ -43,7 +43,7 @@ has _providers => sub {# default
   
 };
 
-has config => sub {
+has config => sub {# только $init_conf !
   my $self = shift;
   
   while (my ($name, $val) = each %{$self->{providers}}) {
@@ -77,7 +77,7 @@ has profile_urls => sub { {
     #~ ?&&&sig=f82efdd230e45e58e4fa327fdf92135d&uids=15410773191172635989
     my $param = {
       method=>'users.getInfo',
-      app_id=>$c->config->{mailru}{key},
+      app_id=>$init_conf->config->{mailru}{key},
       session_key=>$auth->{access_token},
       uids=>$auth->{x_mailru_vid},
       secure=>1,
