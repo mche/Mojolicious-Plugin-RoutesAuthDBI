@@ -31,6 +31,18 @@ has _providers => sub {# default
   
 };
 
+has config => sub {
+  my $self = shift;
+  
+  while (my ($name, $val) = each %{$self->{providers}}) {
+    my $site = $dbh->selectrow_hashref($sth->sth('update oauth site'), undef, ( json_enc($val), $name,))
+      || $dbh->selectrow_hashref($sth->sth('new oauth site'), undef, ($name, json_enc($val)));
+    @$val{qw(id)} = @$site{qw(id)};
+    $val->{name} = $name;
+  }
+  merge $self->{providers}, $self->_providers;
+};
+
 has profile_urls => sub { {
   vkontakte => sub {
     my ($c, $profile_url, $auth, ) = @_;
@@ -56,17 +68,7 @@ has ua => sub {shift->app->ua->connect_timeout(30);};
 my ($dbh, $sth, $init_conf);
 has [qw(app dbh sth sites admin)];
 
-has providers => sub {
-  my $self = shift;
-  
-  while (my ($name, $val) = each %{$self->{providers}}) {
-    my $site = $dbh->selectrow_hashref($sth->sth('update oauth site'), undef, ( json_enc($val), $name,))
-      || $dbh->selectrow_hashref($sth->sth('new oauth site'), undef, ($name, json_enc($val)));
-    @$val{qw(id)} = @$site{qw(id)};
-    $val->{name} = $name;
-  }
-  merge $self->{providers}, $self->_providers;
-};
+
 
 sub init {# from plugin
   my $self = shift;
@@ -84,8 +86,8 @@ sub init {# from plugin
   die "Plugin OAuth2 already loaded"
     if $self->app->renderer->helpers->{'oauth2.get_token'};
   
-  $self->app->log->debug($self->app->dumper($self->providers));
-  $self->app->plugin("OAuth2" => $self->providers);
+  $self->app->log->debug($self->app->dumper($self->config));
+  $self->app->plugin("OAuth2" => $self->config);
   
   
   
