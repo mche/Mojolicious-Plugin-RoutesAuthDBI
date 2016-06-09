@@ -3,7 +3,7 @@ use Mojo::Base 'Mojolicious::Controller';
 use Mojolicious::Plugin::RoutesAuthDBI::Util qw(json_enc json_dec);
 use Hash::Merge qw( merge );
 
-has providers => sub {
+has _providers => sub {# default
   {
     vkontakte => {
       key           => "0.........0",
@@ -56,16 +56,16 @@ has ua => sub {shift->app->ua->connect_timeout(30);};
 my ($dbh, $sth, $init_conf);
 has [qw(app dbh sth sites admin)];
 
-has sites => sub {
-  my $c = shift;
+has providers => sub {
+  my $self = shift;
   
-  while (my ($name, $val) = each %{$c->{providers}}) {
+  while (my ($name, $val) = each %{$self->{providers}}) {
     my $site = $dbh->selectrow_hashref($sth->sth('update oauth site'), undef, ( json_enc($val), $name,))
       || $dbh->selectrow_hashref($sth->sth('new oauth site'), undef, ($name, json_enc($val)));
     @$val{qw(id)} = @$site{qw(id)};
     $val->{name} = $name;
   }
-  $c->{providers};
+  merge $self->{providers}, $self->_providers;
 };
 
 sub init {# from plugin
@@ -84,7 +84,7 @@ sub init {# from plugin
   $self->sites;
   die "Plugin OAuth2 already loaded"
     if $self->app->renderer->helpers->{'oauth2.get_token'};
-  $self->app->plugin("OAuth2" => merge $self->{providers}, $self->providers);
+  $self->app->plugin("OAuth2" => $self->providers);
   
   $self->app->log->debug($self->app->dumper([values %{$self->oauth2->providers}]));
   
