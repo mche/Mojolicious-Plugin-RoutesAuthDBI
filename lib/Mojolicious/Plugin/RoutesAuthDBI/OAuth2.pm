@@ -175,9 +175,9 @@ sub login {
       || $dbh->selectrow_hashref($sth->sth('new oauth user'), undef, @bind);
 
       #~ $c->app->log->debug("Oauth user row: ", $c->dumper($u));
+      my $auth_user_helper = $c->access->{plugin}->merge_conf->{auth}{current_user_fn};
       
-      my $current_auth = $c->auth_user;
-      #~ $c->app->log->debug("Текущий пользователь: ", $c->dumper($current_auth));
+      my $current_auth = $c->$auth_user_helper;
       
       my $профиль = 
       

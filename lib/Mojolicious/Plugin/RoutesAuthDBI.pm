@@ -98,6 +98,7 @@ has access => sub {# object
     $self->_class($pos)->new($pos->{template} ? (template=>$pos->{template}) : ())
   );
   $access->{app} = $self->app;
+  $access->{plugin} = $self;
   return $access->init;
 };
 
@@ -164,6 +165,7 @@ sub register {
     my $admin = $self->admin;
     $access->apply_route($_) for $admin->self_routes;
   }
+  
   
   $self->app->helper('access', sub {$access});
   
