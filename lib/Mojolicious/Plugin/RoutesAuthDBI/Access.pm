@@ -61,6 +61,8 @@ sub apply_route {# meth in Plugin
     and return undef
     if $r_hash->{disable};
   
+  $r_hash->{request} ||= $r_hash->{route};
+  
   $app->log->debug("Skip route id=[$r_hash->{id}] empty request")
     and return undef
     unless $r_hash->{request};
@@ -79,13 +81,21 @@ sub apply_route {# meth in Plugin
   # STEP ACCESS
   $nr->over(access => $r_hash);
   
-  if ($r_hash->{controller}) {
-    $nr->to(controller=>$r_hash->{controller}, action => $r_hash->{action},  $r_hash->{namespace} ? (namespace => $r_hash->{namespace}) : (),);
-  } elsif ($r_hash->{callback}) {
+  if ( $r_hash->{action} ) {
+
+    my %ns = (namespace => $r_hash->{namespace})
+      if $r_hash->{namespace};
+      
+    if ( $r_hash->{action} =~ /#/ ) { $nr->to($r_hash->{action}, %ns); }
+    else { $nr->to(controller=>$r_hash->{controller}, action => $r_hash->{action}, %ns,); }
+    
+  } elsif ( $r_hash->{callback} ) {
+    
     my $cb = eval $r_hash->{callback};
     die "Compile error on callback: [$@]", $app->dumper($r_hash)
       if $@;
     $nr->to(cb => $cb);
+    
   } else {
     die "No defaults for route: ", $app->dumper($r_hash);
   }
