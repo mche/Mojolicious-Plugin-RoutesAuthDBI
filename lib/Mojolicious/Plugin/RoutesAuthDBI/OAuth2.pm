@@ -3,6 +3,9 @@ use Mojo::Base 'Mojolicious::Controller';
 use Mojolicious::Plugin::RoutesAuthDBI::Util qw(json_enc json_dec);
 use Hash::Merge qw( merge );
 
+my ($dbh, $sth, $init_conf);
+has [qw(app dbh sth sites admin)];
+
 has _providers => sub {# default
   {
     vkontakte => {
@@ -64,12 +67,6 @@ has profile_urls => sub { {
 
 has ua => sub {shift->app->ua->connect_timeout(30);};
 
-
-my ($dbh, $sth, $init_conf);
-has [qw(app dbh sth sites admin)];
-
-
-
 sub init {# from plugin
   my $self = shift;
   my %args = @_;
@@ -88,8 +85,6 @@ sub init {# from plugin
   
   $self->app->log->debug($self->app->dumper($self->config));
   $self->app->plugin("OAuth2" => $self->config);
-  
-  
   
   $init_conf = $self;
   return $self;
