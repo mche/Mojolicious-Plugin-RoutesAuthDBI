@@ -2,6 +2,7 @@ package Mojolicious::Plugin::RoutesAuthDBI::OAuth2;
 use Mojo::Base 'Mojolicious::Controller';
 use Mojolicious::Plugin::RoutesAuthDBI::Util qw(json_enc json_dec);
 use Hash::Merge qw( merge );
+use Digest::MD5 qw(md5_hex);
 
 my ($dbh, $sth, $init_conf);
 has [qw(app dbh sth sites admin)];
@@ -32,11 +33,11 @@ has _providers => sub {# default
     },
     mailru => {
       key=>'z..........q',
-      secret => '',
+      secret => '1...............9',
       authorize_url=>"https://connect.mail.ru/oauth/authorize",
       token_url => "https://connect.mail.ru/oauth/token",
-      profile_url=> ""
-      #~ https://www.appsmail.ru/platform/api?method=users.getInfo&app_id=423004&session_key=be6ef89965d58e56dec21acb9b62bdaa&sig=f82efdd230e45e58e4fa327fdf92135d&uids=15410773191172635989
+      profile_url=> "https://www.appsmail.ru/platform/api"
+
     }
   }
   
@@ -70,6 +71,20 @@ has profile_urls => sub { {
     my ($c, $profile_url, $auth, ) = @_;
     $profile_url
       ->query('format=json&oauth_token='.$auth->{access_token});
+  },
+  mailru => sub {
+    my ($c, $profile_url, $auth, ) = @_;
+    #~ ?&&&sig=f82efdd230e45e58e4fa327fdf92135d&uids=15410773191172635989
+    my $param = {
+      method=>'users.getInfo',
+      app_id=>$c->config->{mailru}{key},
+      session_key=>$auth->{access_token},
+      uids=$auth->{x_mailru_vid},
+      secure=>1,
+    };
+    $param->{sig} = md5_hex map "$_=$param->{$_}", sort keys %$param;
+    $profile_url
+      ->query($param);
   },
 }};
 
