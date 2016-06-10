@@ -22,7 +22,7 @@ WriteMakefile(
         'Mojolicious'=>6.00,
         'Mojolicious::Plugin::Authentication'=>1.29,
         'DBI'=>1.6,
-        'DBIx::POS::Template'=>0.0002,
+        'DBIx::POS::Template'=>0.010,
         'Hash::Merge'=>0.200,
     },
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },

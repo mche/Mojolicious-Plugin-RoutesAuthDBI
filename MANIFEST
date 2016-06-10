@@ -2,7 +2,6 @@ Changes
 lib/Mojolicious/Plugin/RoutesAuthDBI/Util.pm
 lib/Mojolicious/Plugin/RoutesAuthDBI/OAuth2.pm
 lib/Mojolicious/Plugin/RoutesAuthDBI/Schema.pm
-lib/Mojolicious/Plugin/RoutesAuthDBI/Sth.pm
 lib/Mojolicious/Plugin/RoutesAuthDBI/POS/OAuth2.pm
 lib/Mojolicious/Plugin/RoutesAuthDBI/POS/Admin.pm
 lib/Mojolicious/Plugin/RoutesAuthDBI/POS/Access.pm
