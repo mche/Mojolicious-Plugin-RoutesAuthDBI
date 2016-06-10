@@ -411,7 +411,7 @@ See L<Mojolicious::Plugin::RoutesAuthDBI::Access> for detail options list.
 Hashref options for admin controller for actions on SQL tables routes, roles, profiles, logins. By default the builtin module:
 
   admin => {
-    controller => 'Access',
+    controller => 'Admin',
     namespace => 'Mojolicious::Plugin::RoutesAuthDBI',
     ...,
   },
