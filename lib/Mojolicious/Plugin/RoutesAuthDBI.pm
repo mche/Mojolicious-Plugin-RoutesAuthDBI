@@ -5,13 +5,13 @@ use Mojo::Util qw(hmac_sha1_sum);
 use Hash::Merge qw( merge );
 use DBIx::POS::Sth;
 
-our $VERSION = '0.700';
+our $VERSION = '0.701';
 
 =pod
 
 =head1 VERSION
 
-0.700
+0.701
 
 =cut
 
@@ -62,28 +62,12 @@ has default => sub {
     },
     fail_auth_cb => sub {shift->render(format=>'txt', text=>"@_")},
   },
-  #~ sth => {namespace => $pkg, module => 'Sth', },
 }};
 
 has merge_conf => sub {#hashref
   my $self = shift;
   merge($self->conf, $self->default);
 };
-
-#~ has pos => sub {# object DBIx::POS::Template
-  #~ my $self = shift;
-  #~ my $pos = $self->merge_conf->{'pos'};
-  #~ my $class = $self->_class($pos);
-  #~ $class->new($pos->{template} ? (template=>$pos->{template}) : ());
-#~ };
-
-#~ has sth => sub {# object Sth
-  #~ my $self = shift;
-  #~ my $sth = $self->merge_conf->{'sth'};
-  #~ $self->_class($sth);
-  
-
-#~ };
 
 has access => sub {# object
   my $self = shift;
@@ -448,7 +432,7 @@ See L<Mojolicious::Plugin::RoutesAuthDBI::Admin> for detail options list.
 Hashref options for oauth controller. By default the builtin module:
 
   oauth => {
-    module => 'OAuth2',
+    controller => 'OAuth2',
     namespace => 'Mojolicious::Plugin::RoutesAuthDBI',
     ...,
   },
@@ -457,7 +441,7 @@ Hashref options for oauth controller. By default the builtin module:
 You might define your own controller by passing options:
 
   oauth => {
-    module => 'Foo::Bar::Baz',
+    controller => 'Foo::Bar::Baz',
     ...,
   },
 
