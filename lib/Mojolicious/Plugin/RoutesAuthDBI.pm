@@ -3,14 +3,15 @@ use Mojo::Base 'Mojolicious::Plugin::Authentication';
 use Mojo::Loader qw(load_class);
 use Mojo::Util qw(hmac_sha1_sum);
 use Hash::Merge qw( merge );
+use DBIx::POS::Sth;
 
-our $VERSION = '0.620';
+our $VERSION = '0.700';
 
 =pod
 
 =head1 VERSION
 
-0.620
+0.700
 
 =cut
 
@@ -61,7 +62,7 @@ has default => sub {
     },
     fail_auth_cb => sub {shift->render(format=>'txt', text=>"@_")},
   },
-  sth => {namespace => $pkg, module => 'Sth', },
+  #~ sth => {namespace => $pkg, module => 'Sth', },
 }};
 
 has merge_conf => sub {#hashref
@@ -76,14 +77,13 @@ has merge_conf => sub {#hashref
   #~ $class->new($pos->{template} ? (template=>$pos->{template}) : ());
 #~ };
 
-has sth => sub {# object Sth
-  my $self = shift;
-  my $sth = $self->merge_conf->{'sth'};
-  #~ my $class = 
-  $self->_class($sth);
-  #~ my $template = $self->merge_conf->{template};
-  #~ $class->new($self->dbh, $self->pos,); #%$template
-};
+#~ has sth => sub {# object Sth
+  #~ my $self = shift;
+  #~ my $sth = $self->merge_conf->{'sth'};
+  #~ $self->_class($sth);
+  
+
+#~ };
 
 has access => sub {# object
   my $self = shift;
@@ -93,7 +93,7 @@ has access => sub {# object
   bless $access, $class;
   $access->{dbh} = $self->dbh;
   my $pos = $access->{pos};
-  $access->{sth} = $self->sth->new(
+  $access->{sth} = DBIx::POS::Sth->new(
     $self->dbh,
     $self->_class($pos)->new($pos->{template} ? (template=>$pos->{template}) : ())
   );
@@ -110,7 +110,7 @@ has admin => sub {# object
   bless $admin, $class;
   $admin->{dbh} = $self->dbh;
   my $pos = $admin->{pos};
-  $admin->{sth} = $self->sth->new(
+  $admin->{sth} = DBIx::POS::Sth->new(
     $self->dbh,
     $self->_class($pos)->new($pos->{template} ? (template=>$pos->{template}) : ()),
   );
@@ -125,7 +125,7 @@ has oauth => sub {
   bless $oauth, $class;
   $oauth->{dbh} = $self->dbh;
   my $pos = $oauth->{pos};
-  $oauth->{sth} = $self->sth->new(
+  $oauth->{sth} = DBIx::POS::Sth->new(
     $self->dbh,
     $self->_class($pos)->new($pos->{template} ? (template=>$pos->{template}) : ()),
   );
@@ -374,7 +374,6 @@ First of all you will see L<SVG|https://github.com/mche/Mojolicious-Plugin-Route
     access => {...},
     admin => {...},
     oauth => {...},
-    sth => {...},
   );
 
 
@@ -463,10 +462,6 @@ You might define your own controller by passing options:
   },
 
 See L<Mojolicious::Plugin::RoutesAuthDBI::OAuth2> for detail options list.
-
-=head3 sth
-
-Hashref options for DBI statements hub. See L<Mojolicious::Plugin::RoutesAuthDBI::Sth>.
 
 
 =head1 INSTALL
