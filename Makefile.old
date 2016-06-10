@@ -19,7 +19,7 @@
 #     MIN_PERL_VERSION => q[5.014]
 #     NAME => q[Mojolicious::Plugin::RoutesAuthDBI]
 #     PL_FILES => {  }
-#     PREREQ_PM => { DBI=>q[1.6], DBIx::POS::Template=>q[0.0002], Hash::Merge=>q[0.2], Mojolicious=>q[6], Mojolicious::Plugin::Authentication=>q[1.29], Test::More=>q[0] }
+#     PREREQ_PM => { DBI=>q[1.6], DBIx::POS::Template=>q[0.01], Hash::Merge=>q[0.2], Mojolicious=>q[6], Mojolicious::Plugin::Authentication=>q[1.29], Test::More=>q[0] }
 #     TEST_REQUIRES => {  }
 #     VERSION_FROM => q[lib/Mojolicious/Plugin/RoutesAuthDBI.pm]
 #     dist => { COMPRESS=>q[gzip -9f], SUFFIX=>q[gz] }
@@ -61,11 +61,11 @@ DIRFILESEP = /
 DFSEP = $(DIRFILESEP)
 NAME = Mojolicious::Plugin::RoutesAuthDBI
 NAME_SYM = Mojolicious_Plugin_RoutesAuthDBI
-VERSION = 0.620
+VERSION = 0.700
 VERSION_MACRO = VERSION
-VERSION_SYM = 0_620
+VERSION_SYM = 0_700
 DEFINE_VERSION = -D$(VERSION_MACRO)=\"$(VERSION)\"
-XS_VERSION = 0.620
+XS_VERSION = 0.700
 XS_VERSION_MACRO = XS_VERSION
 XS_DEFINE_VERSION = -D$(XS_VERSION_MACRO)=\"$(XS_VERSION)\"
 INST_ARCHLIB = blib/arch
@@ -169,6 +169,7 @@ MAN3PODS = 000README.pod \
 	Config.pm \
 	README.pod \
 	lib/Mojolicious/Plugin/RoutesAuthDBI.pm \
+	lib/Mojolicious/Plugin/RoutesAuthDBI/000.Sth.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Access.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Admin.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Install.pm \
@@ -177,7 +178,6 @@ MAN3PODS = 000README.pod \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/POS/Admin.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/POS/OAuth2.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Schema.pm \
-	lib/Mojolicious/Plugin/RoutesAuthDBI/Sth.pm \
 	test-pod.pl
 
 # Where is the Config information that we are using/depend on
@@ -205,6 +205,7 @@ TO_INST_PM = 000README.pod \
 	Config.pm \
 	README.pod \
 	lib/Mojolicious/Plugin/RoutesAuthDBI.pm \
+	lib/Mojolicious/Plugin/RoutesAuthDBI/000.Sth.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Access.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Admin.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Install.pm \
@@ -213,7 +214,6 @@ TO_INST_PM = 000README.pod \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/POS/Admin.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/POS/OAuth2.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Schema.pm \
-	lib/Mojolicious/Plugin/RoutesAuthDBI/Sth.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Test/Test.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Util.pm \
 	lib/Mojolicious/Plugin/test-merge-hash.pl \
@@ -230,6 +230,8 @@ PM_TO_BLIB = 000README.pod \
 	$(INST_LIB)/Mojolicious/Plugin/README.pod \
 	lib/Mojolicious/Plugin/RoutesAuthDBI.pm \
 	blib/lib/Mojolicious/Plugin/RoutesAuthDBI.pm \
+	lib/Mojolicious/Plugin/RoutesAuthDBI/000.Sth.pm \
+	blib/lib/Mojolicious/Plugin/RoutesAuthDBI/000.Sth.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Access.pm \
 	blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Access.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Admin.pm \
@@ -246,8 +248,6 @@ PM_TO_BLIB = 000README.pod \
 	blib/lib/Mojolicious/Plugin/RoutesAuthDBI/POS/OAuth2.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Schema.pm \
 	blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Schema.pm \
-	lib/Mojolicious/Plugin/RoutesAuthDBI/Sth.pm \
-	blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Sth.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Test/Test.pm \
 	blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Test/Test.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Util.pm \
@@ -331,7 +331,7 @@ RCS_LABEL = rcs -Nv$(VERSION_SYM): -q
 DIST_CP = best
 DIST_DEFAULT = tardist
 DISTNAME = Mojolicious-Plugin-RoutesAuthDBI
-DISTVNAME = Mojolicious-Plugin-RoutesAuthDBI-0.620
+DISTVNAME = Mojolicious-Plugin-RoutesAuthDBI-0.700
 
 
 # --- MakeMaker macro section:
@@ -489,6 +489,7 @@ manifypods : pure_all  \
 	Config.pm \
 	README.pod \
 	lib/Mojolicious/Plugin/RoutesAuthDBI.pm \
+	lib/Mojolicious/Plugin/RoutesAuthDBI/000.Sth.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Access.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Admin.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Install.pm \
@@ -497,13 +498,13 @@ manifypods : pure_all  \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/POS/Admin.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/POS/OAuth2.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Schema.pm \
-	lib/Mojolicious/Plugin/RoutesAuthDBI/Sth.pm \
 	test-pod.pl
 	$(NOECHO) $(POD2MAN) --section=3 --perm_rw=$(PERM_RW) -u \
 	  000README.pod $(INST_MAN3DIR)/Mojolicious::Plugin::000README.$(MAN3EXT) \
 	  Config.pm $(INST_MAN3DIR)/Mojolicious::Plugin::Config.$(MAN3EXT) \
 	  README.pod $(INST_MAN3DIR)/Mojolicious::Plugin::README.$(MAN3EXT) \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI.pm $(INST_MAN3DIR)/Mojolicious::Plugin::RoutesAuthDBI.$(MAN3EXT) \
+	  lib/Mojolicious/Plugin/RoutesAuthDBI/000.Sth.pm $(INST_MAN3DIR)/Mojolicious::Plugin::RoutesAuthDBI::000.Sth.$(MAN3EXT) \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/Access.pm $(INST_MAN3DIR)/Mojolicious::Plugin::RoutesAuthDBI::Access.$(MAN3EXT) \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/Admin.pm $(INST_MAN3DIR)/Mojolicious::Plugin::RoutesAuthDBI::Admin.$(MAN3EXT) \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/Install.pm $(INST_MAN3DIR)/Mojolicious::Plugin::RoutesAuthDBI::Install.$(MAN3EXT) \
@@ -512,7 +513,6 @@ manifypods : pure_all  \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/POS/Admin.pm $(INST_MAN3DIR)/Mojolicious::Plugin::RoutesAuthDBI::POS::Admin.$(MAN3EXT) \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/POS/OAuth2.pm $(INST_MAN3DIR)/Mojolicious::Plugin::RoutesAuthDBI::POS::OAuth2.$(MAN3EXT) \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/Schema.pm $(INST_MAN3DIR)/Mojolicious::Plugin::RoutesAuthDBI::Schema.$(MAN3EXT) \
-	  lib/Mojolicious/Plugin/RoutesAuthDBI/Sth.pm $(INST_MAN3DIR)/Mojolicious::Plugin::RoutesAuthDBI::Sth.$(MAN3EXT) \
 	  test-pod.pl $(INST_MAN3DIR)/Mojolicious::Plugin::test-pod.$(MAN3EXT) 
 
 
@@ -571,7 +571,7 @@ realclean_subdirs :
 # Delete temporary files (via clean) and also delete dist files
 realclean purge ::  clean realclean_subdirs
 	- $(RM_F) \
-	  $(FIRST_MAKEFILE) $(MAKEFILE_OLD) 
+	  $(MAKEFILE_OLD) $(FIRST_MAKEFILE) 
 	- $(RM_RF) \
 	  $(DISTVNAME) 
 
@@ -600,12 +600,12 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '    - inc' >> META_new.yml
 	$(NOECHO) $(ECHO) 'requires:' >> META_new.yml
 	$(NOECHO) $(ECHO) '  DBI: '\''1.6'\''' >> META_new.yml
-	$(NOECHO) $(ECHO) '  DBIx::POS::Template: '\''0.0002'\''' >> META_new.yml
+	$(NOECHO) $(ECHO) '  DBIx::POS::Template: '\''0.01'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Hash::Merge: '\''0.2'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Mojolicious: '\''6'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Mojolicious::Plugin::Authentication: '\''1.29'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  perl: '\''5.014'\''' >> META_new.yml
-	$(NOECHO) $(ECHO) 'version: '\''0.620'\''' >> META_new.yml
+	$(NOECHO) $(ECHO) 'version: '\''0.700'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) 'x_serialization_backend: '\''CPAN::Meta::YAML version 0.018'\''' >> META_new.yml
 	-$(NOECHO) $(MV) META_new.yml $(DISTVNAME)/META.yml
 	$(NOECHO) $(ECHO) Generating META.json
@@ -644,7 +644,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '      "runtime" : {' >> META_new.json
 	$(NOECHO) $(ECHO) '         "requires" : {' >> META_new.json
 	$(NOECHO) $(ECHO) '            "DBI" : "1.6",' >> META_new.json
-	$(NOECHO) $(ECHO) '            "DBIx::POS::Template" : "0.0002",' >> META_new.json
+	$(NOECHO) $(ECHO) '            "DBIx::POS::Template" : "0.01",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "Hash::Merge" : "0.2",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "Mojolicious" : "6",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "Mojolicious::Plugin::Authentication" : "1.29",' >> META_new.json
@@ -653,7 +653,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '      }' >> META_new.json
 	$(NOECHO) $(ECHO) '   },' >> META_new.json
 	$(NOECHO) $(ECHO) '   "release_status" : "stable",' >> META_new.json
-	$(NOECHO) $(ECHO) '   "version" : "0.620",' >> META_new.json
+	$(NOECHO) $(ECHO) '   "version" : "0.700",' >> META_new.json
 	$(NOECHO) $(ECHO) '   "x_serialization_backend" : "JSON::PP version 2.27300"' >> META_new.json
 	$(NOECHO) $(ECHO) '}' >> META_new.json
 	-$(NOECHO) $(MV) META_new.json $(DISTVNAME)/META.json
@@ -961,7 +961,7 @@ ppd :
 	$(NOECHO) $(ECHO) '    <IMPLEMENTATION>' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <PERLCORE VERSION="5,014,0,0" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="DBI::" VERSION="1.6" />' >> $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '        <REQUIRE NAME="DBIx::POS::Template" VERSION="0.0002" />' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '        <REQUIRE NAME="DBIx::POS::Template" VERSION="0.01" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Hash::Merge" VERSION="0.2" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Mojolicious::" VERSION="6" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Mojolicious::Plugin::Authentication" VERSION="1.29" />' >> $(DISTNAME).ppd
@@ -979,6 +979,7 @@ pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	  Config.pm $(INST_LIB)/Mojolicious/Plugin/Config.pm \
 	  README.pod $(INST_LIB)/Mojolicious/Plugin/README.pod \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI.pm blib/lib/Mojolicious/Plugin/RoutesAuthDBI.pm \
+	  lib/Mojolicious/Plugin/RoutesAuthDBI/000.Sth.pm blib/lib/Mojolicious/Plugin/RoutesAuthDBI/000.Sth.pm \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/Access.pm blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Access.pm \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/Admin.pm blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Admin.pm \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/Install.pm blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Install.pm \
@@ -987,7 +988,6 @@ pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/POS/Admin.pm blib/lib/Mojolicious/Plugin/RoutesAuthDBI/POS/Admin.pm \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/POS/OAuth2.pm blib/lib/Mojolicious/Plugin/RoutesAuthDBI/POS/OAuth2.pm \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/Schema.pm blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Schema.pm \
-	  lib/Mojolicious/Plugin/RoutesAuthDBI/Sth.pm blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Sth.pm \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/Test/Test.pm blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Test/Test.pm \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/Util.pm blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Util.pm \
 	  lib/Mojolicious/Plugin/test-merge-hash.pl blib/lib/Mojolicious/Plugin/test-merge-hash.pl \
