@@ -126,7 +126,12 @@ sub login {
   
   die "OAuth provider [$site_name] does not configured"
     unless $site->{id};
-    
+  
+  my $auth_profile = $c->${ \$init_conf->plugin->merge_conf->{auth}{current_user_fn} };
+  
+  $dbh->selectrow_hashref($sth->sth('check profile oauth'), undef, ($auth_profile->{id}, $site->{id}))
+    if $auth_profile;
+  
   my $fail_auth_cb = $init_conf->{fail_auth_cb};
 
   $c->delay(
@@ -175,13 +180,10 @@ sub login {
       || $dbh->selectrow_hashref($sth->sth('new oauth user'), undef, @bind);
 
       #~ $c->app->log->debug("Oauth user row: ", $c->dumper($u));
-      my $auth_user_helper = $init_conf->plugin->merge_conf->{auth}{current_user_fn};
-      
-      my $current_auth = $c->$auth_user_helper;
       
       my $профиль = 
       
-        $current_auth
+        $auth_profile
         
         || $dbh->selectrow_hashref($sth->sth('profile by oauth user'), undef, ($u->{id}))
 
@@ -191,7 +193,7 @@ sub login {
       my $r = $init_conf->plugin->admin->ref($профиль->{id}, $u->{id},);
       
       $c->authenticate(undef, undef, $профиль)
-        unless $current_auth;
+        unless $auth_profile;
 
 
       #~ $c->app->log->debug("Профиль: ", $c->dumper($профиль));
