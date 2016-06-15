@@ -283,7 +283,30 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
 
   providers => {google=>{key=> ..., secret=>..., }, ...},
 
-See L<Mojolicious::Plugin::OAuth2>.
+See L<Mojolicious::Plugin::OAuth2>. But two additional parameters (keys of provider hash) are needs:
+
+=over 4
+
+=item * B<profile_url> abs url string
+
+  profile_url=> 'https://www.googleapis.com/oauth2/v1/userinfo',
+
+=item * B<profile_query> coderef
+
+Example for google:
+
+  profile_query => sub {
+    my ($c, $auth, ) = @_;
+    {
+      alt => 'json',
+      access_token => $auth->{access_token},
+    };
+  },
+
+In: $auth hash ref with access_token.
+Out: hashref profile query params.
+
+=back
 
 =item * B<pos> - hashref
 
