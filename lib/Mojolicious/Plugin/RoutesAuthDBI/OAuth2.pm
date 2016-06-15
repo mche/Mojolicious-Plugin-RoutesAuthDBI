@@ -10,8 +10,6 @@ has [qw(app dbh sth plugin)];
 has _providers => sub {# default
   {
     vkontakte => {
-      #~ key           => "0.........0",
-      #~ secret        => "z.................8",
       authorize_url => "https://oauth.vk.com/authorize",
       authorize_query => {display=>'page', response_type=>'code', v=>'5.52',},#&scope=friends
       token_url     => "https://oauth.vk.com/access_token",
@@ -25,8 +23,6 @@ has _providers => sub {# default
       },
     },
     google=>{# обязательно redirect_url
-      #~ key=>'9................0.apps.googleusercontent.com',
-      #~ secret=>'J...............1',
       scope=>'profile',
       profile_url=> 'https://www.googleapis.com/oauth2/v1/userinfo',
       profile_query => sub {
@@ -38,8 +34,6 @@ has _providers => sub {# default
       },
     },
     yandex=>{# обязательно redirect_url
-      #~ key=>'9.............d',
-      #~ secret=>'5................f',
       authorize_url=>"https://oauth.yandex.ru/authorize",
       authorize_query => {force_confirm=>1, response_type=>'code',},# state=>
       token_url => "https://oauth.yandex.ru/token",
@@ -53,8 +47,6 @@ has _providers => sub {# default
       },
     },
     mailru => {
-      #~ key=>'z..........q',
-      #~ secret => '1...............9',
       authorize_url=>"https://connect.mail.ru/oauth/authorize?response_type=code",
       token_url => "https://connect.mail.ru/oauth/token",
       profile_url=> "https://www.appsmail.ru/platform/api",
