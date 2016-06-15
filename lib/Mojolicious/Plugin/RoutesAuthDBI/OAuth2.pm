@@ -117,11 +117,11 @@ sub init {# from plugin
 sub login {
   my $c = shift;
   
-  $c->session(oauth => {
+  $c->session(oauth_init => {
     redirect => $c->param('redirect') || $c->req->headers->referrer->path || 'profile',
     #~ $c->param('fail_render') ? (fail_render => $c->param('fail_render')) : (),
   })
-    unless $c->session('oauth');
+    unless $c->session('oauth_init');
   
   my $site_name = $c->stash('site');
 
@@ -138,7 +138,7 @@ sub login {
   
   my $r; $r = $dbh->selectrow_hashref($sth->sth('check profile oauth'), undef, ($auth_profile->{id}, $site->{id}))
     and $c->app->log->warn("Попытка двойной авторизации сайта $site_name", $c->dumper($r), "профиль: ", $c->dumper($auth_profile),)
-    and return $c->redirect_to($c->url_for(${ delete $c->session->{oauth} }{redirect})->query(err=> "Уже есть авторизация сайта $site_name"))
+    and return $c->redirect_to($c->url_for(${ delete $c->session->{oauth_init} }{redirect})->query(err=> "Уже есть авторизация сайта $site_name"))
     if $auth_profile;
 
   $c->delay(
@@ -157,7 +157,7 @@ sub login {
       
       $c->app->log->error("Автоизация $site_name:", $err, $c->dumper($auth))
         #~ and return $c->$fail_auth_cb()
-        and return $c->redirect_to($c->url_for(${ delete $c->session->{oauth} }{redirect})->query(err=> $err.' Нет access_token'))
+        and return $c->redirect_to($c->url_for(${ delete $c->session->{oauth_init} }{redirect})->query(err=> $err.' Нет access_token'))
         unless $auth->{access_token};
       
       my $url = Mojo::URL->new($site->{profile_url})->query($c->${ \$site->{profile_query} }($auth));
@@ -173,7 +173,7 @@ sub login {
       
       $c->app->log->error("Профиль $site_name:", $err, $tx->req->url, $c->dumper($tx->res), $c->dumper($profile), )
         #~ and return $c->$fail_auth_cb($err)
-        and return $c->redirect_to($c->url_for(${ delete $c->session->{oauth} }{redirect})->query(err=> $err))
+        and return $c->redirect_to($c->url_for(${ delete $c->session->{oauth_init} }{redirect})->query(err=> $err))
         if $err;
         
       $profile = $profile->{response}
@@ -204,7 +204,7 @@ sub login {
 
 
       #~ $c->app->log->debug("Профиль: ", $c->dumper($профиль));
-      return $c->redirect_to(${ delete $c->session->{oauth} }{redirect});
+      return $c->redirect_to(${ delete $c->session->{oauth_init} }{redirect});
     },
   );
   
