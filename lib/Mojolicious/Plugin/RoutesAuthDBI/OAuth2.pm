@@ -234,12 +234,12 @@ sub _routes {# from plugin!
     action => 'out',
     name => 'logout',
   },
-  #~ {request =>'/'.$Init->plugin->admin->{trust}."/oauth/conf",
-    #~ namespace=>$Init->{namespace},
-    #~ controller=>$Init->{controller} || $Init->{module},
-    #~ action => 'conf',
-    #~ name => 'oauth-conf',
-  #~ }
+  {request =>'/'.$Init->plugin->admin->{trust}."/oauth/conf",
+    namespace=>$Init->{namespace},
+    controller=>$Init->{controller} || $Init->{module},
+    action => 'conf',
+    name => 'oauth-conf',
+  }
   
   );
   
