@@ -214,7 +214,7 @@ sub login {
 sub out {# выход
   my $c = shift;
   $c->logout;
-  $c->redirect_to($c->param('redirect') || 'home');
+  $c->redirect_to($c->param('redirect') || '/');
 }
 
 sub _routes {# from plugin!
@@ -234,12 +234,12 @@ sub _routes {# from plugin!
     action => 'out',
     name => 'logout',
   },
-  {request =>'/'.$Init->plugin->admin->{trust}."/oauth/conf",
-    namespace=>$Init->{namespace},
-    controller=>$Init->{controller} || $Init->{module},
-    action => 'conf',
-    name => 'oauth-conf',
-  }
+  #~ {request =>'/'.$Init->plugin->admin->{trust}."/oauth/conf",
+    #~ namespace=>$Init->{namespace},
+    #~ controller=>$Init->{controller} || $Init->{module},
+    #~ action => 'conf',
+    #~ name => 'oauth-conf',
+  #~ }
   
   );
   
@@ -291,14 +291,11 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
 
   providers => {google=>{key=> ..., secret=>..., }, ...},
 
+See L<Mojolicious::Plugin::OAuth2>.
 
 =item * B<pos> - hashref
 
 SQL-dictionary for DBI statements. See L<Mojolicious::Plugin::RoutesAuthDBI::POS::OAuth2>.
-
-=item * B<fail_auth_cb> - coderef
-
-Invokes on diffrent api errors
 
 =back
 
@@ -311,19 +308,32 @@ Invokes on diffrent api errors
       namespace => 'Mojolicious::Plugin::RoutesAuthDBI',
       module => 'POS::OAuth2',
     },
-    fail_auth_cb => sub {shift->render(format=>'txt', text=>"@_")},
   },
+
+disable oauth module
   
-  oauth => undef, # disable oauth
+  oauth => undef, 
   
 
 =head1 METHODS NEEDS IN PLUGIN
 
-=over 4
+=head2 _routes()
 
-=item * B<_routes()> - this oauth controller routes. Return array of hashrefs routes records for apply route on app.
+This oauth controller routes. Return array of hashrefs routes records for apply route on app. Plugin internal use.
 
-=back
+=head1 Routes
+
+=head2 /login/:site
+
+Main route of this controller. Stash B<site> is the name of the hash key of the C<providers> config above. Example html link:
+
+  <a href="<%= $c->url_for('oauth-login', site=> 'google')->query(redirect=>'profile') %>">Login by google</a>
+
+This route has name 'oauth-login'. This route accept param 'redirect' and will use for $c->redirect_to after success oauith and also failed oauth with out param 'err'.
+
+=head2 /logout
+
+Clear session and redirect to param 'redirect' || '/'. This route has name 'logout'.
 
 =head1 SEE ALSO
 
