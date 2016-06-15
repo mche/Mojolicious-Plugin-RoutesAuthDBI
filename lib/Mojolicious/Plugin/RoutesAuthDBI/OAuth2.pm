@@ -118,7 +118,7 @@ sub login {
   my $c = shift;
   
   $c->session(oauth => {
-    redirect => $c->param('redirect') || $c->req->headers->referer->path || 'profile',
+    redirect => $c->param('redirect') || $c->req->headers->referrer->path || 'profile',
     #~ $c->param('fail_render') ? (fail_render => $c->param('fail_render')) : (),
   })
     unless $c->session('oauth');
