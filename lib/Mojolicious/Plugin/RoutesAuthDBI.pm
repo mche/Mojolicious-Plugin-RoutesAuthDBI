@@ -5,16 +5,6 @@ use Mojo::Util qw(hmac_sha1_sum);
 use Hash::Merge qw( merge );
 use DBIx::POS::Sth;
 
-our $VERSION = '0.701';
-
-=pod
-
-=head1 VERSION
-
-0.701
-
-=cut
-
 my $pkg = __PACKAGE__;
 
 has [qw(app dbh conf)];
@@ -330,7 +320,7 @@ sub deny_log {
   );
 }
 
-1;
+our $VERSION = '0.702';
 
 =pod
 
@@ -341,6 +331,10 @@ sub deny_log {
 =head1 Mojolicious::Plugin::RoutesAuthDBI
 
 ¡ ¡ ¡ ALL GLORY TO GLORIA ! ! !
+
+=head1 VERSION
+
+0.702
 
 =head1 NAME
 

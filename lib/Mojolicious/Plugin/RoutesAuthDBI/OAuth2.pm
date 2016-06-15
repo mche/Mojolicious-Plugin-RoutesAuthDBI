@@ -117,7 +117,11 @@ sub init {# from plugin
 sub login {
   my $c = shift;
   
-  my $redirect = $c->param('redirect') || 'profile';
+  $c->session(oauth => {
+    redirect => $c->param('redirect') || $c->req->headers->referer->path || 'profile',
+    $c->param('fail_render') ? (fail_render => $c->param('fail_render')) : (),
+  })
+    unless $c->session('oauth');
   
   my $site_name = $c->stash('site');
 
@@ -125,7 +129,7 @@ sub login {
     or die "No such oauth provider [$site_name]" ;
   
   if (my @fatal = grep !defined $site->{$_}, qw(id key secret authorize_url token_url profile_url profile_query)) {
-    die "OAuth provider [$site_name] does not configured: is not defined [@fatal]";
+    die "OAuth provider [$site_name] does not configured: [@fatal] is not defined";
   }
   
   my $fail_auth_cb = $Init->{fail_auth_cb};
@@ -156,8 +160,6 @@ sub login {
         unless $auth->{access_token};
       
       my $url = Mojo::URL->new($site->{profile_url})->query($c->${ \$site->{profile_query} }($auth));
-        #~ or $c->app->log->error("Нет ссылки для профиля $site_name")
-        #~ and return $c->$fail_auth_cb("Нет ссылки для профиля $site_name");
       
       $c->ua->get($url, $delay->begin);
       $delay->pass($auth);
