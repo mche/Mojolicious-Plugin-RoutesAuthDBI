@@ -120,6 +120,24 @@ L<DBIx::POS::Template>
 
   where r.id2=?;
 
+
+=head2 check profile oauth
+
+=name check profile oauth
+
+=desc
+
+Только один сайт на профиль
+
+=sql
+
+  select o.*
+  from "{% $schema %}"."{% $tables{profiles} %}" p
+    join "{% $schema %}"."{% $tables{refs} %}" r on p.id=r.id1
+    join "{% $schema %}"."{% $tables{oauth_users} %}" o on o.id=r.id2
+  
+  where p.id=? and o.site_id=?
+
 =cut
 
 1;

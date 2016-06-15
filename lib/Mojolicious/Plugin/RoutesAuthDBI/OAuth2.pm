@@ -4,46 +4,79 @@ use Mojolicious::Plugin::RoutesAuthDBI::Util qw(json_enc json_dec);
 use Hash::Merge qw( merge );
 use Digest::MD5 qw(md5_hex);
 
-my ($dbh, $sth, $init_conf);
+my ($dbh, $sth, $Init);
 has [qw(app dbh sth plugin)];
 
 has _providers => sub {# default
   {
     vkontakte => {
-      key           => "0.........0",
-      secret        => "z.................8",
+      #~ key           => "0.........0",
+      #~ secret        => "z.................8",
       authorize_url => "https://oauth.vk.com/authorize",
       authorize_query => {display=>'page', response_type=>'code', v=>'5.52',},#&scope=friends
       token_url     => "https://oauth.vk.com/access_token",
       profile_url => 'https://api.vk.com/method/users.get',#?user_ids=260362925&v=5.52&access_token=...
+      profile_query => sub {
+        my ($c, $auth, ) = @_;
+        {
+          access_token=>$auth->{access_token},
+          fields=>'photo_100',
+        };
+      },
     },
     google=>{# обязательно redirect_url
-      key=>'9................0.apps.googleusercontent.com',
-      secret=>'J...............1',
+      #~ key=>'9................0.apps.googleusercontent.com',
+      #~ secret=>'J...............1',
       scope=>'profile',
       profile_url=> 'https://www.googleapis.com/oauth2/v1/userinfo',
+      profile_query => sub {
+        my ($c, $auth, ) = @_;
+        {
+          alt => 'json',
+          access_token => $auth->{access_token},
+        };
+      },
     },
     yandex=>{# обязательно redirect_url
-      key=>'9.............d',
-      secret=>'5................f',
+      #~ key=>'9.............d',
+      #~ secret=>'5................f',
       authorize_url=>"https://oauth.yandex.ru/authorize",
       authorize_query => {force_confirm=>1, response_type=>'code',},# state=>
       token_url => "https://oauth.yandex.ru/token",
       profile_url=> "https://login.yandex.ru/info",
+      profile_query => sub {
+        my ($c, $auth, ) = @_;
+        {
+          format => 'json',
+          oauth_token=> $auth->{access_token},
+        };
+      },
     },
     mailru => {
-      key=>'z..........q',
-      secret => '1...............9',
+      #~ key=>'z..........q',
+      #~ secret => '1...............9',
       authorize_url=>"https://connect.mail.ru/oauth/authorize?response_type=code",
       token_url => "https://connect.mail.ru/oauth/token",
-      profile_url=> "https://www.appsmail.ru/platform/api"
+      profile_url=> "https://www.appsmail.ru/platform/api",
+      profile_query => sub {
+        my ($c, $auth, ) = @_;
+        my $param = {
+          method=>'users.getInfo',
+          app_id=>$Init->config->{mailru}{key},
+          session_key=>$auth->{access_token},
+          #~ uids=>$auth->{x_mailru_vid},
+          secure=>1,
+        };
+        $param->{sig} = md5_hex map("$_=$param->{$_}", sort keys %$param), $Init->config->{mailru}{secret};
+        $param;
+      },
 
     }
   }
   
 };
 
-has config => sub {# только $init_conf !
+has config => sub {# только $Init !
   my $self = shift;
   
   while (my ($name, $val) = each %{$self->{providers}}) {
@@ -54,39 +87,6 @@ has config => sub {# только $init_conf !
   }
   merge $self->{providers}, $self->_providers;
 };
-
-has profile_urls => sub { {
-  vkontakte => sub {
-    my ($c, $profile_url, $auth, ) = @_;
-    $profile_url
-      ->query(sprintf qq{user_ids=%s&access_token=%s}, @$auth{qw(user_id access_token)}, );
-      #&v=%s     $c->site->{authorize_query}{v}
-  },
-  google => sub {
-    my ($c, $profile_url, $auth, ) = @_;
-    $profile_url
-      ->query('alt=json&access_token='.$auth->{access_token});
-  },
-  yandex => sub {
-    my ($c, $profile_url, $auth, ) = @_;
-    $profile_url
-      ->query('format=json&oauth_token='.$auth->{access_token});
-  },
-  mailru => sub {
-    my ($c, $profile_url, $auth, ) = @_;
-    #~ ?&&&sig=f82efdd230e45e58e4fa327fdf92135d&uids=15410773191172635989
-    my $param = {
-      method=>'users.getInfo',
-      app_id=>$init_conf->config->{mailru}{key},
-      session_key=>$auth->{access_token},
-      #~ uids=>$auth->{x_mailru_vid},
-      secure=>1,
-    };
-    $param->{sig} = md5_hex map("$_=$param->{$_}", sort keys %$param), $init_conf->config->{mailru}{secret};
-    $profile_url
-      ->query($param);
-  },
-}};
 
 has ua => sub {shift->app->ua->connect_timeout(30);};
 
@@ -109,7 +109,7 @@ sub init {# from plugin
   #~ $self->app->log->debug($self->app->dumper($self->config));
   $self->app->plugin("OAuth2" => $self->config);
   
-  $init_conf = $self;
+  $Init = $self;
   return $self;
   
 }
@@ -124,15 +124,18 @@ sub login {
   my $site = $c->oauth2->providers->{$site_name}
     or die "No such oauth provider [$site_name]" ;
   
-  die "OAuth provider [$site_name] does not configured"
-    unless $site->{id};
+  if (my @fatal = grep !defined $site->{$_}, qw(id key secret authorize_url token_url profile_url profile_query)) {
+    die "OAuth provider [$site_name] does not configured: is not defined [@fatal]";
+  }
   
-  my $auth_profile = $c->${ \$init_conf->plugin->merge_conf->{auth}{current_user_fn} };
+  my $fail_auth_cb = $Init->{fail_auth_cb};
   
-  $dbh->selectrow_hashref($sth->sth('check profile oauth'), undef, ($auth_profile->{id}, $site->{id}))
+  my $auth_profile = $c->${ \$Init->plugin->merge_conf->{auth}{current_user_fn} };
+  
+  my $r; $r = $dbh->selectrow_hashref($sth->sth('check profile oauth'), undef, ($auth_profile->{id}, $site->{id}))
+    and $c->app->log->warn("Попытка двойной авторизации сайта $site_name", $c->dumper($r), "профиль: ", $c->dumper($auth_profile),)
+    and return $c->$fail_auth_cb("Уже есть авторизация сайта $site_name")
     if $auth_profile;
-  
-  my $fail_auth_cb = $init_conf->{fail_auth_cb};
 
   $c->delay(
     sub { # шаг авторизации
@@ -152,9 +155,9 @@ sub login {
         and return $c->$fail_auth_cb($err.' Нет access_token')
         unless $auth->{access_token};
       
-      my $url = $c->${ \$c->profile_urls->{$site_name} }(Mojo::URL->new($site->{profile_url}), $auth)
-        or $c->app->log->error("Нет ссылки для профиля $site_name")
-        and return $c->$fail_auth_cb("Нет ссылки для профиля $site_name");
+      my $url = Mojo::URL->new($site->{profile_url})->query($c->${ \$site->{profile_query} }($auth));
+        #~ or $c->app->log->error("Нет ссылки для профиля $site_name")
+        #~ and return $c->$fail_auth_cb("Нет ссылки для профиля $site_name");
       
       $c->ua->get($url, $delay->begin);
       $delay->pass($auth);
@@ -188,9 +191,9 @@ sub login {
         || $dbh->selectrow_hashref($sth->sth('profile by oauth user'), undef, ($u->{id}))
 
 
-        || $dbh->selectrow_hashref($init_conf->plugin->admin->sth->sth('new profile'), undef, ([$profile->{first_name} || $profile->{given_name}, $profile->{last_name} || $profile->{family_name},]));
+        || $dbh->selectrow_hashref($Init->plugin->admin->sth->sth('new profile'), undef, ([$profile->{first_name} || $profile->{given_name}, $profile->{last_name} || $profile->{family_name},]));
 
-      my $r = $init_conf->plugin->admin->ref($профиль->{id}, $u->{id},);
+      my $r = $Init->plugin->admin->ref($профиль->{id}, $u->{id},);
       
       $c->authenticate(undef, undef, $профиль)
         unless $auth_profile;
@@ -218,20 +221,20 @@ sub _routes {# from plugin!
   return (
   
   {request=>'/login/:site',
-    namespace=>$init_conf->{namespace},
-    controller=>$init_conf->{controller} || $init_conf->{module},
+    namespace=>$Init->{namespace},
+    controller=>$Init->{controller} || $Init->{module},
     action => 'login',
     name => 'oauth-login',
   },
   {request =>'/logout',
-    namespace=>$init_conf->{namespace},
-    controller=>$init_conf->{controller} || $init_conf->{module},
+    namespace=>$Init->{namespace},
+    controller=>$Init->{controller} || $Init->{module},
     action => 'out',
     name => 'logout',
   },
-  {request =>'/'.$init_conf->plugin->admin->{trust}."/oauth/conf",
-    namespace=>$init_conf->{namespace},
-    controller=>$init_conf->{controller} || $init_conf->{module},
+  {request =>'/'.$Init->plugin->admin->{trust}."/oauth/conf",
+    namespace=>$Init->{namespace},
+    controller=>$Init->{controller} || $Init->{module},
     action => 'conf',
     name => 'oauth-conf',
   }
