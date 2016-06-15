@@ -119,7 +119,7 @@ sub login {
   
   $c->session(oauth => {
     redirect => $c->param('redirect') || $c->req->headers->referer->path || 'profile',
-    $c->param('fail_render') ? (fail_render => $c->param('fail_render')) : (),
+    #~ $c->param('fail_render') ? (fail_render => $c->param('fail_render')) : (),
   })
     unless $c->session('oauth');
   
@@ -132,13 +132,13 @@ sub login {
     die "OAuth provider [$site_name] does not configured: [@fatal] is not defined";
   }
   
-  my $fail_auth_cb = $Init->{fail_auth_cb};
+  #~ my $fail_auth_cb = $Init->{fail_auth_cb};
   
   my $auth_profile = $c->${ \$Init->plugin->merge_conf->{auth}{current_user_fn} };
   
   my $r; $r = $dbh->selectrow_hashref($sth->sth('check profile oauth'), undef, ($auth_profile->{id}, $site->{id}))
     and $c->app->log->warn("Попытка двойной авторизации сайта $site_name", $c->dumper($r), "профиль: ", $c->dumper($auth_profile),)
-    and return $c->$fail_auth_cb("Уже есть авторизация сайта $site_name")
+    and return $c->redirect_to(${ delete $c->session->{oauth} }{redirect}, err=> "Уже есть авторизация сайта $site_name")
     if $auth_profile;
 
   $c->delay(
@@ -156,7 +156,8 @@ sub login {
         if $auth->{error};
       
       $c->app->log->error("Автоизация $site_name:", $err, $c->dumper($auth))
-        and return $c->$fail_auth_cb($err.' Нет access_token')
+        #~ and return $c->$fail_auth_cb()
+        and return $c->redirect_to(${ delete $c->session->{oauth} }{redirect}, err=> $err.' Нет access_token')
         unless $auth->{access_token};
       
       my $url = Mojo::URL->new($site->{profile_url})->query($c->${ \$site->{profile_query} }($auth));
@@ -171,7 +172,8 @@ sub login {
         if ref($profile) eq 'HASH' && $profile->{error};
       
       $c->app->log->error("Профиль $site_name:", $err, $tx->req->url, $c->dumper($tx->res), $c->dumper($profile), )
-        and return $c->$fail_auth_cb($err)
+        #~ and return $c->$fail_auth_cb($err)
+        and return $c->redirect_to(${ delete $c->session->{oauth} }{redirect}, err=> $err)
         if $err;
         
       $profile = $profile->{response}
@@ -203,7 +205,7 @@ sub login {
 
       #~ $c->app->log->debug("Профиль: ", $c->dumper($профиль));
       #~ return $c->session(token => $c->redirect_to('profile'));
-      return $c->redirect_to($redirect);
+      return $c->redirect_to(${ delete $c->session->{oauth} }{redirect});
     },
   );
   #~ $c->app->log->debug("Login delay done");
