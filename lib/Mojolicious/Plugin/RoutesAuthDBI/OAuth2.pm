@@ -80,6 +80,8 @@ has config => sub {# только $Init !
   merge $self->{providers}, $self->_providers;
 };
 
+has auth_profile => sub { shift->${ \$Init->plugin->merge_conf->{auth}{current_user_fn} };};
+
 has ua => sub {shift->app->ua->connect_timeout(30);};
 
 sub init {# from plugin
@@ -124,9 +126,7 @@ sub login {
     die "OAuth provider [$site_name] does not configured: [@fatal] is not defined";
   }
   
-  #~ my $fail_auth_cb = $Init->{fail_auth_cb};
-  
-  my $auth_profile = $c->${ \$Init->plugin->merge_conf->{auth}{current_user_fn} };
+  my $auth_profile = $c->auth_profile;
   
   my $r; $r = $dbh->selectrow_hashref($sth->sth('check profile oauth'), undef, ($auth_profile->{id}, $site->{id}))
     and $c->app->log->warn("Попытка двойной авторизации сайта $site_name", $c->dumper($r), "профиль: ", $c->dumper($auth_profile),)
@@ -202,6 +202,21 @@ sub login {
   
 }
 
+sub отсоединить {
+  my $c = shift;
+  my $site_name = $c->stash('site');
+
+  my $site = $c->oauth2->providers->{$site_name}
+    or die "No such oauth provider [$site_name]" ;
+  
+  my $auth_profile = $c->auth_profile;
+  
+  my $r = $dbh->selectrow_hashref($sth->sth('отсоединить oauth'), undef, ($site->{id}, $auth_profile->{id},));
+  $c->app->log->debug("Убрал авторизацию сайта [$site_name] профиля [$auth_profile->{id}]", $c->dumper($r));
+  
+  $c->redirect_to($c->param('redirect') || 'profile');
+}
+
 
 sub out {# выход
   my $c = shift;
@@ -219,6 +234,13 @@ sub _routes {# from plugin!
     controller=>$Init->{controller} || $Init->{module},
     action => 'login',
     name => 'oauth-login',
+  },
+  {request=>'/detach/:site',
+    namespace=>$Init->{namespace},
+    controller=>$Init->{controller} || $Init->{module},
+    action => 'отсоединить',
+    name => 'oauth-detach',
+    auth=>'only',
   },
   {request =>'/logout',
     namespace=>$Init->{namespace},

@@ -138,6 +138,24 @@ L<DBIx::POS::Template>
   
   where p.id=? and o.site_id=?
 
+=head2 отсоединить oauth
+
+=name отсоединить oauth
+
+=desc
+
+=sql
+
+  delete from "{% $schema %}"."{% $tables{oauth_users} %}"
+  where site_id = ?
+    and id in (
+      select id2
+      from "{% $schema %}"."{% $tables{refs} %}"
+      where id1=? -- ид профиля
+    )
+  RETURNING *
+
+
 =cut
 
 1;
