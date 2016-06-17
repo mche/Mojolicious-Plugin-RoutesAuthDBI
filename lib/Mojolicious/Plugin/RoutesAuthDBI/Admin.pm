@@ -313,7 +313,7 @@ TXT
     and return
     unless $u;
   
-  my $ref = $dbh->selectrow_hashref($sth->sth('del ref'), undef, ($r->{id}, $u->{id}));
+  my $ref = $dbh->selectrow_hashref($sth->sth('del ref'), undef, (undef, $r->{id}, $u->{id}));
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 

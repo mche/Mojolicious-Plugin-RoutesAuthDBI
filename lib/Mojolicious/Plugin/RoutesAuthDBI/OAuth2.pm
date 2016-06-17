@@ -214,6 +214,8 @@ sub отсоединить {
   my $r = $dbh->selectrow_hashref($sth->sth('отсоединить oauth'), undef, ($site->{id}, $auth_profile->{id},));
   $c->app->log->debug("Убрал авторизацию сайта [$site_name] профиля [$auth_profile->{id}]", $c->dumper($r));
   
+  $dbh->selectrow_hashref($Init->plugin->admin->sth->sth('del ref'), undef, ($r->{ref_id}, undef, undef));
+  
   $c->redirect_to($c->param('redirect') || 'profile');
 }
 
@@ -358,7 +360,7 @@ disable oauth module
 
 This oauth controller routes. Return array of hashrefs routes records for apply route on app. Plugin internal use.
 
-=head1 Routes
+=head1 Controller routes
 
 =head2 /login/:site
 
@@ -366,11 +368,15 @@ Main route of this controller. Stash B<site> is the name of the hash key of the 
 
   <a href="<%= $c->url_for('oauth-login', site=> 'google')->query(redirect=>'profile') %>">Login by google</a>
 
-This route has name 'oauth-login'. This route accept param 'redirect' and will use for $c->redirect_to after success oauith and also failed oauth with out param 'err'.
+This route has builtin name 'oauth-login'. This route accept param 'redirect' and will use for $c->redirect_to after success oauith and also failed oauth clauses with param 'err'.
+
+=head2 /detach/:site
+
+Remove attached oauth user to profile. Stash B<site> and param 'redirect' as above. Route has builtin name 'oauth-detach'.
 
 =head2 /logout
 
-Clear session and redirect to param 'redirect' || '/'. This route has name 'logout'.
+Clear session and redirect to param 'redirect' || '/'. This route has builtin name 'logout'. 
 
 =head1 SEE ALSO
 

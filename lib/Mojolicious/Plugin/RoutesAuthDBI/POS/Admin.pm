@@ -147,7 +147,7 @@ L<DBIx::POS::Template>
 =sql
 
   delete from "{% $schema %}"."{% $tables{refs} %}"
-  where id1=? and id2=?
+  where id=? or (id1=? and id2=?)
   returning *;
 
 

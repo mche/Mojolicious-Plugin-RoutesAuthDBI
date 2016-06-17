@@ -146,14 +146,13 @@ L<DBIx::POS::Template>
 
 =sql
 
-  delete from "{% $schema %}"."{% $tables{oauth_users} %}"
-  where site_id = ?
-    and id in (
-      select id2
-      from "{% $schema %}"."{% $tables{refs} %}"
-      where id1=? -- ид профиля
-    )
-  RETURNING *
+  delete from "{% $schema %}"."{% $tables{oauth_users} %}" d
+  using "{% $schema %}"."{% $tables{refs} %}" r
+  where d.site_id = ?
+    and r.id1=? -- ид профиля
+    and d.id=r.id2
+  
+  RETURNING d.*, r.id as ref_id;
 
 
 =cut
