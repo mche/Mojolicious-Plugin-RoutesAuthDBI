@@ -212,7 +212,7 @@ sub отсоединить {
   my $auth_profile = $c->auth_profile;
   
   my $r = $dbh->selectrow_hashref($sth->sth('отсоединить oauth'), undef, ($site->{id}, $auth_profile->{id},));
-  $c->app->log->debug("Убрал авторизацию сайта [$site_name] профиля [$auth_profile->{id}]", $c->dumper($r));
+  #~ $c->app->log->debug("Убрал авторизацию сайта [$site_name] профиля [$auth_profile->{id}]", $c->dumper($r));
   
   $dbh->selectrow_hashref($Init->plugin->admin->sth->sth('del ref'), undef, ($r->{ref_id}, undef, undef));
   
