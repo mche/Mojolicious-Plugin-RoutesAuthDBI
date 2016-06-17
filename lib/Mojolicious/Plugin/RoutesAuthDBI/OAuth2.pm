@@ -303,7 +303,7 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
 =item * B<controller> - module controller name, default 'OAuth2',
 
 
-=item * B<providers> - hashref. required.
+=item * B<providers> - hashref. Required.
 
   providers => {google=>{key=> ..., secret=>..., }, ...},
 
