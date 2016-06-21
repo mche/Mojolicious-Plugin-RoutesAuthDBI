@@ -338,7 +338,7 @@ our $VERSION = '0.707';
 
 =head1 NAME
 
-Mojolicious::Plugin::RoutesAuthDBI - from DBI sql-tables does generate routes, make authentication and make restrict access (authorization) to request. Plugin makes an auth operations throught the plugin L<Mojolicious::Plugin::Authentication> on which is based.
+Mojolicious::Plugin::RoutesAuthDBI - from DBI tables does generate routes, make authentication and make restrict access (authorization) to requests. Plugin makes an auth operations throught the plugin L<Mojolicious::Plugin::Authentication> and OAuth2 by L<Mojolicious::Plugin::OAuth2>.
 
 =head1 DB DESIGN DIAGRAM
 
@@ -361,7 +361,7 @@ One option C<dbh> is mandatory, all other - optional.
 
 =head3 dbh
 
-Handler DBI connection where are tables: controllers, actions, routes, logins, profiles, roles, refs.
+Handler DBI connection where are tables: controllers, actions, routes, logins, profiles, roles, refs and oauth.
 
   dbh => $app->dbh,
   # or
