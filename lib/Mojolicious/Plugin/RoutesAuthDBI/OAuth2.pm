@@ -71,12 +71,15 @@ has _providers => sub {# default
 has config => sub {# только $Init !
   my $self = shift;
   
+  my ($update, $insert) = ($sth->sth('update oauth site'), $sth->sth('new oauth site'));
+  
   while (my ($name, $val) = each %{$self->{providers}}) {
-    my $site = $dbh->selectrow_hashref($sth->sth('update oauth site'), undef, ( json_enc($val), $name,))
-      || $dbh->selectrow_hashref($sth->sth('new oauth site'), undef, ($name, json_enc($val)));
+    my $site = $dbh->selectrow_hashref($update, undef, ( json_enc($val), $name,))
+      || $dbh->selectrow_hashref($insert, undef, ($name, json_enc($val)));
     @$val{qw(id)} = @$site{qw(id)};
     $val->{name} = $name;
   }
+  
   merge $self->{providers}, $self->_providers;
 };
 
