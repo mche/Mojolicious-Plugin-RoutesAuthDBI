@@ -3,7 +3,7 @@ use Mojo::Base -base;
 #~ use Mojolicious::Plugin::RoutesAuthDBI::Sth;#  sth cache
 use Exporter 'import'; 
 our @EXPORT_OK = qw(load_user validate_user);
-
+use Mojolicious::Plugin::RoutesAuthDBI::Model::Profile;
 
 my $pkg = __PACKAGE__;
 my ($dbh, $sth, $app);
@@ -27,9 +27,9 @@ sub init {# from plugin! init Class vars
 
 sub load_user {# import for Mojolicious::Plugin::Authentication
   my ($c, $uid) = @_;
-  my $p = $dbh->selectrow_hashref($sth->sth('profile'), undef, ($uid, undef));
-  $c->app->log->debug("Loading profile by id=$uid ". ($p ? 'success' : 'failed'));
-  $p->{pass} = '**********************' if $p;
+  my $p = Mojolicious::Plugin::RoutesAuthDBI::Model::Profile->new($dbh->selectrow_hashref($sth->sth('profile'), undef, ($uid, undef)), dbh=>$dbh, sth=>$sth);
+  $c->app->log->debug("Loading profile by id=$uid ". ($p->{id} ? 'success' : 'failed'));
+  $p->{pass} = '**********************';
   return $p;
 }
 
@@ -111,12 +111,12 @@ sub db_routes {
   $dbh->selectall_arrayref($sth->sth('apply routes'), { Slice => {} },);
 }
 
-sub load_user_roles {
-  my ($self, $user) = @_;
-  $user->{roles} ||= $dbh->selectall_arrayref($sth->sth('profile roles'), { Slice => {} }, ($user->{id}))
-    and $app->log->debug("Loading profile roles:", $app->dumper($user->{roles}) =~ s/\s+//gr,);
+#~ sub load_user_roles {
+  #~ my ($self, $user) = @_;
+  #~ $user->{roles} ||= $dbh->selectall_arrayref($sth->sth('profile roles'), { Slice => {} }, ($user->{id}))
+    #~ and $app->log->debug("Loading profile roles:", $app->dumper($user->{roles}) =~ s/\s+//gr,);
   
-}
+#~ }
 
 sub access_explicit {# i.e. by refs table
   my ($self, $id1, $id2,) = @_;

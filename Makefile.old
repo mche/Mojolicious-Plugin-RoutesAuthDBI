@@ -61,11 +61,11 @@ DIRFILESEP = /
 DFSEP = $(DIRFILESEP)
 NAME = Mojolicious::Plugin::RoutesAuthDBI
 NAME_SYM = Mojolicious_Plugin_RoutesAuthDBI
-VERSION = 0.708
+VERSION = 0.710
 VERSION_MACRO = VERSION
-VERSION_SYM = 0_708
+VERSION_SYM = 0_710
 DEFINE_VERSION = -D$(VERSION_MACRO)=\"$(VERSION)\"
-XS_VERSION = 0.708
+XS_VERSION = 0.710
 XS_VERSION_MACRO = XS_VERSION
 XS_DEFINE_VERSION = -D$(XS_VERSION_MACRO)=\"$(XS_VERSION)\"
 INST_ARCHLIB = blib/arch
@@ -209,6 +209,7 @@ TO_INST_PM = 000README.pod \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Access.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Admin.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Install.pm \
+	lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Profile.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/OAuth2.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/POS/Access.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/POS/Admin.pm \
@@ -238,6 +239,8 @@ PM_TO_BLIB = 000README.pod \
 	blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Admin.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Install.pm \
 	blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Install.pm \
+	lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Profile.pm \
+	blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Profile.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/OAuth2.pm \
 	blib/lib/Mojolicious/Plugin/RoutesAuthDBI/OAuth2.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/POS/Access.pm \
@@ -331,7 +334,7 @@ RCS_LABEL = rcs -Nv$(VERSION_SYM): -q
 DIST_CP = best
 DIST_DEFAULT = tardist
 DISTNAME = Mojolicious-Plugin-RoutesAuthDBI
-DISTVNAME = Mojolicious-Plugin-RoutesAuthDBI-0.708
+DISTVNAME = Mojolicious-Plugin-RoutesAuthDBI-0.710
 
 
 # --- MakeMaker macro section:
@@ -571,7 +574,7 @@ realclean_subdirs :
 # Delete temporary files (via clean) and also delete dist files
 realclean purge ::  clean realclean_subdirs
 	- $(RM_F) \
-	  $(MAKEFILE_OLD) $(FIRST_MAKEFILE) 
+	  $(FIRST_MAKEFILE) $(MAKEFILE_OLD) 
 	- $(RM_RF) \
 	  $(DISTVNAME) 
 
@@ -605,7 +608,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '  Mojolicious: '\''6'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Mojolicious::Plugin::Authentication: '\''1.29'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  perl: '\''5.014'\''' >> META_new.yml
-	$(NOECHO) $(ECHO) 'version: '\''0.708'\''' >> META_new.yml
+	$(NOECHO) $(ECHO) 'version: '\''0.710'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) 'x_serialization_backend: '\''CPAN::Meta::YAML version 0.018'\''' >> META_new.yml
 	-$(NOECHO) $(MV) META_new.yml $(DISTVNAME)/META.yml
 	$(NOECHO) $(ECHO) Generating META.json
@@ -653,7 +656,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '      }' >> META_new.json
 	$(NOECHO) $(ECHO) '   },' >> META_new.json
 	$(NOECHO) $(ECHO) '   "release_status" : "stable",' >> META_new.json
-	$(NOECHO) $(ECHO) '   "version" : "0.708",' >> META_new.json
+	$(NOECHO) $(ECHO) '   "version" : "0.710",' >> META_new.json
 	$(NOECHO) $(ECHO) '   "x_serialization_backend" : "JSON::PP version 2.27300"' >> META_new.json
 	$(NOECHO) $(ECHO) '}' >> META_new.json
 	-$(NOECHO) $(MV) META_new.json $(DISTVNAME)/META.json
@@ -983,6 +986,7 @@ pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/Access.pm blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Access.pm \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/Admin.pm blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Admin.pm \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/Install.pm blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Install.pm \
+	  lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Profile.pm blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Profile.pm \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/OAuth2.pm blib/lib/Mojolicious/Plugin/RoutesAuthDBI/OAuth2.pm \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/POS/Access.pm blib/lib/Mojolicious/Plugin/RoutesAuthDBI/POS/Access.pm \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/POS/Admin.pm blib/lib/Mojolicious/Plugin/RoutesAuthDBI/POS/Admin.pm \

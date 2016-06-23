@@ -186,7 +186,7 @@ sub cond_access {# add_condition
     unless $u;
   
   #  получить все группы
-  $access->load_user_roles($u);
+  #~ $access->load_user_roles($u);
   
   # допустить если {auth=>'only'}
   $app->log->debug(sprintf(qq[Access allow [%s] for {auth}='only'],
@@ -206,7 +206,7 @@ sub cond_access {# add_condition
     return 0x01;
   }
 
-  my $id2 = [$u->{id}, map($_->{id}, grep !$_->{disable},@{$u->{roles}})];
+  my $id2 = [$u->{id}, map($_->{id}, grep !$_->{disable},@{$u->roles})];
   my $id1 = [grep $_, @$args{qw(id route_id action_id controller_id namespace_id)}];
   
   # explicit acces to route
@@ -320,7 +320,7 @@ sub deny_log {
   );
 }
 
-our $VERSION = '0.708';
+our $VERSION = '0.710';
 
 =pod
 
@@ -334,7 +334,7 @@ our $VERSION = '0.708';
 
 =head1 VERSION
 
-0.708
+0.710
 
 =head1 NAME
 
