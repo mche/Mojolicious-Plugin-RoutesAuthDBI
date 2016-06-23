@@ -1,4 +1,5 @@
 Changes
+lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Profile.pm
 lib/Mojolicious/Plugin/RoutesAuthDBI/Util.pm
 lib/Mojolicious/Plugin/RoutesAuthDBI/OAuth2.pm
 lib/Mojolicious/Plugin/RoutesAuthDBI/Schema.pm
