@@ -128,7 +128,7 @@ sub register {
   die "Plugin must work with dbh, see SYNOPSIS" unless $self->dbh;
   
   # init base model
-  Mojolicious::Plugin::RoutesAuthDBI::Model::Base->singleton(dbh=>$self->dbh);
+  Mojolicious::Plugin::RoutesAuthDBI::Model::Base->singleton(dbh=>$self->dbh, template=>$self->merge_conf->{template} || {});
   
   my $access = $self->access;
   
