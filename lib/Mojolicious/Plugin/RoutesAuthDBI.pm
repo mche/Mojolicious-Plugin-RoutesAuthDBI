@@ -62,7 +62,8 @@ has merge_conf => sub {#hashref
 
 has access => sub {# object
   my $self = shift;
-  my $access = $self->merge_conf->{'access'};
+  my $mconf = $self->merge_conf;
+  my $access = $mconf->{'access'};
   my $class = $self->_class($access);
   $class->import( @{$access->{import}});
   bless $access, $class;
@@ -70,7 +71,8 @@ has access => sub {# object
   my $pos = $access->{pos};
   $access->{sth} = DBIx::POS::Sth->new(
     $self->dbh,
-    $self->_class($pos)->new($pos->{template} ? (template=>$pos->{template}) : ())
+    $self->_class($pos)->new, #($pos->{template} ? (template=>$pos->{template}) : ()),
+    $pos->{template} || $access->{template} || $mconf->{template} || {},
   );
   $access->{app} = $self->app;
   $access->{plugin} = $self;
@@ -79,7 +81,8 @@ has access => sub {# object
 
 has admin => sub {# object
   my $self = shift;
-  my $admin = $self->merge_conf->{'admin'};
+  my $mconf = $self->merge_conf;
+  my $admin = $mconf->{'admin'};
   $admin->{module} ||= $admin->{controller};
   my $class = $self->_class($admin);
   bless $admin, $class;
@@ -87,7 +90,8 @@ has admin => sub {# object
   my $pos = $admin->{pos};
   $admin->{sth} = DBIx::POS::Sth->new(
     $self->dbh,
-    $self->_class($pos)->new($pos->{template} ? (template=>$pos->{template}) : ()),
+    $self->_class($pos)->new, #($pos->{template} ? (template=>$pos->{template}) : ()),
+    $pos->{template} || $admin->{template} || $mconf->{template} || {},
   );
   $admin->{plugin} = $self;
   return $admin->init;
@@ -95,14 +99,16 @@ has admin => sub {# object
 
 has oauth => sub {
   my $self = shift;
-  my $oauth = $self->merge_conf->{'oauth'};
+  my $mconf = $self->merge_conf;
+  my $oauth = $mconf->{'oauth'};
   my $class = $self->_class($oauth);
   bless $oauth, $class;
   $oauth->{dbh} = $self->dbh;
   my $pos = $oauth->{pos};
   $oauth->{sth} = DBIx::POS::Sth->new(
     $self->dbh,
-    $self->_class($pos)->new($pos->{template} ? (template=>$pos->{template}) : ()),
+    $self->_class($pos)->new, #($pos->{template} ? (template=>$pos->{template}) : ()),
+    $pos->{template} || $oauth->{template} || $mconf->{template} || {},
   );
   $oauth->{app} = $self->app;
   $oauth->{plugin} = $self;

@@ -24,7 +24,7 @@ has pos => sub {
 #~ }
 
 sub new {
-  my $base = shift->SUPER::singleton;
+  my $base = shift->singleton;
   bless $base->dbh->selectrow_hashref($base->sth->sth('profile'), undef, (@_))
     || {};
   

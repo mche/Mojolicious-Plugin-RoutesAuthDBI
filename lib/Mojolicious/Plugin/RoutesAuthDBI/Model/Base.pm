@@ -2,7 +2,7 @@ package Mojolicious::Plugin::RoutesAuthDBI::Model::Base;
 use Mojo::Base -base;
 use Carp 'croak';
 
-has [qw(dbh pos)];
+has [qw(dbh pos template)];
 
 my $singleton;
 
@@ -12,6 +12,7 @@ has sth => sub {
   DBIx::POS::Sth->new(
     $singleton->dbh,
     $self->pos,
+    $self->template,
   );
 };
 
@@ -37,10 +38,10 @@ sub singleton {
 
 Always singleton for process.
 
-Init once in plugin register with dbh only:
+Init once in plugin register with dbh and (optional) template defaults only:
 
   use Mojolicious::Plugin::RoutesAuthDBI::Model::Base;
-  Mojolicious::Plugin::RoutesAuthDBI::Model::Base->singleton(dbh=>$dbh);
+  Mojolicious::Plugin::RoutesAuthDBI::Model::Base->singleton(dbh=>$dbh, template=>$t);
 
 In child model must define POS dict:
 
@@ -53,7 +54,7 @@ In child model must define POS dict:
   };
   
   sub new {
-    my $base = shift->SUPER::singleton;
+    my $base = shift->singleton;
     bless $base->dbh->selectrow_hashref($base->sth->sth('foo row'), undef, (@_));
     
   }
