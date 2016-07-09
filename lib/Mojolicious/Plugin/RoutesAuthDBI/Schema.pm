@@ -19,7 +19,7 @@ our $defaults = {
   },
   
 };
-my $sql = DBIx::POS::Template->new(__FILE__, template=>$defaults,);
+my $pos = DBIx::POS::Template->new(__FILE__, template=>$defaults,);
 
 =pod
 
@@ -274,29 +274,29 @@ sub schema {
   
   #~ my $schema2 = qq{"$schema".} if $schema;
   $c->render(format=>'txt', text => <<TXT);
-@{[$sql->{'schema'}->template(%$template)]}
+@{[$pos->{'schema'}->template(%$template)]}
 
-@{[$sql->{'sequence'}->template(%$template)]}
+@{[$pos->{'sequence'}->template(%$template)]}
 
-@{[$sql->{'routes'}->template(%$template)]}
+@{[$pos->{'routes'}->template(%$template)]}
 
-@{[$sql->{'namespaces'}->template(%$template)]}
+@{[$pos->{'namespaces'}->template(%$template)]}
 
-@{[$sql->{'controllers'}->template(%$template)]}
+@{[$pos->{'controllers'}->template(%$template)]}
 
-@{[$sql->{'actions'}->template(%$template)]}
+@{[$pos->{'actions'}->template(%$template)]}
 
-@{[$sql->{profiles}->template(%$template)]}
+@{[$pos->{profiles}->template(%$template)]}
 
-@{[$sql->{'logins'}->template(%$template)]}
+@{[$pos->{'logins'}->template(%$template)]}
 
-@{[$sql->{'roles'}->template(%$template)]}
+@{[$pos->{'roles'}->template(%$template)]}
 
-@{[$sql->{'refs'}->template(%$template)]}
+@{[$pos->{'refs'}->template(%$template)]}
 
-@{[$sql->{'oauth_sites'}->template(%$template)]}
+@{[$pos->{'oauth_sites'}->template(%$template)]}
 
-@{[$sql->{'oauth_users'}->template(%$template)]}
+@{[$pos->{'oauth_users'}->template(%$template)]}
 
 TXT
 }
@@ -331,7 +331,7 @@ sub schema_drop {
   my $template = $c->_vars;
   #~ $schema = qq{"$schema".} if $schema;
   $c->render(format=>'txt', text => <<TXT);
-@{[$sql->{'drop'}->template(%$template)]}
+@{[$pos->{'drop'}->template(%$template)]}
 
 TXT
 }
@@ -365,7 +365,7 @@ sub schema_flush {
   my $template = $c->_vars;
   $c->render(format=>'txt', text => <<TXT);
 
-@{[$sql->{'flush'}->template(%$template)]}
+@{[$pos->{'flush'}->template(%$template)]}
 
 TXT
 }
