@@ -37,12 +37,12 @@ sub singleton {
 
 Always singleton for process.
 
-Init once with dbh only:
+Init once in plugin register with dbh only:
 
   use Mojolicious::Plugin::RoutesAuthDBI::Model::Base;
   Mojolicious::Plugin::RoutesAuthDBI::Model::Base->singleton(dbh=>$dbh);
 
-In child model:
+In child model must define POS dict:
 
   package Model::Foo;
   use Mojo::Base 'Mojolicious::Plugin::RoutesAuthDBI::Model::Base';
@@ -53,8 +53,9 @@ In child model:
   };
   
   sub new {
-    my $self = shift->SUPER::singleton;
-    $self->dbh->selectrow_hashref($self->sth->sth('foo row'), undef, (@_));
+    my $base = shift->SUPER::singleton;
+    bless $base->dbh->selectrow_hashref($base->sth->sth('foo row'), undef, (@_));
+    
   }
 
 In controller:
@@ -64,7 +65,7 @@ In controller:
   
   sub actionFoo {
     my $c = shift;
-    my $rec = $c->modelFoo->new($c->param('id'));
+    my $foo = $c->modelFoo->new($c->param('id'));
     ...
   
   }
