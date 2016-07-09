@@ -3,11 +3,16 @@ use Mojo::Base -base;
 #~ use Mojolicious::Plugin::RoutesAuthDBI::Sth;#  sth cache
 use Exporter 'import'; 
 our @EXPORT_OK = qw(load_user validate_user);
-use Mojolicious::Plugin::RoutesAuthDBI::Model::Profile;
+
 
 my $pkg = __PACKAGE__;
 my ($dbh, $sth, $app);
 has [qw(dbh sth app plugin)];
+
+state $profile = do {
+  require Mojolicious::Plugin::RoutesAuthDBI::Model::Profile;
+  'Mojolicious::Plugin::RoutesAuthDBI::Model::Profile';
+};
 
 sub init {# from plugin! init Class vars
   my $self = shift;
@@ -27,7 +32,7 @@ sub init {# from plugin! init Class vars
 
 sub load_user {# import for Mojolicious::Plugin::Authentication
   my ($c, $uid) = @_;
-  my $p = Mojolicious::Plugin::RoutesAuthDBI::Model::Profile->new($uid); #$dbh->selectrow_hashref($sth->sth('profile'), undef, ($uid, undef)), dbh=>$dbh, sth=>$sth
+  my $p = $profile->new($uid, undef); #$dbh->selectrow_hashref($sth->sth('profile'), undef, ($uid, undef)), dbh=>$dbh, sth=>$sth
   $c->app->log->debug("Loading profile by id=$uid ". ($p->{id} ? 'success' : 'failed'));
   $p->{pass} = '**********************';
   return $p;
@@ -39,8 +44,10 @@ sub validate_user {# import for Mojolicious::Plugin::Authentication
   return $extradata->{id}
     if $extradata && $extradata->{id};
     
-  if (my $p = $dbh->selectrow_hashref($sth->sth('profile'), undef, (undef, $login))) {
-    return $p->{id}
+  #~ if (my $p = $dbh->selectrow_hashref($sth->sth('profile'), undef, (undef, $login))) {
+  if (my $p = $profile->new(undef, $login)) {
+    $c->app->log->debug("Success authenticate by login[$login]/pass[$pass] for profile id[$p->{id}]")
+      and return $p->{id}
       if $p->{pass} eq $pass  && !$p->{disable};
   }
   return undef;

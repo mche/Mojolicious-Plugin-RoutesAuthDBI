@@ -9,12 +9,22 @@ has roles => sub {
 };
 
 state $pos = do {
-  #~ die shift;
   require Mojolicious::Plugin::RoutesAuthDBI::POS::Access;
   Mojolicious::Plugin::RoutesAuthDBI::POS::Access->new;
 };
 
 
+sub new {
+  my $self = shift->SUPER::new(pos=>$pos);
+  my $r = $self->dbh->selectrow_hashref($self->sth->sth('profile'), undef, (shift, shift,))
+    || {};
+  @$self{ keys %$r } = values %$r;
+  $self;
+}
+
+1;
+
+__END__
 #~ sub new {
   #~ my $proto = shift;
   #~ my $class = ref($proto) || $proto;
@@ -25,14 +35,3 @@ state $pos = do {
     #~ for grep exists $arg{$_},qw(dbh sth);
   #~ $self;
 #~ }
-
-sub new {
-  my $self = shift->SUPER::new(pos=>$pos);
-  #~ $base->pos($pos);
-  my $r = $self->dbh->selectrow_hashref($self->sth->sth('profile'), undef, (shift, undef,))
-    || {};
-  @$self{ keys %$r } = values %$r;
-  $self;
-}
-
-1;

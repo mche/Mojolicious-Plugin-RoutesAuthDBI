@@ -16,11 +16,12 @@ has sth => sub {
 };
 
 
-
+#init once
 sub singleton {
   state $singleton = shift->SUPER::new(@_);
 }
 
+# child model
 sub new {
   my $self = shift->SUPER::new(@_);
   my $singleton = $self->singleton;
@@ -55,25 +56,26 @@ In child model must define POS dict:
   package Model::Foo;
   use Mojo::Base 'Mojolicious::Plugin::RoutesAuthDBI::Model::Base';
   
-  has pos => sub {
+  state $pos = do {
     require POS::Foo;
     POS::Foo->new;
   };
   
   sub new {
-    my $base = shift->singleton;
-    bless $base->dbh->selectrow_hashref($base->sth->sth('foo row'), undef, (@_));
-    
+    my $self = shift->SUPER::new(pos=>$pos);
+    my $row = $self->dbh->selectrow_hashref($self->sth->sth('foo row'), undef, (shift));
+    @$self{ keys %$row } = values %$row;
+    $self;
   }
 
 In controller:
 
   ...
-  has modelFoo => sub {require Model::Foo; 'Model::Foo';}
+  state $mFoo = do {require Model::Foo; 'Model::Foo';};
   
   sub actionFoo {
     my $c = shift;
-    my $foo = $c->modelFoo->new($c->param('id'));
+    my $foo = $mFoo->new($c->param('id'));
     ...
   
   }
