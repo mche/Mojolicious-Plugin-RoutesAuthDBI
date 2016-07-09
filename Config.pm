@@ -39,7 +39,7 @@
         ShowErrorStatement => 1,
         AutoCommit => 1,
         RaiseError => 1,
-        PrintError => 1, 
+        PrintError => 0, 
         pg_enable_utf8 => 1,
         #mysql_enable_utf8 => 1,
         #mysql_auto_reconnect=>1,
