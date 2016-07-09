@@ -4,6 +4,7 @@ use Mojo::Loader qw(load_class);
 use Mojo::Util qw(hmac_sha1_sum);
 use Hash::Merge qw( merge );
 use DBIx::POS::Sth;
+use Mojolicious::Plugin::RoutesAuthDBI::Model::Base; # must init dbh once
 
 my $pkg = __PACKAGE__;
 
@@ -119,6 +120,9 @@ sub register {
   $self->dbh($self->dbh->($self->app))
     if ref($self->dbh) eq 'CODE';
   die "Plugin must work with dbh, see SYNOPSIS" unless $self->dbh;
+  
+  # init base model
+  Mojolicious::Plugin::RoutesAuthDBI::Model::Base->singleton(dbh=>$self->dbh);
   
   my $access = $self->access;
   

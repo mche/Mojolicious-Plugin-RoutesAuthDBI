@@ -27,7 +27,7 @@ sub init {# from plugin! init Class vars
 
 sub load_user {# import for Mojolicious::Plugin::Authentication
   my ($c, $uid) = @_;
-  my $p = Mojolicious::Plugin::RoutesAuthDBI::Model::Profile->new($dbh->selectrow_hashref($sth->sth('profile'), undef, ($uid, undef)), dbh=>$dbh, sth=>$sth);
+  my $p = Mojolicious::Plugin::RoutesAuthDBI::Model::Profile->new($uid); #$dbh->selectrow_hashref($sth->sth('profile'), undef, ($uid, undef)), dbh=>$dbh, sth=>$sth
   $c->app->log->debug("Loading profile by id=$uid ". ($p->{id} ? 'success' : 'failed'));
   $p->{pass} = '**********************';
   return $p;
