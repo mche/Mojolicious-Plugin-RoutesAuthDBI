@@ -1,16 +1,15 @@
 package Mojolicious::Plugin::RoutesAuthDBI::Model::Base;
 use Mojo::Base -base;
 use Carp 'croak';
+#~ use feature 'state';
 
 has [qw(dbh pos template)];
-
-my $singleton;
 
 has sth => sub {
   my $self = shift;
   require DBIx::POS::Sth;
   DBIx::POS::Sth->new(
-    $singleton->dbh,
+    $self->dbh,
     $self->pos,
     $self->template,
   );
@@ -19,9 +18,17 @@ has sth => sub {
 
 
 sub singleton {
-  $singleton = shift->SUPER::new(@_)
-    if @_;
-  $singleton;
+  state $singleton = shift->SUPER::new(@_);
+}
+
+sub new {
+  my $self = shift->SUPER::new(@_);
+  my $singleton = $self->singleton;
+  $self->dbh($singleton->dbh)
+    unless $self->dbh;
+  $self->template($singleton->template)
+    unless $self->template;
+  $self;
 }
 
 =pod
