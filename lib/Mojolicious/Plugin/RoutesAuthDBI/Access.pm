@@ -5,59 +5,34 @@ use Exporter 'import';
 our @EXPORT_OK = qw(load_user validate_user);
 
 
-my $pkg = __PACKAGE__;
-my ($dbh, $sth, $app);
-has [qw(dbh sth app plugin)];
+#~ state $pkg = __PACKAGE__;
 
-state $Profile = do {
-  require Mojolicious::Plugin::RoutesAuthDBI::Model::Profiles;
-  'Mojolicious::Plugin::RoutesAuthDBI::Model::Profiles';
-};
+my ($App, $Plugin); # assign on ->init class
+has [qw(app plugin)];
 
-state $Namespaces = do {
-  require Mojolicious::Plugin::RoutesAuthDBI::Model::Namespaces;
-  'Mojolicious::Plugin::RoutesAuthDBI::Model::Namespaces';
-};
-
-state $Routes = do {
-  require Mojolicious::Plugin::RoutesAuthDBI::Model::Routes;
-  'Mojolicious::Plugin::RoutesAuthDBI::Model::Routes';
-};
-
-state $Refs = do {
-  require Mojolicious::Plugin::RoutesAuthDBI::Model::Refs;
-  'Mojolicious::Plugin::RoutesAuthDBI::Model::Refs';
-};
-
-state $Controllers = do {
-  require Mojolicious::Plugin::RoutesAuthDBI::Model::Controllers;
-  'Mojolicious::Plugin::RoutesAuthDBI::Model::Controllers';
-};
-
-state $Actions = do {
-  require Mojolicious::Plugin::RoutesAuthDBI::Model::Actions;
-  'Mojolicious::Plugin::RoutesAuthDBI::Model::Actions';
-};
-
-state $Roles = do {
-  require Mojolicious::Plugin::RoutesAuthDBI::Model::Roles;
-  'Mojolicious::Plugin::RoutesAuthDBI::Model::Roles';
-};
-
+state $NS = 'Mojolicious::Plugin::RoutesAuthDBI';
+state $Profile =             $Plugin->_class(namespace=>$NS, module=>'Model::Profiles');
+state $Namespaces = $Plugin->_class(namespace=>$NS, module=>'Model::Namespaces');
+state $Routes =               $Plugin->_class(namespace=>$NS, module=>'Model::Routes');
+state $Refs =                      $Plugin->_class(namespace=>$NS, module=>'Model::Refs');
+state $Controllers = $Plugin->_class(namespace=>$NS, module=>'Model::Controllers');
+state $Actions =             $Plugin->_class(namespace=>$NS, module=>'Model::Actions');
+state $Roles =                   $Plugin->_class(namespace=>$NS, module=>'Model::Roles');
 
 sub init {# from plugin! init Class vars
   my $self = shift;
   my %args = @_;
 
-  $self->dbh($self->{dbh} || $args{dbh});
-  $dbh = $self->dbh
-    or die "Нет DBI handler";
-  $self->sth($self->{sth} || $args{sth});
-  $sth = $self->sth
-    or die "Нет STH";
+  #~ $self->dbh($self->{dbh} || $args{dbh});
+  #~ $dbh = $self->dbh
+    #~ or die "Нет DBI handler";
+  #~ $self->sth($self->{sth} || $args{sth});
+  #~ $sth = $self->sth
+    #~ or die "Нет STH";
   $self->app($self->{app} || $args{app});
   $self->plugin($self->{plugin} || $args{plugin});
-  $app = $self->app;
+  $Plugin = $self->plugin;
+  $App = $self->app;
   return $self;
 }
 
@@ -88,30 +63,30 @@ sub apply_ns {# Plugin
   my ($self,) = @_;
   my $ns = $Namespaces->app_ns;
   return unless @$ns;
-  my $r = $app->routes;
+  my $r = $App->routes;
   push @{ $r->namespaces() }, $_->{namespace} for @$ns;
 }
 
 sub apply_route {# meth in Plugin
   my ($self, $r_hash) = @_;
-  my $r = $app->routes;
+  my $r = $App->routes;
   
-  $app->log->debug("Skip disabled route id=[$r_hash->{id}] [$r_hash->{request}]")
+  $App->log->debug("Skip disabled route id=[$r_hash->{id}] [$r_hash->{request}]")
     and return undef
     if $r_hash->{disable};
   
   $r_hash->{request} //= $r_hash->{route};
   
-  $app->log->debug("Skip route @{[$app->dumper($r_hash) =~ s/\s+//gr]}: empty request")
+  $App->log->debug("Skip route @{[$App->dumper($r_hash) =~ s/\s+//gr]}: empty request")
     and return undef
     unless $r_hash->{request};
   
-  $app->log->debug("Skip comment request [$r_hash->{request}]")
+  $App->log->debug("Skip comment request [$r_hash->{request}]")
     and return undef
     if $r_hash->{request} =~ /^#/;
   
   my @request = grep /\S/, split /\s+/, $r_hash->{request}
-    or $app->log->debug("Skip route @{[$app->dumper($r_hash) =~ s/\s+//gr]}: bad request")
+    or $App->log->debug("Skip route @{[$App->dumper($r_hash) =~ s/\s+//gr]}: bad request")
     and return;
   my $nr = $r->route(pop @request);
   $nr->via(@request) if @request;
@@ -132,15 +107,15 @@ sub apply_route {# meth in Plugin
   } elsif ( $r_hash->{callback} ) {
     
     my $cb = eval $r_hash->{callback};
-    die "Compile error on callback: [$@]", $app->dumper($r_hash)
+    die "Compile error on callback: [$@]", $App->dumper($r_hash)
       if $@;
     $nr->to(cb => $cb);
     
   } else {
-    die "No defaults for route: ", $app->dumper($r_hash);
+    die "No defaults for route: ", $App->dumper($r_hash);
   }
   $nr->name($r_hash->{name}) if $r_hash->{name};
-  #~ $app->log->debug("$pkg generate the route from data row [@{[$app->dumper($r_hash) =~ s/\n/ /gr]}]");
+  #~ $App->log->debug("$pkg generate the route from data row [@{[$App->dumper($r_hash) =~ s/\n/ /gr]}]");
   return $nr;
 }
 
@@ -176,7 +151,7 @@ sub access_action {#implicit
 
 sub access_role {#implicit
   my ($self, $role, $id2,) = @_;
-  return scalar $dbh->selectrow_array($sth->sth('access role'), undef, ($role =~ /\D/ ? (undef, $role) : ($role, undef),), $id2);
+  return scalar $Roles->access($role =~ /\D/ ? (undef, $role) : ($role, undef), $id2);
 }
 
 1;
@@ -253,15 +228,6 @@ See detail L<Mojolicious::Plugin::RoutesAuthDBI#access>
 
 Both above options determining the module which will play as manager of authentication, accessing and generate routing from DBI source.
 
-=item * B<pos> - hashref, default:
-
-  pos => {
-    namespace => 'Mojolicious::Plugin::RoutesAuthDBI',
-    module => 'POS::Access',
-  },
-
-SQL-dictionary for DBI statements. See L<Mojolicious::Plugin::RoutesAuthDBI::POS::Access>.
-
 =item * B<fail_auth_cb> = sub {my $c = shift;...}
 
 This callback invoke when request need auth route but authentication was failure.
@@ -286,15 +252,15 @@ This callback invoke when request need auth route but access was failure. $route
 
 =over 4
 
-=item * B<init_class()>
+=item * B<init()>
 
-Make initialization of class vars: $dbh, $sth, $init_conf. Return $self object.
+Make initialization of class vars: $App and $Plugin. Return $self object.
 
-=item * B<apply_ns($app,)>
+=item * B<apply_ns()>
 
 Select from db table I<namespaces> ns thus app_ns=1 and push them to $app->namespaces()
 
-=item * B<apply_route($app, $r_hash)>
+=item * B<apply_route($r_hash)>
 
 Heart of routes generation from db tables and not only. Insert to app->routes an hash item $r_hash. DB schema specific. Return new Mojolicious route.
 

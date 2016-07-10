@@ -29,10 +29,10 @@ has default => sub {
       shift->render(format=>'txt', text=>"You don`t have access on this route (url, action).\n");
     },
     import => [qw(load_user validate_user)],
-    pos => {
-      namespace => $pkg,
-      module => 'POS::Access',
-    },
+    #~ pos => {
+      #~ namespace => $pkg,
+      #~ module => 'POS::Access',
+    #~ },
   },
   admin => {
     namespace => $pkg,
@@ -67,13 +67,13 @@ has access => sub {# object
   my $class = $self->_class($access);
   $class->import( @{$access->{import}});
   bless $access, $class;
-  $access->{dbh} = $self->dbh;
-  my $pos = $access->{pos};
-  $access->{sth} = DBIx::POS::Sth->new(
-    $self->dbh,
-    $self->_class($pos)->new, #($pos->{template} ? (template=>$pos->{template}) : ()),
-    $pos->{template} || $access->{template} || $mconf->{template} || {},
-  );
+  #~ $access->{dbh} = $self->dbh;
+  #~ my $pos = $access->{pos};
+  #~ $access->{sth} = DBIx::POS::Sth->new(
+    #~ $self->dbh,
+    #~ $self->_class($pos)->new, #($pos->{template} ? (template=>$pos->{template}) : ()),
+    #~ $pos->{template} || $access->{template} || $mconf->{template} || {},
+  #~ );
   $access->{app} = $self->app;
   $access->{plugin} = $self;
   return $access->init;
@@ -160,7 +160,7 @@ sub register {
 
 sub _class {
   my $self = shift;
-  my $conf = shift;
+  my $conf = ref $_[0] ? shift : {@_};
   my $class  = join '::', $conf->{namespace}, $conf->{module} || $conf->{controller}
     if $conf->{namespace};
   $class ||= $conf->{module} || $conf->{controller};

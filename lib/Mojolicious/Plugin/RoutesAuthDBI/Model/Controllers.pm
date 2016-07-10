@@ -14,7 +14,7 @@ sub new {
 sub controller_ns {
   my $self = ref $_[0] ? shift : shift->new;
   
-  $self->dbh->selectrow_hashref($self->sth->sth('controller', where => "where controller=? and (namespace=? or (?::varchar is null and namespace is null))"), undef, ( $_[0..2]));
+  $self->dbh->selectrow_hashref($self->sth->sth('controller', where => "where controller=? and (namespace=? or (?::varchar is null and namespace is null))"), undef, $_[0..2]);
 }
 
 1;
