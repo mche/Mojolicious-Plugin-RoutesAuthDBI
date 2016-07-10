@@ -91,7 +91,7 @@ TXT
   
   my $p = $Init->plugin->model->{Profiles}->new_profile([$login],));
   
-  $c->ref($p->{id} => $r->{id});
+  $Init->plugin->model->{Refs}->ref($p->{id} => $r->{id});
   
   @$p{qw(login pass)} = @$r{qw(login pass)};
   
@@ -116,21 +116,21 @@ sub trust_new_user {
     || $Init->plugin->model->{Roles}->new_role('admin');
   
   # REF role->user
-  my $ru = $c->ref($rl->{id} => $u->{id});
+  my $ru = $Init->plugin->model->{Refs}->ref($rl->{id} => $u->{id});
   
   # CONTROLLER
-  my $cc = $dbh->selectrow_hashref($sth->sth('controller', where=>"where controller=? and (namespace=? or (?::varchar is null and namespace is null))"), undef, ($Init->{controller}, ($Init->{namespace}) x 2,));
-  $cc ||= $dbh->selectrow_hashref($sth->sth('new controller'), undef, ($Init->{controller}, 'admin actions'));
+  my $cc = $Init->plugin->model->{Controllers}->controller_ns($Init->{controller}, ($Init->{namespace}) x 2,)
+    || $Init->plugin->model->{Controllers}->new_controller($Init->{controller}, 'admin actions');
   
   #Namespace
   my $ns = $dbh->selectrow_hashref($sth->sth('namespace'), undef, (undef, $Init->{namespace},));
   $ns ||= $dbh->selectrow_hashref($sth->sth('new namespace'), undef, ($Init->{namespace}, 'plugin ns!', undef, undef,));
   
   #ref namespace -> controller
-  my $nc = $c->ref($ns->{id}, $cc->{id});
+  my $nc = $Init->plugin->model->{Refs}->ref($ns->{id}, $cc->{id});
   
   #REF namespace->role
-  my $cr = $c->ref($ns->{id}, $rl->{id});
+  my $cr = $Init->plugin->model->{Refs}->ref($ns->{id}, $rl->{id});
   
   $c->render(format=>'txt', text=><<TXT);
 $pkg
@@ -247,7 +247,7 @@ TXT
     and return
     unless $u;
   
-  my $ref = $c->refs($r->{id} => $u->{id});
+  my $ref = $Init->plugin->model->{Refs}->ref($r->{id} => $u->{id});
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
@@ -259,7 +259,7 @@ TXT
     and return
     if $ref;
   
-  $ref = $c->ref($r->{id} => $u->{id});
+  $ref = $Init->plugin->model->{Refs}->ref($r->{id} => $u->{id});
   
   $c->render(format=>'txt', text=><<TXT);
 $pkg
@@ -452,7 +452,7 @@ TXT
   if $cn;
   my $n = $c->new_namespace($ns) if $ns;
   $cn = $dbh->selectrow_hashref($sth->sth('new controller'), undef, ($mod, undef));
-  $c->ref($n->{id}, $cn->{id})
+  $Init->plugin->model->{Refs}->ref($n->{id}, $cn->{id})
     if $n;
   
   $cn = $dbh->selectrow_hashref($sth->sth('controller'), undef, ($mod, ($ns) x 2,));
@@ -713,7 +713,8 @@ sub route_save {
   $route = $dbh->selectrow_hashref($sth->sth('new route'), undef, (@$route{@route_cols}))
     unless $route->{id};
   my $ref = [map {
-    $c->ref($$_[0]{id}, $$_[1]{id},) if $$_[0]{id} && $$_[1]{id};
+    $Init->plugin->model->{Refs}->ref($$_[0]{id}, $$_[1]{id},)
+      if $$_[0]{id} && $$_[1]{id};
   } ([$ns, $controll], [$controll, $act], [$route, $act],)];
   $dbh->commit;
   return ($ns, $controll, $act, $route, $ref);
@@ -734,8 +735,7 @@ sub ref {# get or save
   my $c = shift;
   my ($id1, $id2) = @_;
     #~ $c->app->log->debug($c->dumper(\@_));
-  $dbh->selectrow_hashref($sth->sth('ref'), undef, ($id1, $id2,))
-    || $dbh->selectrow_hashref($sth->sth('new ref'), undef, ($id1, $id2,));
+  $Init->plugin->model->{Refs}->ref($id1, $id2,);
 }
 
 

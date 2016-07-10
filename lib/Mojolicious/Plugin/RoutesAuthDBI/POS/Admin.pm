@@ -58,56 +58,6 @@ L<DBIx::POS::Template>
 
 =head1 SQL definitions
 
-=head2 ref
-
-=name ref
-
-=desc
-
-=sql
-
-  select *
-  from "{% $schema %}"."{% $tables{refs} %}"
-  where id1=? and id2=?;
-
-=head2 new ref
-
-=name new ref
-
-=desc
-
-=sql
-
-  insert into "{% $schema %}"."{% $tables{refs} %}" (id1,id2) values (?,?)
-  returning *;
-
-
-=head2 del ref
-
-=name del ref
-
-=desc Delete ref
-
-=sql
-
-  delete from "{% $schema %}"."{% $tables{refs} %}"
-  where id=? or (id1=? and id2=?)
-  returning *;
-
-
-
-=head2 new controller
-
-=name new controller
-
-=desc
-
-=sql
-
-  insert into "{% $schema %}"."{% $tables{controllers} %}" (controller, descr)
-  values (?,?)
-  returning *;
-
 =head2 action routes
 
 =name action routes

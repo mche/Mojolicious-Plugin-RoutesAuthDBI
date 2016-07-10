@@ -86,24 +86,6 @@ L<DBIx::POS::Template>
     ) ac on rf.id2=ac.id
   order by r.ts - (coalesce(r.interval_ts, 0::int)::varchar || ' second')::interval;
 
-=head2 cnt refs
-
-=name cnt refs
-
-=desc
-
-check if ref between [IDs1] and [IDs2] exists
-
-=param
-
-  {cached=>1}
-
-=sql
-
-  select count(*)
-  from "{% $schema %}"."{% $tables{refs} %}"
-  where id1 = any(?) and id2 = ANY(?);
-
 =head2 access action
 
 =name access action
@@ -171,28 +153,6 @@ check if ref between [IDs1] and [IDs2] exists
   {% $where %}
   {% $order %};
 
-=head2 controller
-
-=name controller
-
-=desc
-
-Не пустой namespace - четко привязанный контроллер, пустой - обязательно не привязанный контроллер
-
-=param
-
-  {cached=>1}
-
-=sql
-
-  select * from (
-  select c.*, n.namespace, n.id as namespace_id, n.descr as namespace_descr
-  from
-    "{% $schema %}"."{% $tables{controllers} %}" c
-    left join "{% $schema %}"."{% $tables{refs} %}" r on c.id=r.id2
-    left join "{% $schema %}"."{% $tables{namespaces} %}" n on n.id=r.id1
-  ) s
-  {% $where %}
 
 =cut
 
