@@ -1,8 +1,6 @@
 package Mojolicious::Plugin::RoutesAuthDBI::Admin;
 use Mojo::Base 'Mojolicious::Controller';
 
-
-
 my $pkg = __PACKAGE__;
 my ($Init);
 has [qw(app plugin)];
@@ -77,7 +75,7 @@ sub new_user {
   my ($login, $pass) = $c->vars('login', 'pass');
   
   my $r;
-  ($r = $dbh->selectrow_hashref($sth->sth('profile'), undef, (undef, $login)))
+  ($r = $Init->plugin->model->{Profiles}->get_profile(undef, $login)
     and $c->render(format=>'txt', text=><<TXT)
 $pkg
 
@@ -89,9 +87,9 @@ TXT
     and ($r->{not_new} = '!')
     and return $r;
   
-  $r = $dbh->selectrow_hashref($sth->sth('new login'), undef, ($login, $pass));
+  $r = $Init->plugin->model->{Logins}->new_login($login, $pass);
   
-  my $p =  $dbh->selectrow_hashref($sth->sth('new profile'), undef, ([$login],));
+  my $p = $Init->plugin->model->{Profiles}->new_profile([$login],));
   
   $c->ref($p->{id} => $r->{id});
   
@@ -114,8 +112,8 @@ sub trust_new_user {
   my $u = $c->new_user;
   
   # ROLE
-  my $rl = $dbh->selectrow_hashref($sth->sth('role'), undef, (undef, 'admin'));
-  $rl ||= $dbh->selectrow_hashref($sth->sth('new role'), undef, ('admin'));
+  my $rl = $Init->plugin->model->{Roles}->get_role(undef, 'admin')
+    || $Init->plugin->model->{Roles}->new_role('admin');
   
   # REF role->user
   my $ru = $c->ref($rl->{id} => $u->{id});

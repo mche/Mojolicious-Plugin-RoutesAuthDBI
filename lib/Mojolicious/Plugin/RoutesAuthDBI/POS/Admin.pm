@@ -58,62 +58,6 @@ L<DBIx::POS::Template>
 
 =head1 SQL definitions
 
-=head2 new profile
-
-=name new profile
-
-=desc
-
-=sql
-
-  insert into "{% $schema %}"."{% $tables{profiles} %}" (names) values (?)
-  returning *;
-
-=head2 new login
-
-=name new login
-
-=desc
-
-=sql
-
-  insert into "{% $schema %}"."{% $tables{logins} %}" (login, pass) values (?,?)
-  returning *;
-
-=head2 role
-
-=name role
-
-=desc
-
-=sql
-
-  select *
-  from "{% $schema %}"."{% $tables{roles} %}"
-  where id=? or lower(name)=?
-
-=head2 new role
-
-=name new role
-
-=desc
-
-=sql
-
-  insert into "{% $schema %}"."{% $tables{roles} %}" (name) values (?)
-  returning *;
-
-=head2 dsbl/enbl role
-
-=name dsbl/enbl role
-
-=desc
-
-=sql
-
-  update "{% $schema %}"."{% $tables{roles} %}" set disable=?::bit where id=? or lower(name)=?
-  returning *;
-
 =head2 ref
 
 =name ref
@@ -303,21 +247,6 @@ L<DBIx::POS::Template>
   insert into "{% $schema %}"."{% $tables{actions} %}" (action, callback, descr)
   values (?,?,?)
   returning *;
-
-=head2 profiles
-
-=name profiles
-
-=sql
-
-  select p.*, l.login, l.pass
-  from "{% $schema %}"."{% $tables{profiles} %}" p
-  left join (
-    select l.*, r.id1
-    from "{% $schema %}"."{% $tables{refs} %}" r 
-      join "{% $schema %}"."{% $tables{logins} %}" l on l.id=r.id2
-  ) l on p.id=l.id1
-
 
 =head2 тест
 

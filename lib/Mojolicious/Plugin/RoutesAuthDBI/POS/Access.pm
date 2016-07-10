@@ -58,30 +58,6 @@ L<DBIx::POS::Template>
 
 =head1 SQL definitions
 
-=head2 profile
-
-=name profile
-
-=desc
-
-Load auth profile
-
-=param
-
-  {cached=>1}
-
-=sql
-
-  select p.*, l.login, l.pass
-  from "{% $schema %}"."{% $tables{profiles} %}" p
-  left join (
-    select l.*, r.id1
-    from "{% $schema %}"."{% $tables{refs} %}" r 
-      join "{% $schema %}"."{% $tables{logins} %}" l on l.id=r.id2
-  ) l on p.id=l.id1
-  
-  where p.id=? or l.login=?
-
 =head2 apply routes>
 
 =name apply routes
@@ -109,27 +85,6 @@ Load auth profile
       ) c on a.id=c._id
     ) ac on rf.id2=ac.id
   order by r.ts - (coalesce(r.interval_ts, 0::int)::varchar || ' second')::interval;
-
-=head2 profile roles
-
-=name profile roles
-
-=desc
-
-Роли пользователя(профиля)
-
-=param
-
-  {cached=>1}
-
-=sql
-
-  select g.*
-  from
-    "{% $schema %}"."{% $tables{roles} %}" g
-    join "{% $schema %}"."{% $tables{refs} %}" r on g.id=r.id1
-  where r.id2=?;
-  --and coalesce(g.disable, 0::bit) <> 1::bit
 
 =head2 cnt refs
 
@@ -200,27 +155,6 @@ check if ref between [IDs1] and [IDs2] exists
     n.namespace=?
     and r.id2=any(?) --- roles ids
     ---and coalesce(o.disable, 0::bit) <> 1::bit
-  ;
-
-=head2 access role
-
-=name access role
-
-=desc
-
-Доступ по роли
-
-=param
-
-  {cached=>1}
-
-=sql
-
-  select count(*)
-  from "{% $schema %}"."{% $tables{roles} %}"
-  where (id = ? or name = ?)
-    and id = any(?)
-    and coalesce(disable, 0::bit) <> 1::bit
   ;
 
 
