@@ -1,12 +1,10 @@
 package Mojolicious::Plugin::RoutesAuthDBI::Access;
 use Mojo::Base -base;
-#~ use Mojolicious::Plugin::RoutesAuthDBI::Sth;#  sth cache
 use Exporter 'import'; 
 our @EXPORT_OK = qw(load_user validate_user);
 
 
 #~ state $pkg = __PACKAGE__;
-
 my ($App, $Plugin); # assign on ->init class
 has [qw(app plugin)];
 
@@ -19,9 +17,9 @@ state $Controllers = $Plugin->_class(namespace=>$NS, module=>'Model::Controllers
 state $Actions =             $Plugin->_class(namespace=>$NS, module=>'Model::Actions');
 state $Roles =                   $Plugin->_class(namespace=>$NS, module=>'Model::Roles');
 
-sub init {# from plugin! init Class vars
-  my $self = shift;
-  my %args = @_;
+sub new {# from plugin! init Class vars
+  state $self = shift->SUPER::new(@_);
+  #~ my %args = @_;
 
   #~ $self->dbh($self->{dbh} || $args{dbh});
   #~ $dbh = $self->dbh
@@ -29,8 +27,8 @@ sub init {# from plugin! init Class vars
   #~ $self->sth($self->{sth} || $args{sth});
   #~ $sth = $self->sth
     #~ or die "Нет STH";
-  $self->app($self->{app} || $args{app});
-  $self->plugin($self->{plugin} || $args{plugin});
+  #~ $self->app($self->{app} || $args{app});
+  #~ $self->plugin($self->{plugin} || $args{plugin});
   $Plugin = $self->plugin;
   $App = $self->app;
   return $self;
@@ -252,7 +250,7 @@ This callback invoke when request need auth route but access was failure. $route
 
 =over 4
 
-=item * B<init()>
+=item * B<new(app=> ..., plugin => ...)>
 
 Make initialization of class vars: $App and $Plugin. Return $self object.
 

@@ -57,16 +57,18 @@ has default => sub {
 
 has merge_conf => sub {#hashref
   my $self = shift;
+  #~ @{ $self->conf }{qw(app plugin)} = ($self->app, $self);
   merge($self->conf, $self->default);
 };
 
 has access => sub {# object
   my $self = shift;
-  my $mconf = $self->merge_conf;
-  my $access = $mconf->{'access'};
-  my $class = $self->_class($access);
-  $class->import( @{$access->{import}});
-  bless $access, $class;
+  my $conf = $self->merge_conf->{'access'};
+  my $class = $self->_class($conf);
+  $class->import( @{ $conf->{import} });
+  $class->new(app=>$self->app, plugin=>$self);
+  
+  #~ bless $access, $class;
   #~ $access->{dbh} = $self->dbh;
   #~ my $pos = $access->{pos};
   #~ $access->{sth} = DBIx::POS::Sth->new(
@@ -74,9 +76,9 @@ has access => sub {# object
     #~ $self->_class($pos)->new, #($pos->{template} ? (template=>$pos->{template}) : ()),
     #~ $pos->{template} || $access->{template} || $mconf->{template} || {},
   #~ );
-  $access->{app} = $self->app;
-  $access->{plugin} = $self;
-  return $access->init;
+  #~ $access->{app} = $self->app;
+  #~ $access->{plugin} = $self;
+  #~ return $access->init;
 };
 
 has admin => sub {# object

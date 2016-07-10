@@ -1,7 +1,6 @@
 package Mojolicious::Plugin::RoutesAuthDBI::Model::Base;
 use Mojo::Base -base;
 use Carp 'croak';
-#~ use feature 'state';
 
 has [qw(dbh pos template)];
 
