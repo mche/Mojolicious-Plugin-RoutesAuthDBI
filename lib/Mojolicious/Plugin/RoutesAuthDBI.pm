@@ -1,6 +1,7 @@
 package Mojolicious::Plugin::RoutesAuthDBI;
 use Mojo::Base 'Mojolicious::Plugin::Authentication';
-use Mojo::Loader qw(load_class);
+#~ use Mojo::Loader qw(load_class);
+use Mojolicious::Plugin::RoutesAuthDBI::Util qw(load_class);
 use Mojo::Util qw(hmac_sha1_sum);
 use Hash::Merge qw( merge );
 use DBIx::POS::Sth;
@@ -64,7 +65,7 @@ has merge_conf => sub {#hashref
 has access => sub {# object
   my $self = shift;
   my $conf = $self->merge_conf->{'access'};
-  my $class = $self->_class($conf);
+  my $class = load_class($conf);
   $class->import( @{ $conf->{import} });
   $class->new(app=>$self->app, plugin=>$self);
   
@@ -86,13 +87,13 @@ has admin => sub {# object
   my $mconf = $self->merge_conf;
   my $admin = $mconf->{'admin'};
   $admin->{module} ||= $admin->{controller};
-  my $class = $self->_class($admin);
+  my $class = load_class($admin);
   bless $admin, $class;
   $admin->{dbh} = $self->dbh;
   my $pos = $admin->{pos};
   $admin->{sth} = DBIx::POS::Sth->new(
     $self->dbh,
-    $self->_class($pos)->new, #($pos->{template} ? (template=>$pos->{template}) : ()),
+    load_class($pos)->new, #($pos->{template} ? (template=>$pos->{template}) : ()),
     $pos->{template} || $admin->{template} || $mconf->{template} || {},
   );
   $admin->{plugin} = $self;
@@ -103,13 +104,13 @@ has oauth => sub {
   my $self = shift;
   my $mconf = $self->merge_conf;
   my $oauth = $mconf->{'oauth'};
-  my $class = $self->_class($oauth);
+  my $class = load_class($oauth);
   bless $oauth, $class;
   $oauth->{dbh} = $self->dbh;
   my $pos = $oauth->{pos};
   $oauth->{sth} = DBIx::POS::Sth->new(
     $self->dbh,
-    $self->_class($pos)->new, #($pos->{template} ? (template=>$pos->{template}) : ()),
+    load_class($pos)->new, #($pos->{template} ? (template=>$pos->{template}) : ()),
     $pos->{template} || $oauth->{template} || $mconf->{template} || {},
   );
   $oauth->{app} = $self->app;
@@ -160,17 +161,15 @@ sub register {
 
 }
 
-sub _class {
-  my $self = shift;
-  my $conf = ref $_[0] ? shift : {@_};
-  my $class  = join '::', $conf->{namespace}, $conf->{module} || $conf->{controller}
-    if $conf->{namespace};
-  $class ||= $conf->{module} || $conf->{controller};
+#~ sub _class {
+  #~ my $self = shift;
+  #~ my $conf = ref $_[0] ? shift : {@_};
+  #~ my $class  = join '::', $conf->{namespace} ? ($conf->{namespace}) : (), $conf->{module} || $conf->{controller} || $conf->{package};
   
-  my $e; $e = load_class($class)# success undef
-    and die $e;
-  return $class;
-}
+  #~ my $e; $e = load_class($class)# success undef
+    #~ and die $e;
+  #~ return $class;
+#~ }
 
 # 
 sub cond_access {# add_condition
@@ -246,7 +245,7 @@ sub cond_access {# add_condition
   my $controller = $args->{controller} || ucfirst(lc($route->pattern->defaults->{controller}));
   my $namespace = $args->{namespace} || $route->pattern->defaults->{namespace};
   if ($controller && !$namespace) {
-    (load_class($_.'::'.$controller) or ($namespace = $_) and last) for @{ $app->routes->namespaces };
+    (load_class(namespace=>$_, controller=>$controller) and ($namespace = $_) and last) for @{ $app->routes->namespaces };
   }
   
   my $fail_access_cb = $access->{fail_access_cb};

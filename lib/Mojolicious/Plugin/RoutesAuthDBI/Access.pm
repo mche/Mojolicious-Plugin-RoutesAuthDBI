@@ -2,6 +2,7 @@ package Mojolicious::Plugin::RoutesAuthDBI::Access;
 use Mojo::Base -base;
 use Exporter 'import'; 
 our @EXPORT_OK = qw(load_user validate_user);
+use Mojolicious::Plugin::RoutesAuthDBI::Util qw(load_class);
 
 
 #~ state $pkg = __PACKAGE__;
@@ -9,13 +10,13 @@ my ($App, $Plugin); # assign on ->init class
 has [qw(app plugin)];
 
 state $NS = 'Mojolicious::Plugin::RoutesAuthDBI';
-state $Profile =             $Plugin->_class(namespace=>$NS, module=>'Model::Profiles');
-state $Namespaces = $Plugin->_class(namespace=>$NS, module=>'Model::Namespaces');
-state $Routes =               $Plugin->_class(namespace=>$NS, module=>'Model::Routes');
-state $Refs =                      $Plugin->_class(namespace=>$NS, module=>'Model::Refs');
-state $Controllers = $Plugin->_class(namespace=>$NS, module=>'Model::Controllers');
-state $Actions =             $Plugin->_class(namespace=>$NS, module=>'Model::Actions');
-state $Roles =                   $Plugin->_class(namespace=>$NS, module=>'Model::Roles');
+state $Profile =             load_class(namespace=>$NS, module=>'Model::Profiles');
+state $Namespaces = load_class(namespace=>$NS, module=>'Model::Namespaces');
+state $Routes =               load_class(namespace=>$NS, module=>'Model::Routes');
+state $Refs =                      load_class(namespace=>$NS, module=>'Model::Refs');
+state $Controllers = load_class(namespace=>$NS, module=>'Model::Controllers');
+state $Actions =             load_class(namespace=>$NS, module=>'Model::Actions');
+state $Roles =                   load_class(namespace=>$NS, module=>'Model::Roles');
 
 sub new {# from plugin! init Class vars
   state $self = shift->SUPER::new(@_);

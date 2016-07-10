@@ -3,8 +3,10 @@ use Mojo::Base -base;
 use Exporter 'import';
 use Mojo::JSON qw(decode_json encode_json);
 use Encode qw(encode decode);
+use Mojo::Loader;
+use Carp qw(carp);
 
-our @EXPORT_OK = qw(json_enc json_dec);
+our @EXPORT_OK = qw(json_enc json_dec load_class);
 
 sub json_enc {
   decode('utf-8', encode_json(shift));
@@ -15,6 +17,18 @@ sub json_dec {
   decode_json(encode('utf-8', shift));
 }
 
-
+sub load_class {
+  my $class;
+  if (@_ == 1) {$class = shift}
+  else {
+    my $conf = ref $_[0] ? shift : {@_};
+    $class  = join '::', $conf->{namespace} ? ($conf->{namespace}) : (), $conf->{module} || $conf->{controller} || $conf->{package};
+  }
+  
+  my $e; $e = Mojo::Loader::load_class($class)# success undef
+    and carp($e)
+    and return undef;
+  return $class;
+}
 
 1;
