@@ -9,10 +9,21 @@ my $pkg = __PACKAGE__;
 my ($dbh, $sth, $app);
 has [qw(dbh sth app plugin)];
 
-state $profile = do {
-  require Mojolicious::Plugin::RoutesAuthDBI::Model::Profile;
-  'Mojolicious::Plugin::RoutesAuthDBI::Model::Profile';
+state $Profile = do {
+  require Mojolicious::Plugin::RoutesAuthDBI::Model::Profiles;
+  'Mojolicious::Plugin::RoutesAuthDBI::Model::Profiles';
 };
+
+state $Namespaces = do {
+  require Mojolicious::Plugin::RoutesAuthDBI::Model::Namespaces;
+  'Mojolicious::Plugin::RoutesAuthDBI::Model::Namespaces';
+};
+
+state $Routes = do {
+  require Mojolicious::Plugin::RoutesAuthDBI::Model::Routes;
+  'Mojolicious::Plugin::RoutesAuthDBI::Model::Routes';
+};
+
 
 sub init {# from plugin! init Class vars
   my $self = shift;
@@ -32,7 +43,7 @@ sub init {# from plugin! init Class vars
 
 sub load_user {# import for Mojolicious::Plugin::Authentication
   my ($c, $uid) = @_;
-  my $p = $profile->new($uid, undef); #$dbh->selectrow_hashref($sth->sth('profile'), undef, ($uid, undef)), dbh=>$dbh, sth=>$sth
+  my $p = $Profile->new($uid, undef); #$dbh->selectrow_hashref($sth->sth('profile'), undef, ($uid, undef)), dbh=>$dbh, sth=>$sth
   $c->app->log->debug("Loading profile by id=$uid ". ($p->{id} ? 'success' : 'failed'));
   $p->{pass} = '**********************';
   return $p;
@@ -45,7 +56,7 @@ sub validate_user {# import for Mojolicious::Plugin::Authentication
     if $extradata && $extradata->{id};
     
   #~ if (my $p = $dbh->selectrow_hashref($sth->sth('profile'), undef, (undef, $login))) {
-  if (my $p = $profile->new(undef, $login)) {
+  if (my $p = $Profile->new(undef, $login)) {
     $c->app->log->debug("Success authenticate by login[$login]/pass[$pass] for profile id[$p->{id}]")
       and return $p->{id}
       if $p->{pass} eq $pass  && !$p->{disable};
@@ -55,7 +66,7 @@ sub validate_user {# import for Mojolicious::Plugin::Authentication
 
 sub apply_ns {# Plugin
   my ($self,) = @_;
-  my $ns = $dbh->selectall_arrayref($sth->sth('namespaces', where=>"where app_ns=1::bit(1)", order=>"order by ts - (coalesce(interval_ts, 0::int)::varchar || ' second')::interval"), { Slice => {namespace=>1} },);
+  my $ns = $Namespaces->app_ns;
   return unless @$ns;
   my $r = $app->routes;
   push @{ $r->namespaces() }, $_->{namespace} for @$ns;
@@ -115,15 +126,8 @@ sub apply_route {# meth in Plugin
 
 sub db_routes {
   my ($self,) = @_;
-  $dbh->selectall_arrayref($sth->sth('apply routes'), { Slice => {} },);
+  $Routes->routes;
 }
-
-#~ sub load_user_roles {
-  #~ my ($self, $user) = @_;
-  #~ $user->{roles} ||= $dbh->selectall_arrayref($sth->sth('profile roles'), { Slice => {} }, ($user->{id}))
-    #~ and $app->log->debug("Loading profile roles:", $app->dumper($user->{roles}) =~ s/\s+//gr,);
-  
-#~ }
 
 sub access_explicit {# i.e. by refs table
   my ($self, $id1, $id2,) = @_;
