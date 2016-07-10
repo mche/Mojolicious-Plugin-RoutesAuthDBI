@@ -20,16 +20,6 @@ state $Roles =                   load_class(namespace=>$NS, module=>'Model::Role
 
 sub new {# from plugin! init Class vars
   state $self = shift->SUPER::new(@_);
-  #~ my %args = @_;
-
-  #~ $self->dbh($self->{dbh} || $args{dbh});
-  #~ $dbh = $self->dbh
-    #~ or die "Нет DBI handler";
-  #~ $self->sth($self->{sth} || $args{sth});
-  #~ $sth = $self->sth
-    #~ or die "Нет STH";
-  #~ $self->app($self->{app} || $args{app});
-  #~ $self->plugin($self->{plugin} || $args{plugin});
   $Plugin = $self->plugin;
   $App = $self->app;
   return $self;
@@ -253,7 +243,7 @@ This callback invoke when request need auth route but access was failure. $route
 
 =item * B<new(app=> ..., plugin => ...)>
 
-Make initialization of class vars: $App and $Plugin. Return $self object.
+Return new access object.
 
 =item * B<apply_ns()>
 

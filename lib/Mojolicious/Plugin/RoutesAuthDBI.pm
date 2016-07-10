@@ -30,10 +30,6 @@ has default => sub {
       shift->render(format=>'txt', text=>"You don`t have access on this route (url, action).\n");
     },
     import => [qw(load_user validate_user)],
-    #~ pos => {
-      #~ namespace => $pkg,
-      #~ module => 'POS::Access',
-    #~ },
   },
   admin => {
     namespace => $pkg,
@@ -68,18 +64,6 @@ has access => sub {# object
   my $class = load_class($conf);
   $class->import( @{ $conf->{import} });
   $class->new(app=>$self->app, plugin=>$self);
-  
-  #~ bless $access, $class;
-  #~ $access->{dbh} = $self->dbh;
-  #~ my $pos = $access->{pos};
-  #~ $access->{sth} = DBIx::POS::Sth->new(
-    #~ $self->dbh,
-    #~ $self->_class($pos)->new, #($pos->{template} ? (template=>$pos->{template}) : ()),
-    #~ $pos->{template} || $access->{template} || $mconf->{template} || {},
-  #~ );
-  #~ $access->{app} = $self->app;
-  #~ $access->{plugin} = $self;
-  #~ return $access->init;
 };
 
 has admin => sub {# object
@@ -188,16 +172,13 @@ sub cond_access {# add_condition
     and return 1 # не проверяем доступ
     unless $args->{auth};
   
-  my $fail_auth_cb = $access->{fail_auth_cb};
+  my $fail_auth_cb = $conf->{access}{fail_auth_cb};
   
   # не авторизовался
   $self->deny_log($route, $args, $u)
     and $c->$fail_auth_cb()
     and return undef
     unless $u;
-  
-  #  получить все группы
-  #~ $access->load_user_roles($u);
   
   # допустить если {auth=>'only'}
   $app->log->debug(sprintf(qq[Access allow [%s] for {auth}='only'],
@@ -248,7 +229,7 @@ sub cond_access {# add_condition
     (load_class(namespace=>$_, controller=>$controller) and ($namespace = $_) and last) for @{ $app->routes->namespaces };
   }
   
-  my $fail_access_cb = $access->{fail_access_cb};
+  my $fail_access_cb = $conf->{access}{fail_access_cb};
   
   $self->deny_log($route, $args, $u)
     and $c->$fail_access_cb()
@@ -331,7 +312,7 @@ sub deny_log {
   );
 }
 
-our $VERSION = '0.710';
+our $VERSION = '0.770';
 
 =pod
 
@@ -345,7 +326,7 @@ our $VERSION = '0.710';
 
 =head1 VERSION
 
-0.710
+0.770
 
 =head1 NAME
 

@@ -4,7 +4,6 @@ use Exporter 'import';
 use Mojo::JSON qw(decode_json encode_json);
 use Encode qw(encode decode);
 use Mojo::Loader;
-use Carp qw(carp);
 
 our @EXPORT_OK = qw(json_enc json_dec load_class);
 
@@ -19,14 +18,15 @@ sub json_dec {
 
 sub load_class {
   my $class;
-  if (@_ == 1) {$class = shift}
+  if (@_ == 1 && ! ref $_[0]) {$class = shift}
   else {
     my $conf = ref $_[0] ? shift : {@_};
     $class  = join '::', $conf->{namespace} ? ($conf->{namespace}) : (), $conf->{module} || $conf->{controller} || $conf->{package};
   }
   
+  
   my $e; $e = Mojo::Loader::load_class($class)# success undef
-    and carp($e)
+    and warn('None load_class[$class]: ', $e)
     and return undef;
   return $class;
 }
