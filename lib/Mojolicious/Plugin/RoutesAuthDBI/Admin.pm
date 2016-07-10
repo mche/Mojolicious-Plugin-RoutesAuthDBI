@@ -156,7 +156,7 @@ TXT
 sub new_role {
 	my $c = shift;
 	my ($name) = $c->vars('name');
-	my $r = $dbh->selectrow_hashref($sth->sth('role'), undef, (undef, $name));
+	my $r = $Init->plugin->model->{Roles}->get_role(undef, $name);
 	$c->render(format=>'txt', text=><<TXT)
 $pkg
 
@@ -168,7 +168,7 @@ Role exists
 TXT
 		and return $c
 		if $r;
-	$r = $dbh->selectrow_hashref($sth->sth('new role'), undef, ($name));
+	$r = $Init->plugin->model->{Roles}->new_role($name);
 	
 	$c->render(format=>'txt', text=><<TXT);
 $pkg
@@ -185,7 +185,7 @@ TXT
 sub user_roles {
   my $c = shift;
   my ($user) = $c->vars('user') || $c->vars('login');
-  my $u =  $dbh->selectrow_hashref($sth->sth('profile'), undef, ($user =~ /\D/ ? (undef, $user) : ($user, undef,)));
+  my $u =  $Init->plugin->model->{Profiles}->get_profile($user =~ /\D/ ? (undef, $user) : ($user, undef,));
   
   $c->render(format=>'txt', text=><<TXT)
 $pkg
@@ -197,7 +197,7 @@ TXT
     and return
     unless $u;
   
-  my $r = $dbh->selectall_arrayref($sth->sth('profile roles'), { Slice => {} }, ($u->{id}));
+  my $r = $p->roles;
   
   $c->render(format=>'txt', text=><<TXT);
 $pkg
@@ -222,7 +222,7 @@ sub new_role_user {
   
   my ($role) = $c->vars('role');
   # ROLE
-  my $r = $dbh->selectrow_hashref($sth->sth('role'), undef, ($role =~ /\D/ ? (undef, $role) : ($role, undef,)));
+  my $r = $Init->plugin->model->{Roles}->get_role($role =~ /\D/ ? (undef, $role) : ($role, undef,));
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
@@ -232,10 +232,10 @@ Can't create new role by only digits[$role] in name
 TXT
     and return
     unless $r && $role =~ /\w/;
-  $r ||= $dbh->selectrow_hashref($sth->sth('new role'), undef, ($role)) ;
+  $r ||= $Init->plugin->model->{Roles}->new_role($role);
   
   my ($user) = $c->vars('user');
-  my $u =  $dbh->selectrow_hashref($sth->sth('profile'), undef, ($user =~ /\D/ ? (undef, $user) : ($user, undef,)));
+  my $u = $Init->plugin->model->{Profiles}->get_profile($user =~ /\D/ ? (undef, $user) : ($user, undef,));
   
   $c->render(format=>'txt', text=><<TXT)
 $pkg
@@ -248,28 +248,15 @@ TXT
     unless $u;
   
   my $ref = $Init->plugin->model->{Refs}->ref($r->{id} => $u->{id});
-  $c->render(format=>'txt', text=><<TXT)
-$pkg
-
-Allready ref ROLE[$r->{name}] -> USER [@{[$c->dumper( $u) =~ s/\s+//gr]}]
-===
-
-@{[$c->dumper( $ref)]}
-TXT
-    and return
-    if $ref;
-  
-  $ref = $Init->plugin->model->{Refs}->ref($r->{id} => $u->{id});
   
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
-Success create ref ROLE[$r->{name}] -> USER [@{[$c->dumper( $u) =~ s/\s+//gr]}]
+Success assign ROLE[$r->{name}] -> USER [@{[$c->dumper( $u) =~ s/\s+//gr]}]
 ===
 
 @{[$c->dumper( $ref)]}
 TXT
-  
   
 }
 

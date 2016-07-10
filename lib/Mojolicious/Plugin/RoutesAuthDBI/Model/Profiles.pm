@@ -16,7 +16,10 @@ sub new {
 
 sub get_profile {
   my $self = ref $_[0] ? shift : shift->new;
-  $self->dbh->selectrow_hashref($self->sth->sth('profile'), undef, (shift, shift,))
+  my $p = $self->dbh->selectrow_hashref($self->sth->sth('profile'), undef, (shift, shift,));
+  bless $p
+    if $p;
+  $p;
 }
 
 sub profiles {
@@ -29,6 +32,8 @@ sub new_profile {
   
   $self->dbh->selectrow_hashref($self->sth->sth('new profile'), undef, (shift,));
 }
+
+
 
 
 1;
