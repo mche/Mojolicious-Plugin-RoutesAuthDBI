@@ -123,8 +123,8 @@ sub trust_new_user {
     || $Init->plugin->model->{Controllers}->new_controller($Init->{controller}, 'admin actions');
   
   #Namespace
-  my $ns = $dbh->selectrow_hashref($sth->sth('namespace'), undef, (undef, $Init->{namespace},));
-  $ns ||= $dbh->selectrow_hashref($sth->sth('new namespace'), undef, ($Init->{namespace}, 'plugin ns!', undef, undef,));
+  my $ns = $Init->plugin->model->{Namespaces}->namespace(undef, $Init->{namespace},)
+    || $Init->plugin->model->{Namespaces}->new_namespace($Init->{namespace}, 'plugin ns!', undef, undef,);
   
   #ref namespace -> controller
   my $nc = $Init->plugin->model->{Refs}->ref($ns->{id}, $cc->{id});

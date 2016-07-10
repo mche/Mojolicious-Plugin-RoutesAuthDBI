@@ -140,30 +140,6 @@ L<DBIx::POS::Template>
     left join "{% $schema %}"."{% $tables{namespaces} %}" n on n.id=r.id1
     {% $where %};
 
-=head2 namespace
-
-=name namespace
-
-=desc
-
-=sql
-
-  select *
-  from "{% $schema %}"."{% $tables{namespaces} %}"
-  where id=? or namespace = ?;
-
-=head2 new namespace
-
-=name new namespace
-
-=desc
-
-=sql
-
-  insert into "{% $schema %}"."{% $tables{namespaces} %}" (namespace, descr, app_ns, interval_ts) values (?,?,?,?)
-  returning *;
-
-
 =head2 actions
 
 =name actions

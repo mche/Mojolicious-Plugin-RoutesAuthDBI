@@ -114,44 +114,8 @@ L<DBIx::POS::Template>
   ;
 
 
-=head2 access namespace
-
-=name access namespace
-
-=desc
-
-доступ ко всем действиям по имени спейса
-
-=param
-
-  {cached=>1}
-
-=sql
-
-  select count(n.*)
-  from 
-    "{% $schema %}"."{% $tables{namespaces} %}" n
-    join "{% $schema %}"."{% $tables{refs} %}" r on n.id=r.id1
-    ---join "{% $schema %}"."{% $tables{roles} %}" o on r.id2=o.id
-  where
-    n.namespace=?
-    and r.id2=any(?) --- roles ids
-    ---and coalesce(o.disable, 0::bit) <> 1::bit
-  ;
 
 
-=head2 namespaces
-
-=name namespaces
-
-=desc
-
-=sql
-
-  select *
-  from "{% $schema %}"."{% $tables{namespaces} %}"
-  {% $where %}
-  {% $order %};
 
 
 =cut
