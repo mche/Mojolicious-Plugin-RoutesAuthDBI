@@ -24,6 +24,16 @@ state $Routes = do {
   'Mojolicious::Plugin::RoutesAuthDBI::Model::Routes';
 };
 
+state $Refs = do {
+  require Mojolicious::Plugin::RoutesAuthDBI::Model::Refs;
+  'Mojolicious::Plugin::RoutesAuthDBI::Model::Refs';
+};
+
+state $Controllers = do {
+  require Mojolicious::Plugin::RoutesAuthDBI::Model::Controllers;
+  'Mojolicious::Plugin::RoutesAuthDBI::Model::Controllers';
+};
+
 
 sub init {# from plugin! init Class vars
   my $self = shift;
@@ -131,18 +141,18 @@ sub db_routes {
 
 sub access_explicit {# i.e. by refs table
   my ($self, $id1, $id2,) = @_;
-  return scalar $dbh->selectrow_array($sth->sth('cnt refs'), undef, ($id1, $id2));
+  return scalar $Refs->cnt($id1, $id2);
 }
 
 
 sub access_namespace {#implicit
   my ($self, $namespace, $id2,) = @_;
-  return scalar $dbh->selectrow_array($sth->sth('access namespace'), undef, ($namespace, $id2));
+  return scalar $Namespaces->access($namespace, $id2);
 }
 
 sub access_controller {#implicit
   my ($self, $namespace, $controller, $id2,) = @_;
-  my $c = $dbh->selectrow_hashref($sth->sth('controller', where => "where controller=? and (namespace=? or (?::varchar is null and namespace is null))"), undef, ( $controller, ($namespace) x 2,))
+  my $c = $Controllers->access( $controller, ($namespace) x 2,)
     or return undef;
   $self->access_explicit([$c->{id}], $id2);
 }

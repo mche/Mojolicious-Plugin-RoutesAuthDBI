@@ -1,4 +1,4 @@
-package Mojolicious::Plugin::RoutesAuthDBI::Model::Routes;
+package Mojolicious::Plugin::RoutesAuthDBI::Model::Refs;
 use Mojo::Base 'Mojolicious::Plugin::RoutesAuthDBI::Model::Base';
 
 state $Pos = do {
@@ -11,10 +11,10 @@ sub new {
   state $self = shift->SUPER::new(pos=>$Pos);
 }
 
-sub routes {
+sub cnt {
   my $self = ref $_[0] ? shift : shift->new;
   
-  $self->dbh->selectall_arrayref($self->sth->sth('apply routes'), { Slice => {} },);
+  $self->dbh->selectrow_array($self->sth->sth('cnt refs'), undef, (shift, shift));
 }
 
 1;

@@ -1,4 +1,4 @@
-package Mojolicious::Plugin::RoutesAuthDBI::Model::Routes;
+package Mojolicious::Plugin::RoutesAuthDBI::Model::Controllers;
 use Mojo::Base 'Mojolicious::Plugin::RoutesAuthDBI::Model::Base';
 
 state $Pos = do {
@@ -11,10 +11,10 @@ sub new {
   state $self = shift->SUPER::new(pos=>$Pos);
 }
 
-sub routes {
+sub access {
   my $self = ref $_[0] ? shift : shift->new;
   
-  $self->dbh->selectall_arrayref($self->sth->sth('apply routes'), { Slice => {} },);
+  $self->dbh->selectrow_hashref($self->sth->sth('controller', where => "where controller=? and (namespace=? or (?::varchar is null and namespace is null))"), undef, ( $_[0..2]))
 }
 
 1;

@@ -14,7 +14,7 @@ state $Pos = do {
 
 
 sub new {
-  my $self = shift->SUPER::new(pos=>$Pos);
+  state $self = shift->SUPER::new(pos=>$Pos);
   my $r = $self->dbh->selectrow_hashref($self->sth->sth('profile'), undef, (shift, shift,))
     || {};
   @$self{ keys %$r } = values %$r;
