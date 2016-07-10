@@ -18,15 +18,3 @@ sub cnt {
 }
 
 1;
-
-__END__
-#~ sub new {
-  #~ my $proto = shift;
-  #~ my $class = ref($proto) || $proto;
-  #~ my $self = shift || {};
-  #~ bless $self, $class;
-  #~ my %arg = @_;
-  #~ $self->$_($arg{$_})
-    #~ for grep exists $arg{$_},qw(dbh sth);
-  #~ $self;
-#~ }

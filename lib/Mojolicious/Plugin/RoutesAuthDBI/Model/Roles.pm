@@ -1,4 +1,4 @@
-package Mojolicious::Plugin::RoutesAuthDBI::Model::Controllers;
+package Mojolicious::Plugin::RoutesAuthDBI::Model::Roles;
 use Mojo::Base 'Mojolicious::Plugin::RoutesAuthDBI::Model::Base';
 
 state $Pos = do {
@@ -11,11 +11,9 @@ sub new {
   state $self = shift->SUPER::new(pos=>$Pos);
 }
 
-sub controller_ns {
+sub access {
   my $self = ref $_[0] ? shift : shift->new;
-  
-  $self->dbh->selectrow_hashref($self->sth->sth('controller', where => "where controller=? and (namespace=? or (?::varchar is null and namespace is null))"), undef, ( $_[0..2]));
+  $self->dbh->selectrow_array($self->sth->sth('access action'), undef, ( $_[0..2] ));
 }
 
 1;
-

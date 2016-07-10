@@ -1,11 +1,5 @@
-package Mojolicious::Plugin::RoutesAuthDBI::Model::Profiles;
+package Mojolicious::Plugin::RoutesAuthDBI::Model::Actions;
 use Mojo::Base 'Mojolicious::Plugin::RoutesAuthDBI::Model::Base';
-
-has roles => sub {
-  my $self=shift;
-  $self->dbh->selectall_arrayref($self->sth->sth('profile roles'), { Slice => {} }, ($self->{id}));
-  
-};
 
 state $Pos = do {
   require Mojolicious::Plugin::RoutesAuthDBI::POS::Access;
@@ -14,11 +8,12 @@ state $Pos = do {
 
 
 sub new {
-  my $self = shift->SUPER::new(pos=>$Pos);
-  my $r = $self->dbh->selectrow_hashref($self->sth->sth('profile'), undef, (shift, shift,))
-    || {};
-  @$self{ keys %$r } = values %$r;
-  $self;
+  state $self = shift->SUPER::new(pos=>$Pos);
+}
+
+sub access {
+  my $self = ref $_[0] ? shift : shift->new;
+  $self->dbh->selectrow_array($self->sth->sth('access action'), undef, ( $_[0..2] ));
 }
 
 1;
