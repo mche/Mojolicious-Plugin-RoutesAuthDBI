@@ -139,7 +139,7 @@ sub register {
   
   $self->app->routes->add_condition(access => sub {$self->cond_access(@_)});
   $access->apply_ns();
-  $access->apply_route($_) for @{ $access->db_routes };
+  $access->apply_route($_) for @{ $access->routes };
   
   if ($self->conf->{oauth}) {
     my $oauth = $self->oauth;
@@ -516,7 +516,6 @@ The callback will get parameters: $profile, $route, $c, $captures, $args (this c
 
 Returns access instance obiect. See L<Mojolicious::Plugin::RoutesAuthDBI::Access> methods.
 
-  $c->access->db_routes;
   if ($c->access->access_explicit([1,2,3], [1,2,3])) {
     # yes, accessible
   }

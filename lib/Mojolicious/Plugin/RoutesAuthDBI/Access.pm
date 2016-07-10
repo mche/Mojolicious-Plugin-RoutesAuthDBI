@@ -134,7 +134,7 @@ sub apply_route {# meth in Plugin
   return $nr;
 }
 
-sub db_routes {
+sub routes {
   my ($self,) = @_;
   $Routes->routes;
 }
@@ -288,7 +288,7 @@ Select from db table I<namespaces> ns thus app_ns=1 and push them to $app->names
 
 Heart of routes generation from db tables and not only. Insert to app->routes an hash item $r_hash. DB schema specific. Return new Mojolicious route.
 
-=item * B<db_routes()>
+=item * B<routes()>
 
 Fetch records for apply_routes. Must return arrayref of hashrefs routes.
 
