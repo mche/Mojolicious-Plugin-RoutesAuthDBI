@@ -1,11 +1,8 @@
 package Mojolicious::Plugin::RoutesAuthDBI::Model::Actions;
 use Mojo::Base 'Mojolicious::Plugin::RoutesAuthDBI::Model::Base';
+use Mojolicious::Plugin::RoutesAuthDBI::Util qw(load_class);
 
-state $Pos = do {
-  require Mojolicious::Plugin::RoutesAuthDBI::POS::Access;
-  Mojolicious::Plugin::RoutesAuthDBI::POS::Access->new;
-};
-
+state $Pos = load_class('Mojolicious::Plugin::RoutesAuthDBI::POS::Access')->new;
 
 sub new {
   state $self = shift->SUPER::new(pos=>$Pos);
@@ -18,14 +15,3 @@ sub access {
 
 1;
 
-__END__
-#~ sub new {
-  #~ my $proto = shift;
-  #~ my $class = ref($proto) || $proto;
-  #~ my $self = shift || {};
-  #~ bless $self, $class;
-  #~ my %arg = @_;
-  #~ $self->$_($arg{$_})
-    #~ for grep exists $arg{$_},qw(dbh sth);
-  #~ $self;
-#~ }

@@ -2,23 +2,14 @@ package Mojolicious::Plugin::RoutesAuthDBI::Admin;
 use Mojo::Base 'Mojolicious::Controller';
 
 
+
 my $pkg = __PACKAGE__;
-my ($dbh, $sth, $init_conf);
-has [qw(dbh sth plugin)];
+my ($Init);
+has [qw(app plugin)];
 
 sub init {# from plugin! init Class vars
-  my $self = shift;
-  my %args = @_;
-
-  $self->dbh($self->{dbh} || $args{dbh});
-  $dbh = $self->dbh
-    or die "Нет DBI handler";
-  $self->sth($self->{sth} || $args{sth});
-  $sth = $self->sth
-    or die "Нет STH";
-  #~ $app = $self->app($self->{app} || $args{app});
-  $self->plugin($self->{plugin} || $args{plugin});
-  $init_conf = $self;
+  state $self = shift->SUPER::new(@_);
+  $Init = $self;
   return $self;
 }
 
@@ -69,7 +60,7 @@ sub signout {
 sub users {
   my $c = shift;
   
-  my $p = $dbh->selectall_arrayref($sth->sth('profiles'), {Slice=>{}},);
+  my $p = $Init->plugin->model->{Profiles}->profiles;
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
@@ -130,12 +121,12 @@ sub trust_new_user {
   my $ru = $c->ref($rl->{id} => $u->{id});
   
   # CONTROLLER
-  my $cc = $dbh->selectrow_hashref($sth->sth('controller', where=>"where controller=? and (namespace=? or (?::varchar is null and namespace is null))"), undef, ($init_conf->{controller}, ($init_conf->{namespace}) x 2,));
-  $cc ||= $dbh->selectrow_hashref($sth->sth('new controller'), undef, ($init_conf->{controller}, 'admin actions'));
+  my $cc = $dbh->selectrow_hashref($sth->sth('controller', where=>"where controller=? and (namespace=? or (?::varchar is null and namespace is null))"), undef, ($Init->{controller}, ($Init->{namespace}) x 2,));
+  $cc ||= $dbh->selectrow_hashref($sth->sth('new controller'), undef, ($Init->{controller}, 'admin actions'));
   
   #Namespace
-  my $ns = $dbh->selectrow_hashref($sth->sth('namespace'), undef, (undef, $init_conf->{namespace},));
-  $ns ||= $dbh->selectrow_hashref($sth->sth('new namespace'), undef, ($init_conf->{namespace}, 'plugin ns!', undef, undef,));
+  my $ns = $dbh->selectrow_hashref($sth->sth('namespace'), undef, (undef, $Init->{namespace},));
+  $ns ||= $dbh->selectrow_hashref($sth->sth('new namespace'), undef, ($Init->{namespace}, 'plugin ns!', undef, undef,));
   
   #ref namespace -> controller
   my $nc = $c->ref($ns->{id}, $cc->{id});
@@ -146,7 +137,7 @@ sub trust_new_user {
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
-Success sign up new trust-admin-user with whole access to namespace=[$init_conf->{namespace}]
+Success sign up new trust-admin-user with whole access to namespace=[$Init->{namespace}]
 ===
 
 USER:
@@ -754,8 +745,8 @@ sub ref {# get or save
 my @self_routes_cols = qw(request action name auth descr);
 sub self_routes {# from plugin!
   my $c = shift;
-  my $prefix = $init_conf->{prefix};
-  my $trust = $init_conf->{trust};
+  my $prefix = $Init->{prefix};
+  my $trust = $Init->{trust};
 
   my $t = <<TABLE;
 /$prefix	index	admin home	1	Main page
@@ -814,8 +805,8 @@ TABLE
   for my $line (grep /\S+/, split /\n/, $t) {
     my $r = {};
     @$r{@self_routes_cols} = map($_ eq '' ? undef : $_, split /\t/, $line);
-    $r->{namespace} = $init_conf->{namespace};
-    $r->{controller} = $init_conf->{controller};
+    $r->{namespace} = $Init->{namespace};
+    $r->{controller} = $Init->{controller};
     push @r, $r;
   }
   

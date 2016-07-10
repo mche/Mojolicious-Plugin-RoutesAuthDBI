@@ -103,6 +103,9 @@ has oauth => sub {
   return $oauth->init;
 };
 
+has model => sub {
+  { map $_ => load_class("Mojolicious::Plugin::RoutesAuthDBI::Model::$_")->new, qw(Profiles Namespaces Routes Refs Controllers Actions Roles) }
+};
 
 sub register {
   my $self = shift;
@@ -144,16 +147,6 @@ sub register {
   return $self, $access;
 
 }
-
-#~ sub _class {
-  #~ my $self = shift;
-  #~ my $conf = ref $_[0] ? shift : {@_};
-  #~ my $class  = join '::', $conf->{namespace} ? ($conf->{namespace}) : (), $conf->{module} || $conf->{controller} || $conf->{package};
-  
-  #~ my $e; $e = load_class($class)# success undef
-    #~ and die $e;
-  #~ return $class;
-#~ }
 
 # 
 sub cond_access {# add_condition

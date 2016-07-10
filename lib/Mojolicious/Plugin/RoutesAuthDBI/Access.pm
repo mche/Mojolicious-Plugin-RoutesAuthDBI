@@ -4,30 +4,20 @@ use Exporter 'import';
 our @EXPORT_OK = qw(load_user validate_user);
 use Mojolicious::Plugin::RoutesAuthDBI::Util qw(load_class);
 
-
-#~ state $pkg = __PACKAGE__;
-my ($App, $Plugin); # assign on ->init class
 has [qw(app plugin)];
 
-state $NS = 'Mojolicious::Plugin::RoutesAuthDBI';
-state $Profile =             load_class(namespace=>$NS, module=>'Model::Profiles');
-state $Namespaces = load_class(namespace=>$NS, module=>'Model::Namespaces');
-state $Routes =               load_class(namespace=>$NS, module=>'Model::Routes');
-state $Refs =                      load_class(namespace=>$NS, module=>'Model::Refs');
-state $Controllers = load_class(namespace=>$NS, module=>'Model::Controllers');
-state $Actions =             load_class(namespace=>$NS, module=>'Model::Actions');
-state $Roles =                   load_class(namespace=>$NS, module=>'Model::Roles');
+#~ has model => sub {
+  #~ { map $_ => load_class("Mojolicious::Plugin::RoutesAuthDBI::Model::$_")->new, qw(Profiles Namespaces Routes Refs Controllers Actions Roles) }
+#~ };
 
 sub new {# from plugin! init Class vars
   state $self = shift->SUPER::new(@_);
-  $Plugin = $self->plugin;
-  $App = $self->app;
-  return $self;
 }
 
 sub load_user {# import for Mojolicious::Plugin::Authentication
   my ($c, $uid) = @_;
-  my $p = $Profile->new($uid, undef); #$dbh->selectrow_hashref($sth->sth('profile'), undef, ($uid, undef)), dbh=>$dbh, sth=>$sth
+  
+  my $p = load_class("Mojolicious::Plugin::RoutesAuthDBI::Model::Profiles")->get_profile($uid, undef);
   $c->app->log->debug("Loading profile by id=$uid ". ($p->{id} ? 'success' : 'failed'));
   $p->{pass} = '**********************';
   return $p;
@@ -39,8 +29,7 @@ sub validate_user {# import for Mojolicious::Plugin::Authentication
   return $extradata->{id}
     if $extradata && $extradata->{id};
     
-  #~ if (my $p = $dbh->selectrow_hashref($sth->sth('profile'), undef, (undef, $login))) {
-  if (my $p = $Profile->new(undef, $login)) {
+  if (my $p = load_class("Mojolicious::Plugin::RoutesAuthDBI::Model::Profiles")->get_profile(undef, $login)) {
     $c->app->log->debug("Success authenticate by login[$login]/pass[$pass] for profile id[$p->{id}]")
       and return $p->{id}
       if $p->{pass} eq $pass  && !$p->{disable};
@@ -50,32 +39,32 @@ sub validate_user {# import for Mojolicious::Plugin::Authentication
 
 sub apply_ns {# Plugin
   my ($self,) = @_;
-  my $ns = $Namespaces->app_ns;
+  my $ns = $self->plugin->model->{Namespaces}->app_ns;
   return unless @$ns;
-  my $r = $App->routes;
+  my $r = $self->app->routes;
   push @{ $r->namespaces() }, $_->{namespace} for @$ns;
 }
 
 sub apply_route {# meth in Plugin
   my ($self, $r_hash) = @_;
-  my $r = $App->routes;
+  my $r = $self->app->routes;
   
-  $App->log->debug("Skip disabled route id=[$r_hash->{id}] [$r_hash->{request}]")
+  $self->app->log->debug("Skip disabled route id=[$r_hash->{id}] [$r_hash->{request}]")
     and return undef
     if $r_hash->{disable};
   
   $r_hash->{request} //= $r_hash->{route};
   
-  $App->log->debug("Skip route @{[$App->dumper($r_hash) =~ s/\s+//gr]}: empty request")
+  $self->app->log->debug("Skip route @{[$self->app->dumper($r_hash) =~ s/\s+//gr]}: empty request")
     and return undef
     unless $r_hash->{request};
   
-  $App->log->debug("Skip comment request [$r_hash->{request}]")
+  $self->app->log->debug("Skip comment request [$r_hash->{request}]")
     and return undef
     if $r_hash->{request} =~ /^#/;
   
   my @request = grep /\S/, split /\s+/, $r_hash->{request}
-    or $App->log->debug("Skip route @{[$App->dumper($r_hash) =~ s/\s+//gr]}: bad request")
+    or $self->app->log->debug("Skip route @{[$self->app->dumper($r_hash) =~ s/\s+//gr]}: bad request")
     and return;
   my $nr = $r->route(pop @request);
   $nr->via(@request) if @request;
@@ -96,51 +85,51 @@ sub apply_route {# meth in Plugin
   } elsif ( $r_hash->{callback} ) {
     
     my $cb = eval $r_hash->{callback};
-    die "Compile error on callback: [$@]", $App->dumper($r_hash)
+    die "Compile error on callback: [$@]", $self->app->dumper($r_hash)
       if $@;
     $nr->to(cb => $cb);
     
   } else {
-    die "No defaults for route: ", $App->dumper($r_hash);
+    die "No defaults for route: ", $self->app->dumper($r_hash);
   }
   $nr->name($r_hash->{name}) if $r_hash->{name};
-  #~ $App->log->debug("$pkg generate the route from data row [@{[$App->dumper($r_hash) =~ s/\n/ /gr]}]");
+  #~ $self->app->log->debug("$pkg generate the route from data row [@{[$self->app->dumper($r_hash) =~ s/\n/ /gr]}]");
   return $nr;
 }
 
 sub routes {
   my ($self,) = @_;
-  $Routes->routes;
+  $self->plugin->model->{Routes}->routes;
 }
 
 sub access_explicit {# i.e. by refs table
   my ($self, $id1, $id2,) = @_;
-  return scalar $Refs->cnt($id1, $id2);
+  return scalar $self->plugin->model->{Refs}->cnt($id1, $id2);
 }
 
 
 sub access_namespace {#implicit
   my ($self, $namespace, $id2,) = @_;
-  return scalar $Namespaces->access($namespace, $id2);
+  return scalar $self->plugin->model->{Namespaces}->access($namespace, $id2);
 }
 
 sub access_controller {#implicit
   my ($self, $namespace, $controller, $id2,) = @_;
-  my $c = $Controllers->controller_ns( $controller, ($namespace) x 2,)
+  my $c = $self->plugin->model->{Controllers}->controller_ns( $controller, ($namespace) x 2,)
     or return undef;
   $self->access_explicit([$c->{id}], $id2);
 }
 
 sub access_action {#implicit
   my ($self, $namespace, $controller, $action, $id2,) = @_;
-  my $c = $Controllers->controller_ns( $controller, ($namespace) x 2,)
+  my $c = $self->plugin->model->{Controllers}->controller_ns( $controller, ($namespace) x 2,)
     or return undef;
-  return scalar $Actions->access( $c->{id}, $action, $id2);
+  return scalar $self->plugin->model->{Actions}->access( $c->{id}, $action, $id2);
 }
 
 sub access_role {#implicit
   my ($self, $role, $id2,) = @_;
-  return scalar $Roles->access($role =~ /\D/ ? (undef, $role) : ($role, undef), $id2);
+  return scalar $self->plugin->model->{Roles}->access($role =~ /\D/ ? (undef, $role) : ($role, undef), $id2);
 }
 
 1;

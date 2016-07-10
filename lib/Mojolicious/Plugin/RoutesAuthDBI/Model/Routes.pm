@@ -1,10 +1,8 @@
 package Mojolicious::Plugin::RoutesAuthDBI::Model::Routes;
 use Mojo::Base 'Mojolicious::Plugin::RoutesAuthDBI::Model::Base';
+use Mojolicious::Plugin::RoutesAuthDBI::Util qw(load_class);
 
-state $Pos = do {
-  require Mojolicious::Plugin::RoutesAuthDBI::POS::Access;
-  Mojolicious::Plugin::RoutesAuthDBI::POS::Access->new;
-};
+state $Pos = load_class('Mojolicious::Plugin::RoutesAuthDBI::POS::Access')->new;
 
 
 sub new {

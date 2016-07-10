@@ -79,7 +79,7 @@ L<DBIx::POS::Template>
 
 =sql
 
-  insert into "{% $schema %}"."{% $tables{oauth_sites} %}" (name,conf) values (?,?)
+  insert into "{% $schema %}"."{% $tables{oauth_sites} %}" (conf,name) values (?,?)
   returning *;
 
 =head2 update oauth user

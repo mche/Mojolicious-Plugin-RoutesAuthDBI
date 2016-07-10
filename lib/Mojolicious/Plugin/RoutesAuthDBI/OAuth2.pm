@@ -1,11 +1,13 @@
 package Mojolicious::Plugin::RoutesAuthDBI::OAuth2;
 use Mojo::Base 'Mojolicious::Controller';
-use Mojolicious::Plugin::RoutesAuthDBI::Util qw(json_enc json_dec);
+use Mojolicious::Plugin::RoutesAuthDBI::Util qw(json_enc load_class);
 use Hash::Merge qw( merge );
 use Digest::MD5 qw(md5_hex);
 
-my ($dbh, $sth, $Init);
-has [qw(app dbh sth plugin)];
+my ($Init);
+has [qw(app plugin)];
+
+has model_OAuth => sub { load_class('Mojolicious::Plugin::RoutesAuthDBI::Model::OAuth')->new };
 
 has _providers => sub {# default
   {
@@ -71,15 +73,11 @@ has _providers => sub {# default
 has config => sub {# только $Init !
   my $self = shift;
   
-  my ($update, $insert) = ($sth->sth('update oauth site'), $sth->sth('new oauth site'));
-  
   while (my ($name, $val) = each %{$self->{providers}}) {
-    my $site = $dbh->selectrow_hashref($update, undef, ( json_enc($val), $name,))
-      || $dbh->selectrow_hashref($insert, undef, ($name, json_enc($val)));
+    my $site = $self->model_OAuth->site( json_enc($val), $name,);
     @$val{qw(id)} = @$site{qw(id)};
     $val->{name} = $name;
   }
-  
   merge $self->{providers}, $self->_providers;
 };
 
@@ -88,17 +86,7 @@ has auth_profile => sub { shift->${ \$Init->plugin->merge_conf->{auth}{current_u
 has ua => sub {shift->app->ua->connect_timeout(30);};
 
 sub init {# from plugin
-  my $self = shift;
-  my %args = @_;
-
-  $self->dbh($self->{dbh} || $args{dbh});
-  $dbh = $self->dbh
-    or die "Нет DBI handler";
-  $self->sth($self->{sth} || $args{sth});
-  $sth = $self->sth
-    or die "Нет STH";
-  $self->app($self->{app} || $args{app});
-  $self->plugin($self->{plugin} || $args{plugin});
+  state $self = shift->SUPER::new(@_);
   
   die "Plugin OAuth2 already loaded"
     if $self->app->renderer->helpers->{'oauth2.get_token'};
@@ -131,7 +119,7 @@ sub login {
   
   my $auth_profile = $c->auth_profile;
   
-  my $r; $r = $dbh->selectrow_hashref($sth->sth('check profile oauth'), undef, ($auth_profile->{id}, $site->{id}))
+  my $r; $r = $self->model_OAuth->check_profile($auth_profile->{id}, $site->{id})
     and $c->app->log->warn("Попытка двойной авторизации сайта $site_name", $c->dumper($r), "профиль: ", $c->dumper($auth_profile),)
     and return $c->redirect_to($c->url_for(${ delete $c->session->{oauth_init} }{redirect})->query(err=> "Уже есть авторизация сайта $site_name"))
     if $auth_profile;
@@ -178,8 +166,7 @@ sub login {
       @$profile{keys %$auth} = values %$auth;
       
       my @bind = (json_enc($profile), $site->{id}, $auth->{uid} || $auth->{user_id} || $profile->{uid} || $profile->{id} );
-      my $u = $dbh->selectrow_hashref($sth->sth('update oauth user'), undef, @bind)
-      || $dbh->selectrow_hashref($sth->sth('new oauth user'), undef, @bind);
+      my $u = $self->model_OAuth->user(@bind);
 
       #~ $c->app->log->debug("Oauth user row: ", $c->dumper($u));
       
@@ -187,7 +174,7 @@ sub login {
       
         $auth_profile
         
-        || $dbh->selectrow_hashref($sth->sth('profile by oauth user'), undef, ($u->{id}))
+        || $self->model_OAuth->profile($u->{id})
 
 
         || $dbh->selectrow_hashref($Init->plugin->admin->sth->sth('new profile'), undef, ([$profile->{first_name} || $profile->{given_name}, $profile->{last_name} || $profile->{family_name},]));
