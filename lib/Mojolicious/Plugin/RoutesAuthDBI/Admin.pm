@@ -717,12 +717,11 @@ sub vars {# получить из stash || param
   } @_;
 }
 
-sub ref {# get or save
-  my $c = shift;
-  my ($id1, $id2) = @_;
-    #~ $c->app->log->debug($c->dumper(\@_));
-  $Init->plugin->model->{Refs}->ref($id1, $id2,);
-}
+#~ sub ref {# get or save
+  #~ my $c = shift;
+  #~ my ($id1, $id2) = @_;
+  #~ $Init->plugin->model->{Refs}->ref($id1, $id2,);
+#~ }
 
 
 
