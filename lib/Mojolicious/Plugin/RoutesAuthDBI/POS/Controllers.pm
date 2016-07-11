@@ -93,6 +93,22 @@ L<DBIx::POS::Template>
   values (?,?)
   returning *;
 
+=head2 controllers
+
+=name controllers
+
+=desc
+
+Контроллер либо привязан к спейсу или нет
+
+=sql
+
+  select c.*, n.namespace, n.id as namespace_id, n.descr as namespace_descr
+    from "{% $schema %}"."{% $tables{controllers} %}" c
+    left join "{% $schema %}"."{% $tables{refs} %}" r on c.id=r.id2
+    left join "{% $schema %}"."{% $tables{namespaces} %}" n on n.id=r.id1
+    {% $where %};
+
 
 =cut
 

@@ -75,7 +75,7 @@ sub new_user {
   my ($login, $pass) = $c->vars('login', 'pass');
   
   my $r;
-  ($r = $Init->plugin->model->{Profiles}->get_profile(undef, $login)
+  ($r = $Init->plugin->model->{Profiles}->get_profile(undef, $login))
     and $c->render(format=>'txt', text=><<TXT)
 $pkg
 
@@ -89,7 +89,7 @@ TXT
   
   $r = $Init->plugin->model->{Logins}->new_login($login, $pass);
   
-  my $p = $Init->plugin->model->{Profiles}->new_profile([$login],));
+  my $p = $Init->plugin->model->{Profiles}->new_profile([$login],);
   
   $Init->plugin->model->{Refs}->ref($p->{id} => $r->{id});
   
@@ -197,7 +197,7 @@ TXT
     and return
     unless $u;
   
-  my $r = $p->roles;
+  my $r = $u->roles;
   
   $c->render(format=>'txt', text=><<TXT);
 $pkg
@@ -265,7 +265,7 @@ sub del_role_user {# удалить связь пользователя с ро�
   
   my ($role) = $c->vars('role');
   # ROLE
-  my $r = $dbh->selectrow_hashref($sth->sth('role'), undef, ($role =~ /\D/ ? (undef, $role) : ($role, undef,)));
+  my $r = $Init->plugin->model->{Roles}->get_role($role =~ /\D/ ? (undef, $role) : ($role, undef,));
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
@@ -277,7 +277,7 @@ TXT
     unless $r;
 
   my ($user) = $c->vars('user');
-  my $u =  $dbh->selectrow_hashref($sth->sth('profile'), undef, ($user =~ /\D/ ? (undef, $user) : ($user, undef,)));
+  my $u = $Init->plugin->model->{Profiles}->get_profile($user =~ /\D/ ? (undef, $user) : ($user, undef,));
   
   $c->render(format=>'txt', text=><<TXT)
 $pkg
@@ -289,7 +289,7 @@ TXT
     and return
     unless $u;
   
-  my $ref = $dbh->selectrow_hashref($sth->sth('del ref'), undef, (undef, $r->{id}, $u->{id}));
+  my $ref = $Init->plugin->model->{Refs}->del(undef, $r->{id}, $u->{id});
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
@@ -317,7 +317,7 @@ sub disable_role {
   
   my ($role) = $c->vars('role');
   # ROLE
-  my $r = $dbh->selectrow_hashref($sth->sth('dsbl/enbl role'), undef, ($a, $role =~ /\D/ ? (undef, $role) : ($role, undef,)));
+  my $r = $Init->plugin->model->{Roles}->dsbl_enbl($a, $role =~ /\D/ ? (undef, $role) : ($role, undef,));
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
@@ -347,7 +347,7 @@ sub role_users {# все пользователи роли по запросу /
   
   my ($role) = $c->vars('role');
   # ROLE
-  my $r = $dbh->selectrow_hashref($sth->sth('role'), undef, ($role =~ /\D/ ? (undef, $role) : ($role, undef,)));
+  my $r = $Init->plugin->model->{Roles}->get_role($role =~ /\D/ ? (undef, $role) : ($role, undef,));
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
@@ -358,7 +358,7 @@ TXT
     and return
     unless $r;
   
-  my $u = $dbh->selectall_arrayref($sth->sth('role profiles'), { Slice => {} }, ($r->{id}));
+  my $u = $Init->plugin->model->{Roles}->profiles($r->{id});
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
@@ -374,7 +374,7 @@ sub role_routes {# все маршруты роли по запросу /myadmin
   
    my ($role) = $c->vars('role');
   # ROLE
-  my $r = $dbh->selectrow_hashref($sth->sth('role'), undef, ($role =~ /\D/ ? (undef, $role) : ($role, undef,)));
+  my $r = $Init->plugin->model->{Roles}->get_role($role =~ /\D/ ? (undef, $role) : ($role, undef,));
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
@@ -384,7 +384,7 @@ TXT
     and return
     unless $r;
   
-  my $t = $dbh->selectall_arrayref($sth->sth('role routes'), { Slice => {} }, ($r->{id}));
+  my $t = $Init->plugin->model->{Routes}->routes_ref($r->{id});
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
@@ -396,7 +396,7 @@ TXT
 
 sub controllers {
   my $c = shift;
-  my $list = $dbh->selectall_arrayref($sth->sth('controllers'), { Slice => {} }, );
+  my $list = $Init->plugin->model->{Controllers}->controllers;
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
@@ -410,14 +410,14 @@ TXT
 sub controller {# /controller/:ns/:controll
   my $c = shift;
   my ($ns, $controll) = $c->vars(qw(ns controll));
-  my $list = $dbh->selectall_arrayref($sth->sth('controller', where=>"where (id=? or controller=?) and (namespace_id = ? or namespace = ? or (?::varchar is null and namespace is null))"), { Slice => {} }, ($controll =~ /\D/ ? (undef, $controll) : ($controll, undef), $ns =~ /\D/ ? (undef, $ns) : ($ns, undef), $ns));
+  my $r = $Init->plugin->model->{Controllers}->controller_id_ns($controll =~ /\D/ ? (undef, $controll) : ($controll, undef), $ns =~ /\D/ ? (undef, $ns) : ($ns, undef), $ns);
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
-CONTROLLER (@{[scalar @$list]})
+CONTROLLER
 ===
 
-@{[$c->dumper( $list)]}
+@{[$c->dumper( $r)]}
 TXT
 }
 
@@ -426,7 +426,7 @@ sub new_controller {
   #~ my $ns = $c->stash('ns') || $c->param('ns') ||  $c->stash('namespace') || $c->param('namespace');
   my ($ns) = $c->vars('ns') || $c->vars('namespace');
   my ($mod) = $c->vars('module');
-  my $cn = $dbh->selectrow_hashref($sth->sth('controller'), undef, ($mod, ($ns) x 2,));
+  my $cn = $Init->plugin->model->{Controllers}->controller_ns($mod, ($ns) x 2,);
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
@@ -438,11 +438,11 @@ TXT
   and return
   if $cn;
   my $n = $c->new_namespace($ns) if $ns;
-  $cn = $dbh->selectrow_hashref($sth->sth('new controller'), undef, ($mod, undef));
+  $cn = $Init->plugin->model->{Controllers}->new_controller($mod, undef);
   $Init->plugin->model->{Refs}->ref($n->{id}, $cn->{id})
     if $n;
   
-  $cn = $dbh->selectrow_hashref($sth->sth('controller'), undef, ($mod, ($ns) x 2,));
+  $cn = $Init->plugin->model->{Controllers}->controller_ns($mod, ($ns) x 2,);
   
   $c->render(format=>'txt', text=><<TXT);
 $pkg
@@ -457,7 +457,7 @@ TXT
 
 sub namespaces {
   my $c = shift;
-  my $list = $dbh->selectall_arrayref($sth->sth('namespaces'), { Slice => {} }, );
+  my $list = $Init->plugin->model->{Namespaces}->namespaces;
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
@@ -474,7 +474,7 @@ sub new_namespace {
   my ($descr) = $_[0] ? (shift) :  $c->vars('descr');
   my ($app_ns) = $_[0] ? (shift) : $c->vars('app_ns');
   my ($interval_ts) = $_[0] ? (shift) : $c->vars('interval_ts');
-  my $n = $dbh->selectrow_hashref($sth->sth('namespace'), undef, ($ns =~ /\D/ ? (undef, $ns) : ($ns, undef,)));
+  my $n = $Init->plugin->model->{Namespaces}->namespace($ns =~ /\D/ ? (undef, $ns) : ($ns, undef,));
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
@@ -485,7 +485,7 @@ Namespace already exists
 TXT
   and return $n
   if $n;
-  $n = $dbh->selectrow_hashref($sth->sth('new namespace'), undef, ($ns, $descr, $app_ns, $interval_ts));
+  $n = $Init->plugin->model->{Namespaces}->new_namespace($ns, $descr, $app_ns, $interval_ts);
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
@@ -500,9 +500,9 @@ TXT
 
 sub actions {
   my $c = shift;
-  my $list = $dbh->selectall_arrayref($sth->sth('actions'), { Slice => {} }, );
+  my $list = $Init->plugin->model->{Actions}->actions;
   map {
-    $_->{routes} = $dbh->selectall_arrayref($sth->sth('action routes', where=>"where action_id=?"), { Slice => {} }, ($_->{id}));
+    $_->{routes} = $Init->plugin->model->{Routes}->routes_action($_->{id});
   } @$list;
   $c->render(format=>'txt', text=><<TXT);
 $pkg
@@ -516,7 +516,7 @@ TXT
 
 sub routes {
   my $c = shift;
-  my $list = $dbh->selectall_arrayref($sth->sth('apply routes'), { Slice => {} }, );
+  my $list = $Init->plugin->model->{Routes}->routes;
   
   $c->render(format=>'txt', text=><<TXT);
 $pkg
@@ -530,7 +530,7 @@ TXT
 
 sub new_route_ns {# показать список мест-имен
   my $c = shift;
-  my $list = $dbh->selectall_arrayref($sth->sth('namespaces'), { Slice => {} }, );
+  my $list = $Init->plugin->model->{Namespaces}->namespaces;
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
@@ -547,9 +547,9 @@ TXT
 sub new_route_c {# показать список контроллеров
   my $c = shift;
   my ($ns) = $c->vars('ns');
-  $ns = $dbh->selectrow_hashref($sth->sth('namespace'), undef, ($ns =~ /\D/ ? (undef, $ns) : ($ns, undef,)))
+  $ns = $Init->plugin->model->{Namespaces}->namespace($ns =~ /\D/ ? (undef, $ns) : ($ns, undef,))
     || {namespace => $ns};
-  my $list = $dbh->selectall_arrayref($sth->sth('controllers', where=>"where n.id=? or (?::int is null and n.id is null)"), { Slice => {} }, ($ns->{id}, $ns->{id}));
+  my $list = $Init->plugin->model->{Controllers}->controllers_ns_id($ns->{id}, $ns->{id});
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
@@ -568,14 +568,14 @@ sub new_route_a {# показать список действий
   my $c = shift;
   my ($ns, $controll) = $c->vars('ns', 'controll');
   
-  $ns = $dbh->selectrow_hashref($sth->sth('namespace'), undef, ($ns =~ /\D/ ? (undef, $ns) : ($ns, undef,)))
+  $ns = $Init->plugin->model->{Namespaces}->namespace($ns =~ /\D/ ? (undef, $ns) : ($ns, undef,))
     || {namespace => $ns};
   
-  $controll = $dbh->selectrow_hashref($sth->sth('controllers', where=>"where (n.id=? or (?::varchar is null and n.id is null)) and (c.id=? or c.controller=?)"), undef, ($ns->{id}, $ns->{id}, $controll =~ /\D/ ? (undef, $controll) : ($controll, undef,), ))
+  $controll = $Init->plugin->model->{Controllers}->controller_id_ns($controll =~ /\D/ ? (undef, $controll) : ($controll, undef,), $ns->{id}, $ns->{namespace}, $ns->{namespace},)
     || {controller=>$controll};
   
-  my $list = $dbh->selectall_arrayref($sth->sth('actions', where=>"where controller_id=?"), { Slice => {} }, ($controll->{id}));
-  my $list2 = $dbh->selectall_arrayref($sth->sth('actions', where=>"where controller_id is null"), { Slice => {} }, ());
+  my $list = $Init->plugin->model->{Actions}->actions_controller($controll->{id});
+  my $list2 = $Init->plugin->model->{Actions}->actions_controller_null();
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
@@ -600,14 +600,14 @@ sub new_route {# показать маршруты к действию
   my $c = shift;
   my ($ns, $controll, $act) = $c->vars('ns', 'controll', 'act');
   
-  $ns = $dbh->selectrow_hashref($sth->sth('namespace'), undef, ($ns =~ /\D/ ? (undef, $ns) : ($ns, undef,)))
+  $ns = $Init->plugin->model->{Namespaces}->namespace($ns =~ /\D/ ? (undef, $ns) : ($ns, undef,))
     || {namespace => $ns};
   
-  $controll = $dbh->selectrow_hashref($sth->sth('controllers', where=>"where (n.id=? or (?::varchar is null and n.id is null)) and (c.id=? or c.controller=?)"), undef, ($ns->{id}, $ns->{id}, $controll =~ /\D/ ? (undef, $controll) : ($controll, undef,), ))
+  $controll = $Init->plugin->model->{Controllers}->controller_id_ns($controll =~ /\D/ ? (undef, $controll) : ($controll, undef,), $ns->{id}, $ns->{namespace}, $ns->{namespace},)
     || {controller=>$controll};
   
-  $act = $dbh->selectrow_hashref($sth->sth('actions', where=>"where controller_id=? and (a.id = ? or a.action = ? )"), undef, ($controll->{id}, $act =~ /\D/ ? (undef, $act) : ($act, undef,),))
-    || $dbh->selectrow_hashref($sth->sth('actions', where=>"where controller_id is null and (a.id = ? or a.action = ? )"), undef, ($act =~ /\D/ ? (undef, $act) : ($act, undef,),))
+  $act = $Init->plugin->model->{Actions}->action_controller($controll->{id}, $act =~ /\D/ ? (undef, $act) : ($act, undef,),)
+    || $Init->plugin->model->{Actions}->action_controller_null($act =~ /\D/ ? (undef, $act) : ($act, undef,),)
     || {action => $act};
   
   # Проверка на похожий $request ?? TODO
@@ -648,11 +648,10 @@ TXT
   
   
   # маршруты действия
-  my $list = $act->{id} ? $dbh->selectall_arrayref($sth->sth('action routes', where=>'where action_id=?'), { Slice => {} }, ($act->{id}))
+  my $list = $act->{id} ? $Init->plugin->model->{Routes}->routes_action($act->{id})
     : [];
   # свободные маршруты
-  my $list2 = $act->{id} ? $dbh->selectall_arrayref($sth->sth('action routes', where=>'where action_id is null'), { Slice => {} }, ())
-    : [];
+  my $list2 = $Init->plugin->model->{Routes}->routes_action_null;
   
   no warnings;
   $c->render(format=>'txt', text=><<TXT);

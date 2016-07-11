@@ -32,5 +32,10 @@ sub new_namespace {
   $self->dbh->selectrow_hashref($self->sth->sth('new namespace'), undef, (@_));
 }
 
+sub namespaces {
+  my $self = ref $_[0] ? shift : shift->new;
+  $self->dbh->selectall_arrayref($self->sth->sth('namespaces'), { Slice => {} }, );
+}
+
 
 1;

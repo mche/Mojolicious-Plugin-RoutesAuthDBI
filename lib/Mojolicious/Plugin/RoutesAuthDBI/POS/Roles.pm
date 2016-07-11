@@ -113,6 +113,22 @@ L<DBIx::POS::Template>
     and coalesce(disable, 0::bit) <> 1::bit
   ;
 
+=head2 role profiles
+
+=name role profiles
+
+=desc
+
+Пользователи роли
+
+=sql
+
+  select p.*
+  from
+    "{% $schema %}"."{% $tables{profiles} %}" p
+    join "{% $schema %}"."{% $tables{refs} %}" r on p.id=r.id2
+  where r.id1=?;
+
 
 =cut
 

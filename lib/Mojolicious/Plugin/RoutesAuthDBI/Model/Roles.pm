@@ -27,4 +27,16 @@ sub new_role {
 
 }
 
+sub dsbl_enbl {
+  my $self = ref $_[0] ? shift : shift->new;
+  
+  $self->dbh->selectrow_hashref($self->sth->sth('dsbl/enbl role'), undef, (@_));
+
+}
+
+sub profiles {# профили роли
+  my $self = ref $_[0] ? shift : shift->new;
+  $self->dbh->selectall_arrayref($self->sth->sth('role profiles'), { Slice => {} }, (shift));
+}
+
 1;

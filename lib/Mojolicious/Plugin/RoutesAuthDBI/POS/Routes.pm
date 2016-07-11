@@ -1,4 +1,4 @@
-package Mojolicious::Plugin::RoutesAuthDBI::POS::Access;
+package Mojolicious::Plugin::RoutesAuthDBI::POS::Routes;
 use DBIx::POS::Template;
 use Hash::Merge qw(merge);
 use Mojolicious::Plugin::RoutesAuthDBI::Schema;
@@ -8,9 +8,9 @@ my $defaults = $Mojolicious::Plugin::RoutesAuthDBI::Schema::defaults;
 sub new {
   my $class= shift;
   my %arg = @_;
-  $arg{template} = $arg{template} ? merge($arg{template}, $defaults) : $defaults;
+  #~ $arg{template} = $arg{template} ? merge($arg{template}, $defaults) : $defaults;
   #~ $class->SUPER::new(__FILE__, %arg);
-  DBIx::POS::Template->instance(__FILE__, %arg);
+  DBIx::POS::Template->new(__FILE__, %arg);
 }
 
 =pod
@@ -21,13 +21,13 @@ sub new {
 
 B<POD ERRORS> here is normal because DBIx::POS::Template used.
 
-=head1 Mojolicious::Plugin::RoutesAuthDBI::POS::Access
+=head1 Mojolicious::Plugin::RoutesAuthDBI::POS::Routes
 
 ¡ ¡ ¡ ALL GLORY TO GLORIA ! ! !
 
 =head1 NAME
 
-Mojolicious::Plugin::RoutesAuthDBI::POS::Access - POS-dict for access statements L<Mojolicious::Plugin::RoutesAuthDBI::Access>.
+Mojolicious::Plugin::RoutesAuthDBI::POS::Routes - POS-dict for model Routes.
 
 =head1 DB DESIGN DIAGRAM
 
@@ -36,7 +36,7 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
 =head1 SYNOPSIS
 
     
-    my $pos = Mojolicious::Plugin::RoutesAuthDBI::POS::Access->new(template=>{tables=>{...}});
+    my $pos = Mojolicious::Plugin::RoutesAuthDBI::POS::Routes->new(template=>{tables=>{...}});
     
     my $sth = $dbh->prepare($pos->{'foo'});
 
@@ -57,6 +57,22 @@ Vars for template system of POS-statements.
 L<DBIx::POS::Template>
 
 =head1 SQL definitions
+
+=head2 role routes
+
+=name role routes
+
+=desc
+
+Маршруты роли/действия
+
+=sql
+
+  select t.*
+  from
+    "{% $schema %}"."{% $tables{routes} %}" t
+    join "{% $schema %}"."{% $tables{refs} %}" r on t.id=r.id1
+  where r.id2=?;
 
 =head2 apply routes>
 
@@ -86,35 +102,40 @@ L<DBIx::POS::Template>
     ) ac on rf.id2=ac.id
   order by r.ts - (coalesce(r.interval_ts, 0::int)::varchar || ' second')::interval;
 
-=head2 access action
+=head2 action routes
 
-=name access action
+=name action routes
 
 =desc
 
-доступ к действию в контроллере (действие-каллбак - доступ проверяется по его ID)
-
-=param
-
-  {cached=>1}
+маршрут может быть не привязан к действию
 
 =sql
 
-  select count(r.*)
-  from
-    "{% $schema %}"."{% $tables{refs} %}" rc 
-    join "{% $schema %}"."{% $tables{actions} %}" a on a.id=rc.id2
-    join "{% $schema %}"."{% $tables{refs} %}" r on a.id=r.id1
-    ---join "{% $schema %}"."{% $tables{roles} %}" o on o.id=r.id2
-  where
-    rc.id1=? ---controller id
-    and a.action=?
-    and r.id2=any(?) --- roles ids
-    ---and coalesce(o.disable, 0::bit) <> 1::bit
+  select * from (
+  select r.*, s.action_id
+  from "{% $schema %}"."{% $tables{routes} %}" r
+    left join (
+     select s.id1, a.id as action_id
+     from "{% $schema %}"."{% $tables{refs} %}" s
+      join "{% $schema %}"."{% $tables{actions} %}" a on a.id=s.id2
+    ) s on r.id=s.id1
+  ) s
+  {% $where %}; -- action_id is null - free routes; or action(id) routes
   ;
 
 
+=head2 new route
 
+=name new route
+
+=desc
+
+=sql
+
+  insert into "{% $schema %}"."{% $tables{routes} %}" (request, name, descr, auth, disable, interval_ts)
+  values (?,?,?,?,?,?)
+  returning *;
 
 
 
