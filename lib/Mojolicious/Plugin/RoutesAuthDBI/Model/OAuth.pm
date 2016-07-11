@@ -6,7 +6,7 @@ state $Pos = load_class('Mojolicious::Plugin::RoutesAuthDBI::POS::OAuth2')->new;
 
 
 sub new {
-  state $self = shift->SUPER::new(pos=>$Pos);
+  state $self = shift->SUPER::new(pos=>$Pos, @_);
 }
 
 sub site {

@@ -1,6 +1,6 @@
 package Mojolicious::Plugin::RoutesAuthDBI::OAuth2;
 use Mojo::Base 'Mojolicious::Controller';
-#~ use Mojolicious::Plugin::RoutesAuthDBI::Util qw(json_enc load_class);
+use Mojolicious::Plugin::RoutesAuthDBI::Util qw(json_enc load_class);
 use Hash::Merge qw( merge );
 use Digest::MD5 qw(md5_hex);
 

@@ -5,7 +5,7 @@ use Mojolicious::Plugin::RoutesAuthDBI::Util qw(load_class);
 state $Pos = load_class('Mojolicious::Plugin::RoutesAuthDBI::POS::Namespaces')->new;
 
 sub new {
-  state $self = shift->SUPER::new(pos=>$Pos);
+  state $self = shift->SUPER::new(pos=>$Pos, @_);
 }
 
 sub app_ns {

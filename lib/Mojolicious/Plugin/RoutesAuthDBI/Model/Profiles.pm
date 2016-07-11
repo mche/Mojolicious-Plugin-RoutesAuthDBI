@@ -11,7 +11,7 @@ has roles => sub {
 };
 
 sub new {
-  state $self = shift->SUPER::new(pos=>$Pos);
+  state $self = shift->SUPER::new(pos=>$Pos, @_);
 }
 
 sub get_profile {
