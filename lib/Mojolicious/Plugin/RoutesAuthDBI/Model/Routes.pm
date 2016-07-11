@@ -30,6 +30,11 @@ sub routes_action_null {# маршруты без действия
   $self->dbh->selectall_arrayref($self->sth->sth('action routes', where=>"where action_id is null"), { Slice => {} });
 }
 
+sub new_route {
+  my $self = ref $_[0] ? shift : shift->new;
+  $self->dbh->selectrow_hashref($self->sth->sth('new route'), undef, (@_));
+}
+
 1;
 
 __END__

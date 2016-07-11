@@ -688,21 +688,21 @@ TXT
 sub route_save {
   my $c = shift;
   my ($ns, $controll, $act, $route) = @_;
-  local $dbh->{AutoCommit} = 0;
-  $ns = $dbh->selectrow_hashref($sth->sth('new namespace'), undef, (@$ns{qw(namespace descr app_ns interval_ts)}))
+  local $Init->plugin->dbh->{AutoCommit} = 0;
+  $ns = $Init->plugin->model->{Namespaces}->new_namespace(@$ns{qw(namespace descr app_ns interval_ts)})
     if $ns->{namespace} && ! $ns->{id};
-  $controll = $dbh->selectrow_hashref($sth->sth('new controller'), undef, (@$controll{qw(controller descr)}))
+  $controll = $Init->plugin->model->{Controllers}->new_controller(@$controll{qw(controller descr)})
     unless $controll->{id};
-  $act = $dbh->selectrow_hashref($sth->sth('new action'), undef, (@$act{qw(action callback descr)}))
+  $act = $Init->plugin->model->{Actions}->new_action(@$act{qw(action callback descr)})
     unless $act->{id};
     
-  $route = $dbh->selectrow_hashref($sth->sth('new route'), undef, (@$route{@route_cols}))
+  $route = $Init->plugin->model->{Routes}->new_route(@$route{@route_cols})
     unless $route->{id};
   my $ref = [map {
     $Init->plugin->model->{Refs}->ref($$_[0]{id}, $$_[1]{id},)
       if $$_[0]{id} && $$_[1]{id};
   } ([$ns, $controll], [$controll, $act], [$route, $act],)];
-  $dbh->commit;
+  $Init->plugin->dbh->commit;
   return ($ns, $controll, $act, $route, $ref);
 
 }

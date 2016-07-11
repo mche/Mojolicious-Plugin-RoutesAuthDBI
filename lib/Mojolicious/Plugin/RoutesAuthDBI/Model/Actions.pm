@@ -43,5 +43,10 @@ sub actions_controller_null {
   $self->dbh->selectall_arrayref($self->sth->sth('actions', where=>"where controller_id is null"), { Slice => {} },);
 }
 
+sub new_action {
+  my $self = ref $_[0] ? shift : shift->new;
+  $self->dbh->selectrow_hashref($self->sth->sth('new action'), undef, (@_))
+}
+
 1;
 

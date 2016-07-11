@@ -35,4 +35,9 @@ sub profile {
   $self->dbh->selectrow_hashref($self->sth->sth('profile by oauth user'), undef, (shift))
 }
 
+sub detach {
+  my $self = ref $_[0] ? shift : shift->new;
+  $self->dbh->selectrow_hashref($self->sth->sth('отсоединить oauth'), undef, (@_));
+}
+
 1;

@@ -1,13 +1,13 @@
 package Mojolicious::Plugin::RoutesAuthDBI::OAuth2;
 use Mojo::Base 'Mojolicious::Controller';
-use Mojolicious::Plugin::RoutesAuthDBI::Util qw(json_enc load_class);
+#~ use Mojolicious::Plugin::RoutesAuthDBI::Util qw(json_enc load_class);
 use Hash::Merge qw( merge );
 use Digest::MD5 qw(md5_hex);
 
 my ($Init);
 has [qw(app plugin)];
 
-has model_OAuth => sub { load_class('Mojolicious::Plugin::RoutesAuthDBI::Model::OAuth')->new };
+has model_OAuth => sub { state $model = load_class('Mojolicious::Plugin::RoutesAuthDBI::Model::OAuth')->new };
 
 has _providers => sub {# default
   {
@@ -119,7 +119,7 @@ sub login {
   
   my $auth_profile = $c->auth_profile;
   
-  my $r; $r = $self->model_OAuth->check_profile($auth_profile->{id}, $site->{id})
+  my $r; $r = $c->model_OAuth->check_profile($auth_profile->{id}, $site->{id})
     and $c->app->log->warn("Попытка двойной авторизации сайта $site_name", $c->dumper($r), "профиль: ", $c->dumper($auth_profile),)
     and return $c->redirect_to($c->url_for(${ delete $c->session->{oauth_init} }{redirect})->query(err=> "Уже есть авторизация сайта $site_name"))
     if $auth_profile;
@@ -166,7 +166,7 @@ sub login {
       @$profile{keys %$auth} = values %$auth;
       
       my @bind = (json_enc($profile), $site->{id}, $auth->{uid} || $auth->{user_id} || $profile->{uid} || $profile->{id} );
-      my $u = $self->model_OAuth->user(@bind);
+      my $u = $c->model_OAuth->user(@bind);
 
       #~ $c->app->log->debug("Oauth user row: ", $c->dumper($u));
       
@@ -174,12 +174,12 @@ sub login {
       
         $auth_profile
         
-        || $self->model_OAuth->profile($u->{id})
+        || $c->model_OAuth->profile($u->{id})
 
 
-        || $dbh->selectrow_hashref($Init->plugin->admin->sth->sth('new profile'), undef, ([$profile->{first_name} || $profile->{given_name}, $profile->{last_name} || $profile->{family_name},]));
+        || $Init->plugin->model->{Profiles}->new_profile([$profile->{first_name} || $profile->{given_name}, $profile->{last_name} || $profile->{family_name},]);
 
-      my $r = $Init->plugin->admin->ref($профиль->{id}, $u->{id},);
+      my $r = $Init->plugin->model->{Refs}->ref($профиль->{id}, $u->{id},);
       
       $c->authenticate(undef, undef, $профиль)
         unless $auth_profile;
@@ -201,10 +201,10 @@ sub отсоединить {
   
   my $auth_profile = $c->auth_profile;
   
-  my $r = $dbh->selectrow_hashref($sth->sth('отсоединить oauth'), undef, ($site->{id}, $auth_profile->{id},));
+  my $r = $c->model_OAuth->detach($site->{id}, $auth_profile->{id},);
   #~ $c->app->log->debug("Убрал авторизацию сайта [$site_name] профиля [$auth_profile->{id}]", $c->dumper($r));
   
-  $dbh->selectrow_hashref($Init->plugin->admin->sth->sth('del ref'), undef, ($r->{ref_id}, undef, undef));
+  $Init->plugin->model->{Refs}->del($r->{ref_id}, undef, undef);
   
   $c->redirect_to($c->param('redirect') || 'profile');
 }
