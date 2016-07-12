@@ -17,7 +17,7 @@ sub get_profile {
   my $p = $self->dbh->selectrow_hashref($self->sth('profile'), undef, (shift, shift,));
   bless $p
     if $p;
-  $p;
+  $p->SUPER::new;# reinit from singleton
 }
 
 sub profiles {

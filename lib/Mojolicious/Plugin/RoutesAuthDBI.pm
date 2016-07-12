@@ -68,7 +68,7 @@ has admin => sub {# object
   my $self = shift;
   my $conf = $self->merge_conf->{'admin'};
   #~ $conf->{module} ||= $conf->{controller};
-  load_class($conf)->init(app=>$self->app, plugin=>$self,);
+  load_class($conf)->init(%$conf, app=>$self->app, plugin=>$self,);
   #~ bless $admin, $class;
   #~ $admin->{dbh} = $self->dbh;
   #~ my $pos = $admin->{pos};
@@ -84,7 +84,7 @@ has admin => sub {# object
 has oauth => sub {
   my $self = shift;
   my $conf = $self->merge_conf->{'oauth'};
-  load_class($conf)->init(app=>$self->app, plugin=>$self,);
+  load_class($conf)->init(%$conf, app=>$self->app, plugin=>$self,);
   #~ bless $oauth, $class;
   #~ $oauth->{dbh} = $self->dbh;
   #~ my $pos = $oauth->{pos};

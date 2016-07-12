@@ -3,7 +3,7 @@ use Mojo::Base 'Mojolicious::Controller';
 
 my $pkg = __PACKAGE__;
 my ($Init);
-has [qw(app plugin)];
+has [qw(plugin controller namespace prefix trust)];
 
 sub init {# from plugin! init Class vars
   state $self = shift->SUPER::new(@_);
@@ -91,7 +91,7 @@ TXT
   
   my $p = $Init->plugin->model->{Profiles}->new_profile([$login],);
   
-  $Init->plugin->model->{Refs}->ref($p->{id} => $r->{id});
+  $Init->plugin->model->{Refs}->refer($p->{id} => $r->{id});
   
   @$p{qw(login pass)} = @$r{qw(login pass)};
   
@@ -116,7 +116,7 @@ sub trust_new_user {
     || $Init->plugin->model->{Roles}->new_role('admin');
   
   # REF role->user
-  my $ru = $Init->plugin->model->{Refs}->ref($rl->{id} => $u->{id});
+  my $ru = $Init->plugin->model->{Refs}->refer($rl->{id} => $u->{id});
   
   # CONTROLLER
   my $cc = $Init->plugin->model->{Controllers}->controller_ns($Init->{controller}, ($Init->{namespace}) x 2,)
@@ -127,10 +127,10 @@ sub trust_new_user {
     || $Init->plugin->model->{Namespaces}->new_namespace($Init->{namespace}, 'plugin ns!', undef, undef,);
   
   #ref namespace -> controller
-  my $nc = $Init->plugin->model->{Refs}->ref($ns->{id}, $cc->{id});
+  my $nc = $Init->plugin->model->{Refs}->refer($ns->{id}, $cc->{id});
   
   #REF namespace->role
-  my $cr = $Init->plugin->model->{Refs}->ref($ns->{id}, $rl->{id});
+  my $cr = $Init->plugin->model->{Refs}->refer($ns->{id}, $rl->{id});
   
   $c->render(format=>'txt', text=><<TXT);
 $pkg
@@ -247,7 +247,7 @@ TXT
     and return
     unless $u;
   
-  my $ref = $Init->plugin->model->{Refs}->ref($r->{id} => $u->{id});
+  my $ref = $Init->plugin->model->{Refs}->refer($r->{id} => $u->{id});
   
   $c->render(format=>'txt', text=><<TXT);
 $pkg
@@ -439,7 +439,7 @@ TXT
   if $cn;
   my $n = $c->new_namespace($ns) if $ns;
   $cn = $Init->plugin->model->{Controllers}->new_controller($mod, undef);
-  $Init->plugin->model->{Refs}->ref($n->{id}, $cn->{id})
+  $Init->plugin->model->{Refs}->refer($n->{id}, $cn->{id})
     if $n;
   
   $cn = $Init->plugin->model->{Controllers}->controller_ns($mod, ($ns) x 2,);
@@ -699,7 +699,7 @@ sub route_save {
   $route = $Init->plugin->model->{Routes}->new_route(@$route{@route_cols})
     unless $route->{id};
   my $ref = [map {
-    $Init->plugin->model->{Refs}->ref($$_[0]{id}, $$_[1]{id},)
+    $Init->plugin->model->{Refs}->refer($$_[0]{id}, $$_[1]{id},)
       if $$_[0]{id} && $$_[1]{id};
   } ([$ns, $controll], [$controll, $act], [$route, $act],)];
   $Init->plugin->dbh->commit;
@@ -720,7 +720,7 @@ sub vars {# получить из stash || param
 #~ sub ref {# get or save
   #~ my $c = shift;
   #~ my ($id1, $id2) = @_;
-  #~ $Init->plugin->model->{Refs}->ref($id1, $id2,);
+  #~ $Init->plugin->model->{Refs}->refer($id1, $id2,);
 #~ }
 
 
@@ -728,8 +728,8 @@ sub vars {# получить из stash || param
 my @self_routes_cols = qw(request action name auth descr);
 sub self_routes {# from plugin!
   my $c = shift;
-  my $prefix = $Init->{prefix};
-  my $trust = $Init->{trust};
+  my $prefix = $Init->prefix;
+  my $trust = $Init->trust;
 
   my $t = <<TABLE;
 /$prefix	index	admin home	1	Main page

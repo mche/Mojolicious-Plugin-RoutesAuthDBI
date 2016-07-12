@@ -11,7 +11,7 @@ sub cnt {
   $self->dbh->selectrow_array($self->sth('cnt refs'), undef, (shift, shift));
 }
 
-sub ref {
+sub refer {
   my $self = ref($_[0]) ? shift : shift->new;
   
   $self->dbh->selectrow_hashref($self->sth('ref'), undef, (@_))

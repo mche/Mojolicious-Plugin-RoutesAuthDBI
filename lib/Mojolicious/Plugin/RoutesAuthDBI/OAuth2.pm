@@ -179,7 +179,7 @@ sub login {
 
         || $Init->plugin->model->{Profiles}->new_profile([$profile->{first_name} || $profile->{given_name}, $profile->{last_name} || $profile->{family_name},]);
 
-      my $r = $Init->plugin->model->{Refs}->ref($профиль->{id}, $u->{id},);
+      my $r = $Init->plugin->model->{Refs}->refer($профиль->{id}, $u->{id},);
       
       $c->authenticate(undef, undef, $профиль)
         unless $auth_profile;

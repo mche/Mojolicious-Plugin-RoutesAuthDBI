@@ -27,7 +27,7 @@ sub singleton {
 
 # child model
 sub new {
-  my $self = shift->SUPER::new(@_);
+  my $self = ref $_[0] ? shift : shift->SUPER::new(@_);
   my $singleton = $self->singleton;
   
   $self->dbh($singleton->dbh)
