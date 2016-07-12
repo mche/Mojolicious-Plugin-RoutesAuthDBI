@@ -7,7 +7,7 @@ use Hash::Merge qw( merge );
 
 my $defaults = $Mojolicious::Plugin::RoutesAuthDBI::Schema::defaults;
 
-my %DICT_CACHE = ();
+my %DICT_CACHE = ();# для каждого пакета/модуля
 
 has [qw(dbh dict template)];
 

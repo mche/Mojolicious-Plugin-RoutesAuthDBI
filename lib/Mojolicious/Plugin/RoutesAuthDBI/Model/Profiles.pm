@@ -15,7 +15,7 @@ sub new {
 sub get_profile {
   my $self = ref($_[0]) ? shift : shift->new;
   my $p = $self->dbh->selectrow_hashref($self->sth('profile'), undef, (shift, shift,));
-  bless($p)->SUPER::new# reinit from singleton
+  bless($p)->SUPER::new# reinit from singleton dict
     if $p;
 }
 

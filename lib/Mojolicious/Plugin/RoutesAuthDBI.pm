@@ -69,33 +69,12 @@ has admin => sub {# object
   my $conf = $self->merge_conf->{'admin'};
   #~ $conf->{module} ||= $conf->{controller};
   load_class($conf)->init(%$conf, app=>$self->app, plugin=>$self,);
-  #~ bless $admin, $class;
-  #~ $admin->{dbh} = $self->dbh;
-  #~ my $pos = $admin->{pos};
-  #~ $admin->{sth} = DBIx::POS::Sth->new(
-    #~ $self->dbh,
-    #~ load_class($pos)->new, #($pos->{template} ? (template=>$pos->{template}) : ()),
-    #~ $pos->{template} || $admin->{template} || $mconf->{template} || {},
-  #~ );
-  #~ $admin->{plugin} = $self;
-  #~ return $admin->init;
 };
 
 has oauth => sub {
   my $self = shift;
   my $conf = $self->merge_conf->{'oauth'};
   load_class($conf)->init(%$conf, app=>$self->app, plugin=>$self,);
-  #~ bless $oauth, $class;
-  #~ $oauth->{dbh} = $self->dbh;
-  #~ my $pos = $oauth->{pos};
-  #~ $oauth->{sth} = DBIx::POS::Sth->new(
-    #~ $self->dbh,
-    #~ load_class($pos)->new, #($pos->{template} ? (template=>$pos->{template}) : ()),
-    #~ $pos->{template} || $oauth->{template} || $mconf->{template} || {},
-  #~ );
-  #~ $oauth->{app} = $self->app;
-  #~ $oauth->{plugin} = $self;
-  #~ return $oauth->init;
 };
 
 has model => sub {

@@ -5,9 +5,11 @@ use Hash::Merge qw( merge );
 use Digest::MD5 qw(md5_hex);
 
 my ($Init);
-has [qw(app plugin)];
+has [qw(plugin controller namespace)];
 
-has model_OAuth => sub { state $model = load_class('Mojolicious::Plugin::RoutesAuthDBI::Model::OAuth')->new };
+# state here for init and many news
+#~ has model => 
+sub _model { state $model = load_class('Mojolicious::Plugin::RoutesAuthDBI::Model::OAuth')->new }
 
 has _providers => sub {# default
   {
@@ -74,7 +76,7 @@ has config => sub {# только $Init !
   my $self = shift;
   
   while (my ($name, $val) = each %{$self->{providers}}) {
-    my $site = $self->model_OAuth->site( json_enc($val), $name,);
+    my $site = $self->_model->site( json_enc($val), $name,);
     @$val{qw(id)} = @$site{qw(id)};
     $val->{name} = $name;
   }
@@ -119,7 +121,7 @@ sub login {
   
   my $auth_profile = $c->auth_profile;
   
-  my $r; $r = $c->model_OAuth->check_profile($auth_profile->{id}, $site->{id})
+  my $r; $r = $c->_model->check_profile($auth_profile->{id}, $site->{id})
     and $c->app->log->warn("Попытка двойной авторизации сайта $site_name", $c->dumper($r), "профиль: ", $c->dumper($auth_profile),)
     and return $c->redirect_to($c->url_for(${ delete $c->session->{oauth_init} }{redirect})->query(err=> "Уже есть авторизация сайта $site_name"))
     if $auth_profile;
@@ -166,7 +168,7 @@ sub login {
       @$profile{keys %$auth} = values %$auth;
       
       my @bind = (json_enc($profile), $site->{id}, $auth->{uid} || $auth->{user_id} || $profile->{uid} || $profile->{id} );
-      my $u = $c->model_OAuth->user(@bind);
+      my $u = $c->_model->user(@bind);
 
       #~ $c->app->log->debug("Oauth user row: ", $c->dumper($u));
       
@@ -174,7 +176,7 @@ sub login {
       
         $auth_profile
         
-        || $c->model_OAuth->profile($u->{id})
+        || $c->_model->profile($u->{id})
 
 
         || $Init->plugin->model->{Profiles}->new_profile([$profile->{first_name} || $profile->{given_name}, $profile->{last_name} || $profile->{family_name},]);
@@ -201,7 +203,7 @@ sub отсоединить {
   
   my $auth_profile = $c->auth_profile;
   
-  my $r = $c->model_OAuth->detach($site->{id}, $auth_profile->{id},);
+  my $r = $c->_model->detach($site->{id}, $auth_profile->{id},);
   #~ $c->app->log->debug("Убрал авторизацию сайта [$site_name] профиля [$auth_profile->{id}]", $c->dumper($r));
   
   $Init->plugin->model->{Refs}->del($r->{ref_id}, undef, undef);
@@ -222,27 +224,27 @@ sub _routes {# from plugin!
   return (
   
   {request=>'/login/:site',
-    namespace=>$Init->{namespace},
-    controller=>$Init->{controller} || $Init->{module},
+    namespace=>$Init->namespace,
+    controller=>$Init->controller,
     action => 'login',
     name => 'oauth-login',
   },
   {request=>'/detach/:site',
-    namespace=>$Init->{namespace},
-    controller=>$Init->{controller} || $Init->{module},
+    namespace=>namespace,
+    controller=>$Init->controller,
     action => 'отсоединить',
     name => 'oauth-detach',
     auth=>'only',
   },
   {request =>'/logout',
-    namespace=>$Init->{namespace},
-    controller=>$Init->{controller} || $Init->{module},
+    namespace=>$Init->namespace,
+    controller=>$Init->controller,
     action => 'out',
     name => 'logout',
   },
-  {request =>'/'.$Init->plugin->admin->{trust}."/oauth/conf",
-    namespace=>$Init->{namespace},
-    controller=>$Init->{controller} || $Init->{module},
+  {request =>'/'.$Init->plugin->admin->trust."/oauth/conf",
+    namespace=>$Init->namespace,
+    controller=>$Init->controller,
     action => 'conf',
     name => 'oauth-conf',
   }
