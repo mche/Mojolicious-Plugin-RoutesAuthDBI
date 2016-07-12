@@ -1,11 +1,17 @@
 Changes
-lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Profile.pm
+lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Base.pm
+lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Profiles.pm
+lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Logins.pm
+lib/Mojolicious/Plugin/RoutesAuthDBI/Model/OAuth.pm
+lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Refs.pm
+lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Routes.pm
+lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Actions.pm
+lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Controllers.pm
+lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Namespaces.pm
+lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Roles.pm
 lib/Mojolicious/Plugin/RoutesAuthDBI/Util.pm
 lib/Mojolicious/Plugin/RoutesAuthDBI/OAuth2.pm
 lib/Mojolicious/Plugin/RoutesAuthDBI/Schema.pm
-lib/Mojolicious/Plugin/RoutesAuthDBI/POS/OAuth2.pm
-lib/Mojolicious/Plugin/RoutesAuthDBI/POS/Admin.pm
-lib/Mojolicious/Plugin/RoutesAuthDBI/POS/Access.pm
 lib/Mojolicious/Plugin/RoutesAuthDBI/Install.pm
 lib/Mojolicious/Plugin/RoutesAuthDBI/Admin.pm
 lib/Mojolicious/Plugin/RoutesAuthDBI/Access.pm
@@ -14,6 +20,8 @@ README.pod
 Makefile.PL
 MANIFEST			This list of files
 t/00-load.t
+t/01-manual.t
+t/02-schema.t
 t/manifest.t
 t/pod-coverage.t
 t/pod.t
