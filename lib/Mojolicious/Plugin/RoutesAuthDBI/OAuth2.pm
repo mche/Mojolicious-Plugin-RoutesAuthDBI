@@ -322,21 +322,11 @@ Out: hashref profile query params.
 
 =back
 
-=item * B<pos> - hashref
-
-SQL-dictionary for DBI statements. See L<Mojolicious::Plugin::RoutesAuthDBI::POS::OAuth2>.
-
-=back
-
 =head2 Defaults
 
   oauth = > {
     namespace => 'Mojolicious::Plugin::RoutesAuthDBI',
     module => 'OAuth2',
-    pos => {
-      namespace => 'Mojolicious::Plugin::RoutesAuthDBI',
-      module => 'POS::OAuth2',
-    },
   },
 
 disable oauth module

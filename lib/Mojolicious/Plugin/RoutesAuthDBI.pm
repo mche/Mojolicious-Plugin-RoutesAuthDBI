@@ -1,11 +1,9 @@
 package Mojolicious::Plugin::RoutesAuthDBI;
 use Mojo::Base 'Mojolicious::Plugin::Authentication';
-#~ use Mojo::Loader qw(load_class);
 use Mojolicious::Plugin::RoutesAuthDBI::Util qw(load_class);
 use Mojo::Util qw(hmac_sha1_sum);
 use Hash::Merge qw( merge );
-use DBIx::POS::Sth;
-use Mojolicious::Plugin::RoutesAuthDBI::Model::Base; # must init dbh once
+#~ use DBIx::POS::Sth;
 
 my $pkg = __PACKAGE__;
 
@@ -36,18 +34,18 @@ has default => sub {
     controller => 'Admin',
     prefix => lc($self->conf->{admin}{controller} || 'admin'),
     trust => hmac_sha1_sum('admin', $self->app->secrets->[0]),
-    pos => {
-      namespace => $pkg,
-      module => 'POS::Admin',
-    },
+    #~ pos => {
+      #~ namespace => $pkg,
+      #~ module => 'POS::Admin',
+    #~ },
   },
   oauth => {
     namespace => $pkg,
     controller => 'OAuth2',
-    pos => {
-      namespace => $pkg,
-      module => 'POS::OAuth2',
-    },
+    #~ pos => {
+      #~ namespace => $pkg,
+      #~ module => 'POS::OAuth2',
+    #~ },
     fail_auth_cb => sub {shift->render(format=>'txt', text=>"@_")},
   },
 }};
@@ -63,44 +61,41 @@ has access => sub {# object
   my $conf = $self->merge_conf->{'access'};
   my $class = load_class($conf);
   $class->import( @{ $conf->{import} });
-  $class->new(app=>$self->app, plugin=>$self);
+  $class->new(app=>$self->app, plugin=>$self,);
 };
 
 has admin => sub {# object
   my $self = shift;
-  my $mconf = $self->merge_conf;
-  my $admin = $mconf->{'admin'};
-  $admin->{module} ||= $admin->{controller};
-  my $class = load_class($admin);
-  bless $admin, $class;
-  $admin->{dbh} = $self->dbh;
-  my $pos = $admin->{pos};
-  $admin->{sth} = DBIx::POS::Sth->new(
-    $self->dbh,
-    load_class($pos)->new, #($pos->{template} ? (template=>$pos->{template}) : ()),
-    $pos->{template} || $admin->{template} || $mconf->{template} || {},
-  );
-  $admin->{plugin} = $self;
-  return $admin->init;
+  my $conf = $self->merge_conf->{'admin'};
+  #~ $conf->{module} ||= $conf->{controller};
+  load_class($conf)->init(app=>$self->app, plugin=>$self,);
+  #~ bless $admin, $class;
+  #~ $admin->{dbh} = $self->dbh;
+  #~ my $pos = $admin->{pos};
+  #~ $admin->{sth} = DBIx::POS::Sth->new(
+    #~ $self->dbh,
+    #~ load_class($pos)->new, #($pos->{template} ? (template=>$pos->{template}) : ()),
+    #~ $pos->{template} || $admin->{template} || $mconf->{template} || {},
+  #~ );
+  #~ $admin->{plugin} = $self;
+  #~ return $admin->init;
 };
 
 has oauth => sub {
   my $self = shift;
-  my $mconf = $self->merge_conf;
-  my $oauth = $mconf->{'oauth'};
-  my $class = load_class($oauth);
-  bless $oauth, $class;
-  $oauth->{dbh} = $self->dbh;
-  my $pos = $oauth->{pos};
-  $oauth->{sth} = DBIx::POS::Sth->new(
-    $self->dbh,
-    load_class($pos)->new, #($pos->{template} ? (template=>$pos->{template}) : ()),
-    $pos->{template} || $oauth->{template} || $mconf->{template} || {},
-  );
-  $oauth->{app} = $self->app;
-  $oauth->{plugin} = $self;
-  #~ $oauth->{admin} = $self->admin;
-  return $oauth->init;
+  my $conf = $self->merge_conf->{'oauth'};
+  load_class($conf)->init(app=>$self->app, plugin=>$self,);
+  #~ bless $oauth, $class;
+  #~ $oauth->{dbh} = $self->dbh;
+  #~ my $pos = $oauth->{pos};
+  #~ $oauth->{sth} = DBIx::POS::Sth->new(
+    #~ $self->dbh,
+    #~ load_class($pos)->new, #($pos->{template} ? (template=>$pos->{template}) : ()),
+    #~ $pos->{template} || $oauth->{template} || $mconf->{template} || {},
+  #~ );
+  #~ $oauth->{app} = $self->app;
+  #~ $oauth->{plugin} = $self;
+  #~ return $oauth->init;
 };
 
 has model => sub {
@@ -118,7 +113,7 @@ sub register {
   die "Plugin must work with dbh, see SYNOPSIS" unless $self->dbh;
   
   # init base model
-  Mojolicious::Plugin::RoutesAuthDBI::Model::Base->singleton(dbh=>$self->dbh, template=>$self->merge_conf->{template} || {});
+  load_class('Mojolicious::Plugin::RoutesAuthDBI::Model::Base')->singleton(dbh=>$self->dbh, template=>$self->merge_conf->{template} || {});
   
   my $access = $self->access;
   
