@@ -2,6 +2,9 @@ package Mojolicious::Plugin::RoutesAuthDBI::Model::Base;
 use Mojo::Base -base;
 use Carp 'croak';
 use Mojolicious::Plugin::RoutesAuthDBI::Util qw(load_class);
+use Mojolicious::Plugin::RoutesAuthDBI::Schema;
+
+my $defaults = $Mojolicious::Plugin::RoutesAuthDBI::Schema::defaults;
 
 has [qw(dbh dict template)];
 
@@ -29,7 +32,7 @@ sub new {
     unless $self->dbh;
   $self->template($singleton->template)
     unless $self->template;
-  $self->dict(load_class('DBIx::POS::Template')->new(ref $self))
+  $self->dict(load_class('DBIx::POS::Template')->new(ref $self, template=>merge($self->template, $defaults)))
     unless $self->dict;
   $self;
 }

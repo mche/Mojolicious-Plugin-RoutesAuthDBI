@@ -47,7 +47,7 @@ B<POD ERRORS> here is normal because DBIx::POS::Template used.
 
 =head1 NAME
 
-Mojolicious::Plugin::RoutesAuthDBI::Model::Profiles - SQL model table "profiles".
+Mojolicious::Plugin::RoutesAuthDBI::Model::Profiles - SQL model for table "profiles".
 
 =head1 DB DESIGN DIAGRAM
 
