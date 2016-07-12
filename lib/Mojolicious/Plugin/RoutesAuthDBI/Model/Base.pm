@@ -40,10 +40,11 @@ sub new {
 sub sth {
   my $self = shift;
   my $name = shift;
-  my $st = $self->dict->{$name}
+  my $dict = $self->dict;
+  my $st = $dict->{$name}
     or croak "No such name[$name] in SQL dict! @{[ join ':', keys %$dict  ]}";
-  my %arg = @_;
-  my $sql = $st->template(%$template ? %arg ? %{merge($template, \%arg)} : %$template : %arg).sprintf("\n--Statement name[%s]", $st->name);
+  #~ my %arg = @_;
+  my $sql = $st->template(@_).sprintf("\n--Statement name[%s]", $st->name); # ->template(%$template ? %arg ? %{merge($template, \%arg)} : %$template : %arg)
   my $param = $st->param;
   
   my $sth;
@@ -51,10 +52,10 @@ sub sth {
   #~ local $dbh->{TraceLevel} = "3|DBD";
   
   if ($param && $param->{cached}) {
-    $sth = $dbh->prepare_cached($sql);
+    $sth = $self->dbh->prepare_cached($sql);
     #~ warn "ST cached: ", $sth->{pg_prepare_name};
   } else {
-    $sth = $dbh->prepare($sql);
+    $sth = $self->dbh->prepare($sql);
   }
   
   return $sth;
