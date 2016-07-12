@@ -13,7 +13,7 @@ sub new {
 }
 
 sub get_profile {
-  my $self = ref $_[0] ? shift : shift->new;
+  my $self = ref($_[0]) ? shift : shift->new;
   my $p = $self->dbh->selectrow_hashref($self->sth('profile'), undef, (shift, shift,));
   bless $p
     if $p;
@@ -21,12 +21,12 @@ sub get_profile {
 }
 
 sub profiles {
-  my $self = ref $_[0] ? shift : shift->new;
+  my $self = ref($_[0]) ? shift : shift->new;
   $self->dbh->selectall_arrayref($self->sth('profiles'), {Slice=>{}},);
 }
 
 sub new_profile {
-  my $self = ref $_[0] ? shift : shift->new;
+  my $self = ref($_[0]) ? shift : shift->new;
   
   $self->dbh->selectrow_hashref($self->sth('new profile'), undef, (shift,));
 }

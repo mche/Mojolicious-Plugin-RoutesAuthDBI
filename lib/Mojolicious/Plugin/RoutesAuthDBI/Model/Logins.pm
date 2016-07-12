@@ -1,4 +1,4 @@
-package Mojolicious::Plugin::RoutesAuthDBI::Model::Refs;
+package Mojolicious::Plugin::RoutesAuthDBI::Model::Logins;
 use Mojo::Base 'Mojolicious::Plugin::RoutesAuthDBI::Model::Base';
 
 sub new {
@@ -6,14 +6,14 @@ sub new {
 }
 
 sub new_login {
-  my $self = ref $_[0] ? shift : shift->new;
+  my $self = ref($_[0]) ? shift : shift->new;
   
   $self->dbh->selectrow_hashref($self->sth('new login'), undef, (shift, shift))
 
 }
 
 sub login {
-  my $self = ref $_[0] ? shift : shift->new;
+  my $self = ref($_[0]) ? shift : shift->new;
   
   $self->dbh->selectrow_hashref($self->sth('login'), undef, (shift, shift))
 

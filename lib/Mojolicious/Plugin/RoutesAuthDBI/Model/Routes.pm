@@ -6,28 +6,28 @@ sub new {
 }
 
 sub routes {
-  my $self = ref $_[0] ? shift : shift->new;
+  my $self = ref($_[0]) ? shift : shift->new;
   
   $self->dbh->selectall_arrayref($self->sth('apply routes'), { Slice => {} },);
 }
 
 sub routes_ref {
-  my $self = ref $_[0] ? shift : shift->new;
+  my $self = ref($_[0]) ? shift : shift->new;
   $self->dbh->selectall_arrayref($self->sth('role routes'), { Slice => {} }, (shift));
 }
 
 sub routes_action {# маршруты действия
-  my $self = ref $_[0] ? shift : shift->new;
+  my $self = ref($_[0]) ? shift : shift->new;
   $self->dbh->selectall_arrayref($self->sth('action routes', where=>"where action_id=?"), { Slice => {} }, (shift));
 }
 
 sub routes_action_null {# маршруты без действия
-  my $self = ref $_[0] ? shift : shift->new;
+  my $self = ref($_[0]) ? shift : shift->new;
   $self->dbh->selectall_arrayref($self->sth('action routes', where=>"where action_id is null"), { Slice => {} });
 }
 
 sub new_route {
-  my $self = ref $_[0] ? shift : shift->new;
+  my $self = ref($_[0]) ? shift : shift->new;
   $self->dbh->selectrow_hashref($self->sth('new route'), undef, (@_));
 }
 

@@ -3,6 +3,7 @@ use Mojo::Base -base;
 use Carp 'croak';
 use Mojolicious::Plugin::RoutesAuthDBI::Util qw(load_class);
 use Mojolicious::Plugin::RoutesAuthDBI::Schema;
+use Hash::Merge qw( merge );
 
 my $defaults = $Mojolicious::Plugin::RoutesAuthDBI::Schema::defaults;
 
@@ -28,10 +29,13 @@ sub singleton {
 sub new {
   my $self = shift->SUPER::new(@_);
   my $singleton = $self->singleton;
+  
   $self->dbh($singleton->dbh)
     unless $self->dbh;
+    
   $self->template($singleton->template)
     unless $self->template;
+  
   $self->dict(load_class('DBIx::POS::Template')->new(ref $self, template=>merge($self->template, $defaults)))
     unless $self->dict;
   $self;

@@ -1,7 +1,7 @@
 package Mojolicious::Plugin::RoutesAuthDBI;
 use Mojo::Base 'Mojolicious::Plugin::Authentication';
 use Mojolicious::Plugin::RoutesAuthDBI::Util qw(load_class);
-use Mojo::Util qw(hmac_sha1_sum);
+use Mojo::Util qw(hmac_sha1_sum dumper);
 use Hash::Merge qw( merge );
 #~ use DBIx::POS::Sth;
 
@@ -99,7 +99,8 @@ has oauth => sub {
 };
 
 has model => sub {
-  { map $_ => load_class("Mojolicious::Plugin::RoutesAuthDBI::Model::$_")->new, qw(Profiles Namespaces Routes Refs Controllers Actions Roles Logins) }
+  my $m = { map {$_ => load_class("Mojolicious::Plugin::RoutesAuthDBI::Model::$_")->new} qw(Profiles Namespaces Routes Refs Controllers Actions Roles Logins) };
+  
 };
 
 sub register {

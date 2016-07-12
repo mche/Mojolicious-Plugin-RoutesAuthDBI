@@ -6,21 +6,21 @@ sub new {
 }
 
 sub cnt {
-  my $self = ref $_[0] ? shift : shift->new;
+  my $self = ref($_[0]) ? shift : shift->new;
   
   $self->dbh->selectrow_array($self->sth('cnt refs'), undef, (shift, shift));
 }
 
 sub ref {
-  my $self = ref $_[0] ? shift : shift->new;
+  my $self = ref($_[0]) ? shift : shift->new;
   
-  $self->dbh->selectrow_hashref($self->sth('ref'), undef, ($id1, $id2,))
-    || $self->dbh->selectrow_hashref($self->sth('new ref'), undef, ($id1, $id2,));
+  $self->dbh->selectrow_hashref($self->sth('ref'), undef, (@_))
+    || $self->dbh->selectrow_hashref($self->sth('new ref'), undef, (@_));
   
 }
 
 sub del {
-  my $self = ref $_[0] ? shift : shift->new;
+  my $self = ref($_[0]) ? shift : shift->new;
   
   $self->dbh->selectrow_hashref($self->sth('del ref'), undef, (@_));
 }

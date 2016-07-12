@@ -6,33 +6,33 @@ sub new {
 }
 
 sub access {
-  my $self = ref $_[0] ? shift : shift->new;
+  my $self = ref($_[0]) ? shift : shift->new;
   $self->dbh->selectrow_array($self->sth('access role'), undef, $_[0..2]);
 }
 
 sub get_role {
-  my $self = ref $_[0] ? shift : shift->new;
+  my $self = ref($_[0]) ? shift : shift->new;
   
   $self->dbh->selectrow_hashref($self->sth('role'), undef, (@_));
 
 }
 
 sub new_role {
-  my $self = ref $_[0] ? shift : shift->new;
+  my $self = ref($_[0]) ? shift : shift->new;
   
   $self->dbh->selectrow_hashref($self->sth('new role'), undef, (@_));
 
 }
 
 sub dsbl_enbl {
-  my $self = ref $_[0] ? shift : shift->new;
+  my $self = ref($_[0]) ? shift : shift->new;
   
   $self->dbh->selectrow_hashref($self->sth('dsbl/enbl role'), undef, (@_));
 
 }
 
 sub profiles {# профили роли
-  my $self = ref $_[0] ? shift : shift->new;
+  my $self = ref($_[0]) ? shift : shift->new;
   $self->dbh->selectall_arrayref($self->sth('role profiles'), { Slice => {} }, (shift));
 }
 

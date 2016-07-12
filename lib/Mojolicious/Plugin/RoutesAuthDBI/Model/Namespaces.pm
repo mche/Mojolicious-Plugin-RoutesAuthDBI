@@ -6,31 +6,31 @@ sub new {
 }
 
 sub app_ns {
-  my $self = ref $_[0] ? shift : shift->new;
+  my $self = ref($_[0]) ? shift : shift->new;
   
   $self->dbh->selectall_arrayref($self->sth('namespaces', where=>"where app_ns=1::bit(1)", order=>"order by ts - (coalesce(interval_ts, 0::int)::varchar || ' second')::interval"), { Slice => {namespace=>1} },);
 }
 
 sub access {
-  my $self = ref $_[0] ? shift : shift->new;
+  my $self = ref($_[0]) ? shift : shift->new;
   
   $self->dbh->selectrow_array($self->sth('access namespace'), undef, (shift, shift));
 }
 
 sub namespace {
-  my $self = ref $_[0] ? shift : shift->new;
+  my $self = ref($_[0]) ? shift : shift->new;
   
   $self->dbh->selectrow_hashref($self->sth('namespace'), undef, (@_));
 }
 
 sub new_namespace {
-  my $self = ref $_[0] ? shift : shift->new;
+  my $self = ref($_[0]) ? shift : shift->new;
   
   $self->dbh->selectrow_hashref($self->sth('new namespace'), undef, (@_));
 }
 
 sub namespaces {
-  my $self = ref $_[0] ? shift : shift->new;
+  my $self = ref($_[0]) ? shift : shift->new;
   $self->dbh->selectall_arrayref($self->sth('namespaces'), { Slice => {} }, );
 }
 

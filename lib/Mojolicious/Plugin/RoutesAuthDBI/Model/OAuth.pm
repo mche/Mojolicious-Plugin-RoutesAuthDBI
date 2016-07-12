@@ -6,33 +6,33 @@ sub new {
 }
 
 sub site {
-  my $self = ref $_[0] ? shift : shift->new;
+  my $self = ref($_[0]) ? shift : shift->new;
   
   $self->dbh->selectrow_hashref($self->sth('update oauth site'), undef, ( @_, ))
       || $self->dbh->selectrow_hashref($self->sth('new oauth site'), undef, (@_,));
 }
 
 sub check_profile {
-  my $self = ref $_[0] ? shift : shift->new;
+  my $self = ref($_[0]) ? shift : shift->new;
   
   $self->dbh->selectrow_hashref($self->sth('check profile oauth'), undef, (@_,));
 }
 
 sub user {
-  my $self = ref $_[0] ? shift : shift->new;
+  my $self = ref($_[0]) ? shift : shift->new;
   
   $self->dbh->selectrow_hashref($self->sth('update oauth user'), undef, @_)
       || $self->dbh->selectrow_hashref($self->sth('new oauth user'), undef, @_);
 }
 
 sub profile {
-  my $self = ref $_[0] ? shift : shift->new;
+  my $self = ref($_[0]) ? shift : shift->new;
   
   $self->dbh->selectrow_hashref($self->sth('profile by oauth user'), undef, (shift))
 }
 
 sub detach {
-  my $self = ref $_[0] ? shift : shift->new;
+  my $self = ref($_[0]) ? shift : shift->new;
   $self->dbh->selectrow_hashref($self->sth('отсоединить oauth'), undef, (@_));
 }
 
