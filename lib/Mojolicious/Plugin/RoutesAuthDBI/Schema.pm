@@ -289,7 +289,7 @@ sub schema {
   my $c = shift;
   my $template = $c->_vars;
   
-  $c->app->log->debug($c->dumper($template));
+  #~ $c->app->log->debug($c->dumper($template));
   
   #~ my $schema2 = qq{"$schema".} if $schema;
   $c->render(format=>'txt', text => <<TXT);
@@ -330,16 +330,18 @@ TXT
 
 =sql
 
-  drop table "{% $schema %}"."{% $tables{refs} %}";
-  drop table "{% $schema %}"."{% $tables{logins} %}";
-  drop table "{% $schema %}"."{% $tables{profiles} %}";
-  drop table "{% $schema %}"."{% $tables{roles} %}";
-  drop table "{% $schema %}"."{% $tables{routes} %}";
-  drop table "{% $schema %}"."{% $tables{controllers} %}";
-  drop table "{% $schema %}"."{% $tables{actions} %}";
-  drop table "{% $schema %}"."{% $tables{namespaces} %}";
-  drop table "{% $schema %}"."{% $tables{oauth_sites} %}";
-  drop table "{% $schema %}"."{% $tables{oauth_users} %}";
+  --drop table "{% $schema %}"."{% $tables{refs} %}" cascade;
+  --drop table "{% $schema %}"."{% $tables{logins} %}" cascade;
+  --drop table "{% $schema %}"."{% $tables{profiles} %}" cascade;
+  --drop table "{% $schema %}"."{% $tables{roles} %}" cascade;
+  --drop table "{% $schema %}"."{% $tables{routes} %}" cascade;
+  --drop table "{% $schema %}"."{% $tables{controllers} %}" cascade;
+  --drop table "{% $schema %}"."{% $tables{actions} %}" cascade;
+  --drop table "{% $schema %}"."{% $tables{namespaces} %}" cascade;
+  --drop table "{% $schema %}"."{% $tables{oauth_sites} %}" cascade;
+  --drop table "{% $schema %}"."{% $tables{oauth_users} %}" cascade;
+
+  drop schema "{% $schema %}" cascade;
   drop sequence {% $sequence %};
 
 

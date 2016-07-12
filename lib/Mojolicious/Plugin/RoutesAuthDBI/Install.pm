@@ -32,11 +32,11 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
     shift->routes->route('/man')
       ->to('install#manual', namespace=>'Mojolicious::Plugin::RoutesAuthDBI');
   }
-  __PACKAGE__->new()->start();
+  __PACKAGE__->new->start;
   PERL
 
 
-=head1 View schema (define the postgresql schema name and tables names)
+=head1 View schema (define the postgresql schema name and alternative tables names)
 
   $ read -d '' CODE <<PERL; perl -Ilib -e "$CODE" get /schema/<name>[?...] # /schema/public?profiles=профили
   use Mojo::Base 'Mojolicious';
@@ -44,7 +44,7 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
     shift->routes->route('/schema/:schema')
       ->to('Schema#schema', namespace=>'Mojolicious::Plugin::RoutesAuthDBI');
   }
-  __PACKAGE__->new()->start();
+  __PACKAGE__->new->start;
   PERL
 
 
@@ -56,7 +56,7 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
     shift->routes->route('/schema/:schema')
       ->to('Schema#schema', namespace=>'Mojolicious::Plugin::RoutesAuthDBI');
   }
-  __PACKAGE__->new()->start();
+  __PACKAGE__->new->start;
   PERL
 
 
@@ -68,7 +68,7 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
     shift->routes->route('/app')
       ->to('install#test_app', namespace=>'Mojolicious::Plugin::RoutesAuthDBI');
   }
-  __PACKAGE__->new()->start();
+  __PACKAGE__->new->start;
   PERL
 
 =name sample.app
@@ -90,7 +90,7 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
       admin=>{prefix=>'myadmin', trust=>'fooobaaar',},
     );
   }
-  __PACKAGE__->new()->start();
+  __PACKAGE__->new->start;
 
 =sql
 
