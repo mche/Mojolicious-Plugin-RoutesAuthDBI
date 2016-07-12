@@ -7,17 +7,9 @@ use Hash::Merge qw( merge );
 
 my $defaults = $Mojolicious::Plugin::RoutesAuthDBI::Schema::defaults;
 
-has [qw(dbh dict template)];
+my %DICT_CACHE = ();
 
-#~ has sth => sub {
-  #~ my $self = shift;
-  #~ require DBIx::POS::Sth;
-  #~ DBIx::POS::Sth->new(
-    #~ $self->dbh,
-    #~ $self->pos,
-    #~ $self->template,
-  #~ );
-#~ };
+has [qw(dbh dict template)];
 
 
 #init once
@@ -36,7 +28,9 @@ sub new {
   $self->template($singleton->template)
     unless $self->template;
   
-  $self->dict(load_class('DBIx::POS::Template')->new(ref $self, template=>merge($self->template, $defaults)))
+  my $pkg = ref $self;
+  
+  $self->dict( $DICT_CACHE{$pkg} ||= load_class('DBIx::POS::Template')->new($pkg, template=>merge($self->template, $defaults)) )
     unless $self->dict;
   $self;
 }
