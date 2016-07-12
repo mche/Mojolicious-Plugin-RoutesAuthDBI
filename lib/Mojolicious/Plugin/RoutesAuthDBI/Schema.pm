@@ -2,7 +2,7 @@ package Mojolicious::Plugin::RoutesAuthDBI::Schema;
 use Mojo::Base 'Mojolicious::Controller';
 use DBIx::POS::Template;
 
-our $defaults = {
+our $defaults = {# copy to pod!
   schema => "public",
   sequence => '"public"."id"',
   tables => { # no quotes! one schema!
@@ -42,6 +42,25 @@ Mojolicious::Plugin::RoutesAuthDBI::Schema - DB schema (PostgreSQL).
 See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagram.svg>
 
 =head1 DB design
+
+=head2 Default variables for SQL templates
+
+  {
+  schema => "public",
+  sequence => '"public"."id"',
+  tables => { # no quotes! one schema!
+    routes => 'routes',
+    refs=>'refs',
+    logins => 'logins',
+    profiles => 'profiles',
+    roles =>'roles',
+    actions => 'actions',
+    controllers => 'controllers',
+    namespaces => 'namespaces',
+    oauth_sites => 'oauth.sites',
+    oauth_users => 'oauth.users',
+    },
+  }
 
 =head2 Schema
 

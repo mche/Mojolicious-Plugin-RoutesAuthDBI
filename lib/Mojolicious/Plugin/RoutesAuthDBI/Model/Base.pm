@@ -40,12 +40,10 @@ sub new {
 sub sth {
   my $self = shift;
   my $name = shift;
-  my $st = $self->dict->{$name};
+  my $st = $self->dict->{$name}
+    or croak "No such name[$name] in SQL dict! @{[ join ':', keys %$dict  ]}";
   my %arg = @_;
-  croak "No such name[$name] in SQL dict! @{[ join ':', keys %$dict  ]}"
-    unless $st;
-
-  my $sql = $st->template(%$template ? %arg ? %{merge($template, \%arg)} : %$template : %arg).sprintf("\n--Statement name: [%s]", $st->name);
+  my $sql = $st->template(%$template ? %arg ? %{merge($template, \%arg)} : %$template : %arg).sprintf("\n--Statement name[%s]", $st->name);
   my $param = $st->param;
   
   my $sth;
@@ -88,7 +86,7 @@ In child model must define SQL dict:
   use Mojo::Base 'Mojolicious::Plugin::RoutesAuthDBI::Model::Base';
   
   sub new {
-    state $self = shift->SUPER::new(dict=>DBIx::POS::Template->new(__FILE__));
+    state $self = shift->SUPER::new(@_);
   }
   
   sub foo {
