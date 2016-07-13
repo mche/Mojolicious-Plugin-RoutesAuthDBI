@@ -21,12 +21,8 @@ sub startup {
 
 my $t = Test::Mojo->new(__PACKAGE__);
 
-subtest 'routes' => sub {
-  my $stdout;
-  local *STDOUT;
-  open(STDOUT, ">", \$stdout);
-  $t->app->commands->run('routes');
-  like $stdout, qr/\/$prefix\/$trust\/admin\/new\/:login\/:pass/, 'routes';
+subtest 'foo' => sub {
+
 };
 
 

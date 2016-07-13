@@ -163,4 +163,23 @@ L<DBIx::POS::Template>
   RETURNING d.*, r.id as ref_id;
 
 
+=head2 profile oauth.users
+
+=name profile oauth.users
+
+=desc
+
+Весь список внешних профилей 
+
+=sql
+
+  select u.*, s.name as site_name
+  from "{% $schema %}"."{% $tables{oauth_sites} %}" s
+    join "{% $schema %}"."{% $tables{oauth_users} %}" u on s.id = u.site_id
+    join "{% $schema %}"."{% $tables{refs} %}" r on u.id=r.id2
+  
+  where s.id=? and r.id1=? -- профиль ид
+
+
+
 =cut

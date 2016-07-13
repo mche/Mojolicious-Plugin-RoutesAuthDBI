@@ -1,9 +1,8 @@
 package Mojolicious::Plugin::RoutesAuthDBI;
 use Mojo::Base 'Mojolicious::Plugin::Authentication';
 use Mojolicious::Plugin::RoutesAuthDBI::Util qw(load_class);
-use Mojo::Util qw(hmac_sha1_sum dumper);
+use Mojo::Util qw(hmac_sha1_sum);
 use Hash::Merge qw( merge );
-#~ use DBIx::POS::Sth;
 
 my $pkg = __PACKAGE__;
 
@@ -11,6 +10,7 @@ has [qw(app dbh conf)];
 
 has default => sub {
   my $self = shift;
+  require Mojolicious::Plugin::RoutesAuthDBI::Schema;
   {
   auth => {
     stash_key => $pkg,
@@ -34,20 +34,13 @@ has default => sub {
     controller => 'Admin',
     prefix => lc($self->conf->{admin}{controller} || 'admin'),
     trust => hmac_sha1_sum('admin', $self->app->secrets->[0]),
-    #~ pos => {
-      #~ namespace => $pkg,
-      #~ module => 'POS::Admin',
-    #~ },
   },
   oauth => {
     namespace => $pkg,
     controller => 'OAuth2',
-    #~ pos => {
-      #~ namespace => $pkg,
-      #~ module => 'POS::OAuth2',
-    #~ },
     fail_auth_cb => sub {shift->render(format=>'txt', text=>"@_")},
   },
+  template => $Mojolicious::Plugin::RoutesAuthDBI::Schema::defaults,
 }};
 
 has merge_conf => sub {#hashref
@@ -93,7 +86,7 @@ sub register {
   die "Plugin must work with dbh, see SYNOPSIS" unless $self->dbh;
   
   # init base model
-  load_class('Mojolicious::Plugin::RoutesAuthDBI::Model::Base')->singleton(dbh=>$self->dbh, template=>$self->merge_conf->{template} || {});
+  load_class('Mojolicious::Plugin::RoutesAuthDBI::Model::Base')->singleton(dbh=>$self->dbh, template=>$self->merge_conf->{template});
   
   my $access = $self->access;
   
@@ -123,7 +116,6 @@ sub register {
 
 }
 
-# 
 sub cond_access {# add_condition
   my $self= shift;
   my ($route, $c, $captures, $args) = @_;
