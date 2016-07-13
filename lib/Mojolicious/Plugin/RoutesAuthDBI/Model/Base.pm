@@ -1,7 +1,6 @@
 package Mojolicious::Plugin::RoutesAuthDBI::Model::Base;
 use Mojo::Base -base;
 use Carp 'croak';
-#~ use Mojolicious::Plugin::RoutesAuthDBI::Util qw(load_class);
 use DBIx::POS::Template;
 
 my %DICT_CACHE = ();# для каждого пакета/модуля
@@ -63,7 +62,7 @@ sub sth {
 
 Доброго всем
 
-=head1 Mojolicious::Plugin::RoutesAuthDBI
+=head1 Mojolicious::Plugin::RoutesAuthDBI::Model::Base
 
 ¡ ¡ ¡ ALL GLORY TO GLORIA ! ! !
 
@@ -87,7 +86,7 @@ In child model must define SQL dict:
   
   sub foo {
     my $self = ref $_[0] ? shift : shift->new;
-    $self->dbh->selectrow_hashref($self->sth('foo'), undef, (shift));
+    $self->dbh->selectrow_hashref($self->sth('foo', where => 'where id=?',), undef, (shift));
   }
   
   =pod
@@ -112,11 +111,11 @@ In child model must define SQL dict:
 In controller:
 
   ...
-  state $mFoo = do {require Model::Foo; 'Model::Foo';};
+  state $mFoo = do {require Model::Foo; Model::Foo->new;};
   
   sub actionFoo {
     my $c = shift;
-    my $foo = $mFoo->new($c->param('id'));
+    my $foo = $mFoo->foo($c->param('id'));
     ...
   
   }
