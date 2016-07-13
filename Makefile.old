@@ -19,7 +19,7 @@
 #     MIN_PERL_VERSION => q[5.014]
 #     NAME => q[Mojolicious::Plugin::RoutesAuthDBI]
 #     PL_FILES => {  }
-#     PREREQ_PM => { DBI=>q[1.6], DBIx::POS::Template=>q[0.01], Hash::Merge=>q[0.2], Mojolicious=>q[6], Mojolicious::Plugin::Authentication=>q[1.29], Test::More=>q[0] }
+#     PREREQ_PM => { DBI=>q[1.6], DBIx::POS::Template=>q[0.022], Hash::Merge=>q[0.2], Mojolicious=>q[6], Mojolicious::Plugin::Authentication=>q[1.29], Test::More=>q[0] }
 #     TEST_REQUIRES => {  }
 #     VERSION_FROM => q[lib/Mojolicious/Plugin/RoutesAuthDBI.pm]
 #     dist => { COMPRESS=>q[gzip -9f], SUFFIX=>q[gz] }
@@ -165,8 +165,7 @@ C_FILES  =
 O_FILES  = 
 H_FILES  = 
 MAN1PODS = 
-MAN3PODS = 000README.pod \
-	Config.pm \
+MAN3PODS = Config.pm \
 	README.pod \
 	lib/Mojolicious/Plugin/RoutesAuthDBI.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/000POS/000Access.pm \
@@ -218,8 +217,7 @@ PERL_ARCHIVEDEP    =
 PERL_ARCHIVE_AFTER = 
 
 
-TO_INST_PM = 000README.pod \
-	Config.pm \
+TO_INST_PM = Config.pm \
 	README.pod \
 	lib/Mojolicious/Plugin/RoutesAuthDBI.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/000POS/000Access.pm \
@@ -257,9 +255,7 @@ TO_INST_PM = 000README.pod \
 	test-merge-hash.pl \
 	test-pod.pl
 
-PM_TO_BLIB = 000README.pod \
-	$(INST_LIB)/Mojolicious/Plugin/000README.pod \
-	Config.pm \
+PM_TO_BLIB = Config.pm \
 	$(INST_LIB)/Mojolicious/Plugin/Config.pm \
 	README.pod \
 	$(INST_LIB)/Mojolicious/Plugin/README.pod \
@@ -556,7 +552,6 @@ POD2MAN = $(POD2MAN_EXE)
 
 
 manifypods : pure_all  \
-	000README.pod \
 	Config.pm \
 	README.pod \
 	lib/Mojolicious/Plugin/RoutesAuthDBI.pm \
@@ -588,7 +583,6 @@ manifypods : pure_all  \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Schema.pm \
 	test-pod.pl
 	$(NOECHO) $(POD2MAN) --section=3 --perm_rw=$(PERM_RW) -u \
-	  000README.pod $(INST_MAN3DIR)/Mojolicious::Plugin::000README.$(MAN3EXT) \
 	  Config.pm $(INST_MAN3DIR)/Mojolicious::Plugin::Config.$(MAN3EXT) \
 	  README.pod $(INST_MAN3DIR)/Mojolicious::Plugin::README.$(MAN3EXT) \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI.pm $(INST_MAN3DIR)/Mojolicious::Plugin::RoutesAuthDBI.$(MAN3EXT) \
@@ -609,9 +603,9 @@ manifypods : pure_all  \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Actions.pm $(INST_MAN3DIR)/Mojolicious::Plugin::RoutesAuthDBI::Model::Actions.$(MAN3EXT) \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Base.pm $(INST_MAN3DIR)/Mojolicious::Plugin::RoutesAuthDBI::Model::Base.$(MAN3EXT) \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Controllers.pm $(INST_MAN3DIR)/Mojolicious::Plugin::RoutesAuthDBI::Model::Controllers.$(MAN3EXT) \
-	  lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Logins.pm $(INST_MAN3DIR)/Mojolicious::Plugin::RoutesAuthDBI::Model::Logins.$(MAN3EXT) 
+	  lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Logins.pm $(INST_MAN3DIR)/Mojolicious::Plugin::RoutesAuthDBI::Model::Logins.$(MAN3EXT) \
+	  lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Namespaces.pm $(INST_MAN3DIR)/Mojolicious::Plugin::RoutesAuthDBI::Model::Namespaces.$(MAN3EXT) 
 	$(NOECHO) $(POD2MAN) --section=3 --perm_rw=$(PERM_RW) -u \
-	  lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Namespaces.pm $(INST_MAN3DIR)/Mojolicious::Plugin::RoutesAuthDBI::Model::Namespaces.$(MAN3EXT) \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/Model/OAuth.pm $(INST_MAN3DIR)/Mojolicious::Plugin::RoutesAuthDBI::Model::OAuth.$(MAN3EXT) \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Profiles.pm $(INST_MAN3DIR)/Mojolicious::Plugin::RoutesAuthDBI::Model::Profiles.$(MAN3EXT) \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Refs.pm $(INST_MAN3DIR)/Mojolicious::Plugin::RoutesAuthDBI::Model::Refs.$(MAN3EXT) \
@@ -677,7 +671,7 @@ realclean_subdirs :
 # Delete temporary files (via clean) and also delete dist files
 realclean purge ::  clean realclean_subdirs
 	- $(RM_F) \
-	  $(FIRST_MAKEFILE) $(MAKEFILE_OLD) 
+	  $(MAKEFILE_OLD) $(FIRST_MAKEFILE) 
 	- $(RM_RF) \
 	  $(DISTVNAME) 
 
@@ -706,7 +700,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '    - inc' >> META_new.yml
 	$(NOECHO) $(ECHO) 'requires:' >> META_new.yml
 	$(NOECHO) $(ECHO) '  DBI: '\''1.6'\''' >> META_new.yml
-	$(NOECHO) $(ECHO) '  DBIx::POS::Template: '\''0.01'\''' >> META_new.yml
+	$(NOECHO) $(ECHO) '  DBIx::POS::Template: '\''0.022'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Hash::Merge: '\''0.2'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Mojolicious: '\''6'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Mojolicious::Plugin::Authentication: '\''1.29'\''' >> META_new.yml
@@ -750,7 +744,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '      "runtime" : {' >> META_new.json
 	$(NOECHO) $(ECHO) '         "requires" : {' >> META_new.json
 	$(NOECHO) $(ECHO) '            "DBI" : "1.6",' >> META_new.json
-	$(NOECHO) $(ECHO) '            "DBIx::POS::Template" : "0.01",' >> META_new.json
+	$(NOECHO) $(ECHO) '            "DBIx::POS::Template" : "0.022",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "Hash::Merge" : "0.2",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "Mojolicious" : "6",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "Mojolicious::Plugin::Authentication" : "1.29",' >> META_new.json
@@ -1067,7 +1061,7 @@ ppd :
 	$(NOECHO) $(ECHO) '    <IMPLEMENTATION>' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <PERLCORE VERSION="5,014,0,0" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="DBI::" VERSION="1.6" />' >> $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '        <REQUIRE NAME="DBIx::POS::Template" VERSION="0.01" />' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '        <REQUIRE NAME="DBIx::POS::Template" VERSION="0.022" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Hash::Merge" VERSION="0.2" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Mojolicious::" VERSION="6" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Mojolicious::Plugin::Authentication" VERSION="1.29" />' >> $(DISTNAME).ppd
@@ -1081,7 +1075,6 @@ ppd :
 
 pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_LIB)/auto'\'', q[$(PM_FILTER)], '\''$(PERM_DIR)'\'')' -- \
-	  000README.pod $(INST_LIB)/Mojolicious/Plugin/000README.pod \
 	  Config.pm $(INST_LIB)/Mojolicious/Plugin/Config.pm \
 	  README.pod $(INST_LIB)/Mojolicious/Plugin/README.pod \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI.pm blib/lib/Mojolicious/Plugin/RoutesAuthDBI.pm \

@@ -1,11 +1,8 @@
 package Mojolicious::Plugin::RoutesAuthDBI::Model::Base;
 use Mojo::Base -base;
 use Carp 'croak';
-use Mojolicious::Plugin::RoutesAuthDBI::Util qw(load_class);
-#~ use Mojolicious::Plugin::RoutesAuthDBI::Schema;
-#~ use Hash::Merge qw( merge );
-
-#~ my $defaults = $Mojolicious::Plugin::RoutesAuthDBI::Schema::defaults;
+#~ use Mojolicious::Plugin::RoutesAuthDBI::Util qw(load_class);
+use DBIx::POS::Template;
 
 my %DICT_CACHE = ();# для каждого пакета/модуля
 
@@ -30,7 +27,7 @@ sub new {
   
   my $pkg = ref $self;
   
-  $self->dict( $DICT_CACHE{$pkg} ||= load_class('DBIx::POS::Template')->new($pkg, template=>$self->template) )
+  $self->dict( $DICT_CACHE{$pkg} ||= DBIx::POS::Template->new($pkg, template=>$self->template) )
     unless $self->dict;
   $self;
 }
