@@ -19,7 +19,7 @@
           auth=>{current_user_fn=>'auth_user'},
           #~ access=> { },
           admin=>{prefix=>'myadmin', trust=>'фубар'},
-          template => {schema => 'test3', tables=>{profiles=>'профили'},},
+          template => {schema => 'test3', },#tables=>{profiles=>'профили'},
       ],
   ],
   mojo_session => {cookie_name => 'ELK'},

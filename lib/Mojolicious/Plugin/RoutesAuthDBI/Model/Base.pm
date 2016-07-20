@@ -7,7 +7,6 @@ my %DICT_CACHE = ();# для каждого пакета/модуля
 
 has [qw(dbh dict template)];
 
-
 #init once
 sub singleton {
   state $singleton = shift->SUPER::new(@_);
