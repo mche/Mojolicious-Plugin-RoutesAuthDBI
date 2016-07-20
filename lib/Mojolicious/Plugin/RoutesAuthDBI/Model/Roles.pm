@@ -36,6 +36,11 @@ sub profiles {# профили роли
   $self->dbh->selectall_arrayref($self->sth('role profiles'), { Slice => {} }, (shift));
 }
 
+sub roles {
+  my $self = ref($_[0]) ? shift : shift->new;
+  $self->dbh->selectall_arrayref($self->sth('roles'), { Slice => {} },);
+}
+
 1;
 
 =pod
@@ -136,6 +141,18 @@ L<DBIx::POS::Template>
     "{% $schema %}"."{% $tables{profiles} %}" p
     join "{% $schema %}"."{% $tables{refs} %}" r on p.id=r.id2
   where r.id1=?;
+
+=head2 roles
+
+=name roles
+
+=desc
+
+=sql
+
+  select *
+  from "{% $schema %}"."{% $tables{roles} %}"
+  {% $where %}
 
 
 =cut

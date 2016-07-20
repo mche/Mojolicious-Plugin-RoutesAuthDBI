@@ -51,5 +51,49 @@ $t->get_ok("/$prefix/sign/in/m3/секрет")->status_is(302)
 $t->get_ok("/$prefix")->status_is(200)
   ->content_like(qr/You are signed as/i);
 
+$t->get_ok("/$prefix/users")->status_is(200)
+  ->content_like(qr/Profiles\(1\)/i);
+
+$t->get_ok("/$prefix/user/new/foo login/s3cr3t")->status_is(200)
+  ->content_like(qr/Success sign up new profile/i);
+
+$t->get_ok("/$prefix/user/new?login=foo 156&pass=pwd156")->status_is(200)
+  ->content_like(qr/Success sign up new profile/i);
+
+$t->get_ok("/$prefix/users")->status_is(200)
+  ->content_like(qr/Profiles\(3\)/i);
+
+$t->get_ok("/$prefix/users/admin")->status_is(200)
+  ->content_like(qr/Profile\/users\(1\) by role \[admin\]/i);
+
+$t->get_ok("/$prefix/role/new/role 156")->status_is(200)
+  ->content_like(qr/Success created role/i);
+
+$t->get_ok("/$prefix/role/role 156/foo 156")->status_is(200)
+  ->content_like(qr/Success assign ROLE\[role 156\] -> USER \[bless/i);
+
+$t->get_ok("/$prefix/users/role 156")->status_is(200)
+  ->content_like(qr/Profile\/users\(1\) by role \[role 156\]/i);
+
+$t->get_ok("/$prefix/roles/foo 156")->status_is(200)
+  ->content_like(qr/List of profile\/login roles \(1\)/i);
+
+$t->get_ok("/$prefix/roles")->status_is(200)
+  ->content_like(qr/ROLES\(2\)/i);
+
+$t->get_ok("/$prefix/role/dsbl/role 156")->status_is(200)
+  ->content_like(qr/Success disable role/i);
+
+$t->get_ok("/$prefix/role/enbl/role 156")->status_is(200)
+  ->content_like(qr/Success enable role/i);
+
+$t->get_ok("/$prefix/role/del/role 156/foo 156")->status_is(200)
+  ->content_like(qr/Success delete ref ROLE\[role 156\] -> USER\[bless/i);
+
+$t->get_ok("/$prefix/users/role 156")->status_is(200)
+  ->content_like(qr/Profile\/users\(0\) by role \[role 156\]/i);
+
+$t->get_ok("/$prefix/roles/foo 156")->status_is(200)
+  ->content_like(qr/List of profile\/login roles \(0\)/i);
 
 done_testing();

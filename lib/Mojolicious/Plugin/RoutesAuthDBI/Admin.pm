@@ -62,7 +62,7 @@ sub users {
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
-Profiles
+Profiles(@{[scalar @$p]})
 ===
 
 @{[$c->dumper( $p)]}
@@ -184,7 +184,7 @@ TXT
 
 sub user_roles {
   my $c = shift;
-  my ($user) = $c->vars('user') || $c->vars('login');
+  my ($user) = $c->vars('user');# || $c->vars('login');
   my $u =  $Init->plugin->model->{Profiles}->get_profile($user =~ /\D/ ? (undef, $user) : ($user, undef,));
   
   $c->render(format=>'txt', text=><<TXT)
@@ -215,6 +215,20 @@ ROLES
 
 TXT
   
+}
+
+sub roles {
+  my $c = shift;
+  my $r = $Init->plugin->model->{Roles}->roles;
+  $c->render(format=>'txt', text=><<TXT);
+$pkg
+
+ROLES(@{[scalar @$r]})
+===
+---
+@{[$c->dumper( $r)]}
+
+TXT
 }
 
 sub new_role_user {
@@ -362,7 +376,7 @@ TXT
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
-All @{[scalar @$u]} profile/users by role [$r->{name}]
+Profile/users(@{[scalar @$u]}) by role [$r->{name}]
 ===
 
 @{[$c->dumper( $u)]}
