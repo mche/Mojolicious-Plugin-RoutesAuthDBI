@@ -25,9 +25,9 @@ t/02-schema.t
 t/03-sample-app.t
 t/04-admin.t
 t/05-access.t
+t/99-drop.t
 t/Test/Test1.pm
 t/config.pm
-t/99-drop.t
 t/manifest.t
 t/pod-coverage.t
 t/pod.t

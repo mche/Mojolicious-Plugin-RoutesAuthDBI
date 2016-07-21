@@ -33,7 +33,7 @@ sub startup {
   $routes->route('/test1/:action')->over(access=>{auth=>1})->to(controller=>'Test1',);
   
   $routes->route('/callback')->over(access=>{auth=>1, role=>'admin'})
-    ->to(cb=>sub {shift->render(format=>'txt', text=>'Admin role have access!')},);
+    ->to(cb=>sub {shift->render(format=>'txt', text=>'Admin role have access')},);
 }
 
 my $t = Test::Mojo->new(__PACKAGE__);
