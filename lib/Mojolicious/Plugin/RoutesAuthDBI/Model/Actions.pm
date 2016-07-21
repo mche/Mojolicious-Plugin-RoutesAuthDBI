@@ -1,5 +1,5 @@
 package Mojolicious::Plugin::RoutesAuthDBI::Model::Actions;
-use Mojo::Base 'Mojolicious::Plugin::RoutesAuthDBI::Model::Base';
+use Mojo::Base 'DBIx::Mojo::Model';
 
 sub new {
   state $self = shift->SUPER::new(@_);
@@ -47,94 +47,41 @@ sub new_action {
 
 1;
 
-=pod
+__DATA__
+@@ access action?cached=1
+%# доступ к действию в контроллере (действие-каллбак - доступ проверяется по его ID)
 
-=encoding utf8
+select count(r.*)
+from
+  "{%= $schema %}"."{%= $tables{refs} %}" rc 
+  join "{%= $schema %}"."{%= $tables{actions} %}" a on a.id=rc.id2
+  join "{%= $schema %}"."{%= $tables{refs} %}" r on a.id=r.id1
+  ---join "{%= $schema %}"."{%= $tables{roles} %}" o on o.id=r.id2
+where
+  rc.id1=? ---controller id
+  and a.action=?
+  and r.id2=any(?) --- roles ids
+  ---and coalesce(o.disable, 0::bit) <> 1::bit
+;
 
-=head3 Warn
+@@ actions
+%# Список действий
 
-B<POD ERRORS> here is normal because DBIx::POS::Template used.
-
-=head1 Mojolicious::Plugin::RoutesAuthDBI::Model::Actions
-
-¡ ¡ ¡ ALL GLORY TO GLORIA ! ! !
-
-=head1 NAME
-
-Mojolicious::Plugin::RoutesAuthDBI::Model::Actions - SQL model for table "actions".
-
-=head1 DB DESIGN DIAGRAM
-
-See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagram.svg>
-
-=head1 SYNOPSIS
-
-=head1 SEE ALSO
-
-L<DBIx::POS::Template>
-
-=head1 SQL definitions
-
-=head2 access action
-
-=name access action
-
-=desc
-
-доступ к действию в контроллере (действие-каллбак - доступ проверяется по его ID)
-
-=param
-
-  {cached=>1}
-
-=sql
-
-  select count(r.*)
-  from
-    "{% $schema %}"."{% $tables{refs} %}" rc 
-    join "{% $schema %}"."{% $tables{actions} %}" a on a.id=rc.id2
-    join "{% $schema %}"."{% $tables{refs} %}" r on a.id=r.id1
-    ---join "{% $schema %}"."{% $tables{roles} %}" o on o.id=r.id2
-  where
-    rc.id1=? ---controller id
-    and a.action=?
-    and r.id2=any(?) --- roles ids
-    ---and coalesce(o.disable, 0::bit) <> 1::bit
-  ;
-
-=head2 actions
-
-=name actions
-
-=desc
-
-Список действий
-
-=sql
-
-  select * from (
+select * from (
   select a.*, ac.controller_id, ac.controller
-  from "{% $schema %}"."{% $tables{actions} %}" a
+  from "{%= $schema %}"."{%= $tables{actions} %}" a
     left join (
       select a.id, c.id as controller_id, c.controller
-      from "{% $schema %}"."{% $tables{actions} %}" a
-        join "{% $schema %}"."{% $tables{refs} %}" r on a.id=r.id2
-        join "{% $schema %}"."{% $tables{controllers} %}" c on c.id=r.id1
+      from "{%= $schema %}"."{%= $tables{actions} %}" a
+        join "{%= $schema %}"."{%= $tables{refs} %}" r on a.id=r.id2
+        join "{%= $schema %}"."{%= $tables{controllers} %}" c on c.id=r.id1
       ) ac on a.id=ac.id-- действия с контроллером
   ) as a
-  {% $where %}
+{%= $where %}
 
-=head2 new action
+@@ new action
 
-=name new action
+insert into "{%= $schema %}"."{%= $tables{actions} %}" (action, callback, descr)
+values (?,?,?)
+returning *;
 
-=desc 
-
-=sql
-
-  insert into "{% $schema %}"."{% $tables{actions} %}" (action, callback, descr)
-  values (?,?,?)
-  returning *;
-
-
-=cut

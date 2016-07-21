@@ -1,5 +1,5 @@
 package Mojolicious::Plugin::RoutesAuthDBI::Model::Profiles;
-use Mojo::Base 'Mojolicious::Plugin::RoutesAuthDBI::Model::Base';
+use Mojo::Base 'DBIx::Mojo::Model';
 
 
 has roles => sub {
@@ -32,101 +32,38 @@ sub new_profile {
 
 1;
 
-=pod
+__DATA__
+@@ profiles
+select p.*, l.login, l.pass
+from "{%= $schema %}"."{%= $tables{profiles} %}" p
+left join (
+  select l.*, r.id1
+  from "{%= $schema %}"."{%= $tables{refs} %}" r 
+    join "{%= $schema %}"."{%= $tables{logins} %}" l on l.id=r.id2
+) l on p.id=l.id1
 
-=encoding utf8
+@@ new profile
+insert into "{%= $schema %}"."{%= $tables{profiles} %}" (names) values (?)
+returning *;
 
-=head3 Warn
+@@ profile?cached=1
+%# Load auth profile
 
-B<POD ERRORS> here is normal because DBIx::POS::Template used.
+select p.*, l.login, l.pass
+from "{%= $schema %}"."{%= $tables{profiles} %}" p
+left join (
+  select l.*, r.id1
+  from "{%= $schema %}"."{%= $tables{refs} %}" r 
+    join "{%= $schema %}"."{%= $tables{logins} %}" l on l.id=r.id2
+) l on p.id=l.id1
+where p.id=? or l.login=?
 
-=head1 Mojolicious::Plugin::RoutesAuthDBI::Model::Profiles
+@@ profile roles?cached=1
+%# Роли пользователя(профиля)
+select g.*
+from
+  "{%= $schema %}"."{%= $tables{roles} %}" g
+  join "{%= $schema %}"."{%= $tables{refs} %}" r on g.id=r.id1
+where r.id2=?;
+--and coalesce(g.disable, 0::bit) <> 1::bit
 
-¡ ¡ ¡ ALL GLORY TO GLORIA ! ! !
-
-=head1 NAME
-
-Mojolicious::Plugin::RoutesAuthDBI::Model::Profiles - SQL model for table "profiles".
-
-=head1 DB DESIGN DIAGRAM
-
-See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagram.svg>
-
-=head1 SEE ALSO
-
-L<DBIx::POS::Template>
-
-=head1 SQL definitions
-
-=head2 profiles
-
-=name profiles
-
-=sql
-
-  select p.*, l.login, l.pass
-  from "{% $schema %}"."{% $tables{profiles} %}" p
-  left join (
-    select l.*, r.id1
-    from "{% $schema %}"."{% $tables{refs} %}" r 
-      join "{% $schema %}"."{% $tables{logins} %}" l on l.id=r.id2
-  ) l on p.id=l.id1
-
-=head2 new profile
-
-=name new profile
-
-=desc
-
-=sql
-
-  insert into "{% $schema %}"."{% $tables{profiles} %}" (names) values (?)
-  returning *;
-
-=head2 profile
-
-=name profile
-
-=desc
-
-Load auth profile
-
-=param
-
-  {cached=>1}
-
-=sql
-
-  select p.*, l.login, l.pass
-  from "{% $schema %}"."{% $tables{profiles} %}" p
-  left join (
-    select l.*, r.id1
-    from "{% $schema %}"."{% $tables{refs} %}" r 
-      join "{% $schema %}"."{% $tables{logins} %}" l on l.id=r.id2
-  ) l on p.id=l.id1
-  
-  where p.id=? or l.login=?
-
-=head2 profile roles
-
-=name profile roles
-
-=desc
-
-Роли пользователя(профиля)
-
-=param
-
-  {cached=>1}
-
-=sql
-
-  select g.*
-  from
-    "{% $schema %}"."{% $tables{roles} %}" g
-    join "{% $schema %}"."{% $tables{refs} %}" r on g.id=r.id1
-  where r.id2=?;
-  --and coalesce(g.disable, 0::bit) <> 1::bit
-
-
-=cut

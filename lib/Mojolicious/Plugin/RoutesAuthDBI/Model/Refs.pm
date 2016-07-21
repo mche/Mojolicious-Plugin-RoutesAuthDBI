@@ -1,5 +1,5 @@
 package Mojolicious::Plugin::RoutesAuthDBI::Model::Refs;
-use Mojo::Base 'Mojolicious::Plugin::RoutesAuthDBI::Model::Base';
+use Mojo::Base 'DBIx::Mojo::Model';
 
 sub new {
   state $self = shift->SUPER::new(@_);
@@ -27,88 +27,26 @@ sub del {
 
 1;
 
-=pod
+__DATA__
+@@ cnt refs?cached=1
+%# check if ref between [IDs1] and [IDs2] exists
+select count(*)
+from "{%= $schema %}"."{%= $tables{refs} %}"
+where id1 = any(?) and id2 = ANY(?);
 
-=encoding utf8
+@@ ref
+select *
+from "{%= $schema %}"."{%= $tables{refs} %}"
+where id1=? and id2=?;
 
-=head3 Warn
+@@ new ref
+insert into "{%= $schema %}"."{%= $tables{refs} %}" (id1,id2) values (?,?)
+returning *;
 
-B<POD ERRORS> here is normal because DBIx::POS::Template used.
-
-=head1 Mojolicious::Plugin::RoutesAuthDBI::Model::Refs
-
-¡ ¡ ¡ ALL GLORY TO GLORIA ! ! !
-
-=head1 NAME
-
-Mojolicious::Plugin::RoutesAuthDBI::Model::Refs - SQL model for table "refs".
-
-=head1 DB DESIGN DIAGRAM
-
-See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagram.svg>
-
-=head1 SYNOPSIS
-
-=head1 SEE ALSO
-
-L<DBIx::POS::Template>
-
-=head1 SQL definitions
-
-=head2 cnt refs
-
-=name cnt refs
-
-=desc
-
-check if ref between [IDs1] and [IDs2] exists
-
-=param
-
-  {cached=>1}
-
-=sql
-
-  select count(*)
-  from "{% $schema %}"."{% $tables{refs} %}"
-  where id1 = any(?) and id2 = ANY(?);
-
-=head2 ref
-
-=name ref
-
-=desc
-
-=sql
-
-  select *
-  from "{% $schema %}"."{% $tables{refs} %}"
-  where id1=? and id2=?;
-
-=head2 new ref
-
-=name new ref
-
-=desc
-
-=sql
-
-  insert into "{% $schema %}"."{% $tables{refs} %}" (id1,id2) values (?,?)
-  returning *;
+@@ del ref
+%# Delete ref
+delete from "{%= $schema %}"."{%= $tables{refs} %}"
+where id=? or (id1=? and id2=?)
+returning *;
 
 
-=head2 del ref
-
-=name del ref
-
-=desc Delete ref
-
-=sql
-
-  delete from "{% $schema %}"."{% $tables{refs} %}"
-  where id=? or (id1=? and id2=?)
-  returning *;
-
-
-
-=cut

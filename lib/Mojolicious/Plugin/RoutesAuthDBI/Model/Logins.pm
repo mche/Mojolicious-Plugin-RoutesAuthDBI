@@ -1,5 +1,5 @@
 package Mojolicious::Plugin::RoutesAuthDBI::Model::Logins;
-use Mojo::Base 'Mojolicious::Plugin::RoutesAuthDBI::Model::Base';
+use Mojo::Base 'DBIx::Mojo::Model';
 
 sub new {
   state $self = shift->SUPER::new(@_);
@@ -21,55 +21,13 @@ sub login {
 
 1;
 
-=pod
+__DATA__
+@@ new login
+insert into "{%= $schema %}"."{%= $tables{logins} %}" (login, pass) values (?,?)
+returning *;
 
-=encoding utf8
+@@ login
+select *
+from "{%= $schema %}"."{%= $tables{logins} %}"
+where id=? or login=?;
 
-=head3 Warn
-
-B<POD ERRORS> here is normal because DBIx::POS::Template used.
-
-=head1 Mojolicious::Plugin::RoutesAuthDBI::Model::Logins
-
-¡ ¡ ¡ ALL GLORY TO GLORIA ! ! !
-
-=head1 NAME
-
-Mojolicious::Plugin::RoutesAuthDBI::Model::Logins - SQL model for table "logins".
-
-=head1 DB DESIGN DIAGRAM
-
-See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagram.svg>
-
-=head1 SYNOPSIS
-
-=head1 SEE ALSO
-
-L<DBIx::POS::Template>
-
-=head1 SQL definitions
-
-=head2 new login
-
-=name new login
-
-=desc
-
-=sql
-
-  insert into "{% $schema %}"."{% $tables{logins} %}" (login, pass) values (?,?)
-  returning *;
-
-=head2 login
-
-=name login
-
-=desc
-
-=sql
-
-  select *
-  from "{% $schema %}"."{% $tables{logins} %}"
-  where id=? or login=?;
-
-=cut

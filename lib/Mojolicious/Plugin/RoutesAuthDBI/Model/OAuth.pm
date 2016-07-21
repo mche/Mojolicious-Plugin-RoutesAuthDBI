@@ -1,5 +1,5 @@
 package Mojolicious::Plugin::RoutesAuthDBI::Model::OAuth;
-use Mojo::Base 'Mojolicious::Plugin::RoutesAuthDBI::Model::Base';
+use Mojo::Base 'DBIx::Mojo::Model';
 
 sub new {
   state $self = shift->SUPER::new(@_);
@@ -38,148 +38,61 @@ sub detach {
 
 1;
 
-=pod
+__DATA__
+@@ update oauth site
+update "{%= $schema %}"."{%= $tables{oauth_sites} %}"
+set conf = ?
+where name =?
+returning *;
 
-=encoding utf8
+@@ new oauth site
+insert into "{%= $schema %}"."{%= $tables{oauth_sites} %}" (conf,name) values (?,?)
+returning *;
 
-=head3 Warn
+@@ update oauth user
+update "{%= $schema %}"."{%= $tables{oauth_users} %}"
+set profile = ?, profile_ts=now()
+where site_id =? and user_id=?
+returning 1::int as "old", *;
 
-B<POD ERRORS> here is normal because DBIx::POS::Template used.
+@@ new oauth user
+insert into "{%= $schema %}"."{%= $tables{oauth_users} %}" (profile, site_id, user_id) values (?,?,?)
+returning 1::int as "new", *;
 
-=head1 Mojolicious::Plugin::RoutesAuthDBI::Model::OAuth
+@@ profile by oauth user
+select p.*
+from "{%= $schema %}"."{%= $tables{profiles} %}" p
+  join "{%= $schema %}"."{%= $tables{refs} %}" r on p.id=r.id1
 
-¡ ¡ ¡ ALL GLORY TO GLORIA ! ! !
-
-=head1 NAME
-
-Mojolicious::Plugin::RoutesAuthDBI::Model::OAuth - SQL model for tables oauth."...".
-
-=head1 DB DESIGN DIAGRAM
-
-See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagram.svg>
-
-=head1 SYNOPSIS
-
-=head1 SEE ALSO
-
-L<DBIx::POS::Template>
-
-=head1 SQL definitions
-
-=head2 update oauth site
-
-=name update oauth site
-
-=desc
-
-=sql
-
-  update "{% $schema %}"."{% $tables{oauth_sites} %}"
-  set conf = ?
-  where name =?
-  returning *;
-
-=head2 new oauth site
-
-=name new oauth site
-
-=desc
-
-=sql
-
-  insert into "{% $schema %}"."{% $tables{oauth_sites} %}" (conf,name) values (?,?)
-  returning *;
-
-=head2 update oauth user
-
-=name update oauth user
-
-=desc
-
-=sql
-
-  update "{% $schema %}"."{% $tables{oauth_users} %}"
-  set profile = ?, profile_ts=now()
-  where site_id =? and user_id=?
-  returning 1::int as "old", *;
-
-=head2 new oauth user
-
-=name new oauth user
-
-=desc
-
-=sql
-
-  insert into "{% $schema %}"."{% $tables{oauth_users} %}" (profile, site_id, user_id) values (?,?,?)
-  returning 1::int as "new", *;
-
-=head2 profile by oauth user
-
-=name profile by oauth user
-
-=desc
-
-=sql
-
-  select p.*
-  from "{% $schema %}"."{% $tables{profiles} %}" p
-    join "{% $schema %}"."{% $tables{refs} %}" r on p.id=r.id1
-
-  where r.id2=?;
+where r.id2=?;
 
 
-=head2 check profile oauth
+@@ check profile oauth
+%# Только один сайт на профиль
 
-=name check profile oauth
+select o.*
+from "{%= $schema %}"."{%= $tables{profiles} %}" p
+  join "{%= $schema %}"."{%= $tables{refs} %}" r on p.id=r.id1
+  join "{%= $schema %}"."{%= $tables{oauth_users} %}" o on o.id=r.id2
 
-=desc
+where p.id=? and o.site_id=?
 
-Только один сайт на профиль
+@@ отсоединить oauth
+delete from "{%= $schema %}"."{%= $tables{oauth_users} %}" d
+using "{%= $schema %}"."{%= $tables{refs} %}" r
+where d.site_id = ?
+  and r.id1=? -- ид профиля
+  and d.id=r.id2
 
-=sql
+RETURNING d.*, r.id as ref_id;
 
-  select o.*
-  from "{% $schema %}"."{% $tables{profiles} %}" p
-    join "{% $schema %}"."{% $tables{refs} %}" r on p.id=r.id1
-    join "{% $schema %}"."{% $tables{oauth_users} %}" o on o.id=r.id2
-  
-  where p.id=? and o.site_id=?
+@@ profile oauth.users
+%# список внешних профилей по внутреннему профилю
 
-=head2 отсоединить oauth
+select u.*, s.name as site_name
+from "{%= $schema %}"."{%= $tables{oauth_sites} %}" s
+  join "{%= $schema %}"."{%= $tables{oauth_users} %}" u on s.id = u.site_id
+  join "{%= $schema %}"."{%= $tables{refs} %}" r on u.id=r.id2
 
-=name отсоединить oauth
+where s.id=? and r.id1=? -- профиль ид
 
-=desc
-
-=sql
-
-  delete from "{% $schema %}"."{% $tables{oauth_users} %}" d
-  using "{% $schema %}"."{% $tables{refs} %}" r
-  where d.site_id = ?
-    and r.id1=? -- ид профиля
-    and d.id=r.id2
-  
-  RETURNING d.*, r.id as ref_id;
-
-
-=head2 profile oauth.users
-
-=name profile oauth.users
-
-=desc
-
-Весь список внешних профилей 
-
-=sql
-
-  select u.*, s.name as site_name
-  from "{% $schema %}"."{% $tables{oauth_sites} %}" s
-    join "{% $schema %}"."{% $tables{oauth_users} %}" u on s.id = u.site_id
-    join "{% $schema %}"."{% $tables{refs} %}" r on u.id=r.id2
-  
-  where s.id=? and r.id1=? -- профиль ид
-
-
-
-=cut

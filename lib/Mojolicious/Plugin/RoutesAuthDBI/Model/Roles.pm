@@ -1,5 +1,5 @@
 package Mojolicious::Plugin::RoutesAuthDBI::Model::Roles;
-use Mojo::Base 'Mojolicious::Plugin::RoutesAuthDBI::Model::Base';
+use Mojo::Base 'DBIx::Mojo::Model';
 
 sub new {
   state $self = shift->SUPER::new(@_);
@@ -43,116 +43,41 @@ sub roles {
 
 1;
 
-=pod
+__DATA__
+@@ role
+select *
+from "{%= $schema %}"."{%= $tables{roles} %}"
+where id=? or lower(name)=?
 
-=encoding utf8
+@@ new role
+insert into "{%= $schema %}"."{%= $tables{roles} %}" (name) values (?)
+returning *;
 
-=head3 Warn
+@@ dsbl/enbl role
+update "{%= $schema %}"."{%= $tables{roles} %}"
+set disable=?::bit
+where id=? or lower(name)=?
+returning *;
 
-B<POD ERRORS> here is normal because DBIx::POS::Template used.
+@@ access role?cached=1
+%# Доступ по роли
+select count(*)
+from "{%= $schema %}"."{%= $tables{roles} %}"
+where (id = ? or name = ?)
+  and id = any(?)
+  and coalesce(disable, 0::bit) <> 1::bit
+;
 
-=head1 Mojolicious::Plugin::RoutesAuthDBI::Model::Roles
+@@ role profiles
+%# Пользователи роли
+select p.*
+from
+  "{%= $schema %}"."{%= $tables{profiles} %}" p
+  join "{%= $schema %}"."{%= $tables{refs} %}" r on p.id=r.id2
+where r.id1=?;
 
-¡ ¡ ¡ ALL GLORY TO GLORIA ! ! !
+@@ roles
+select *
+from "{%= $schema %}"."{%= $tables{roles} %}"
+{%= $where %}
 
-=head1 NAME
-
-Mojolicious::Plugin::RoutesAuthDBI::Model::Roles - SQL model for table "roles".
-
-=head1 DB DESIGN DIAGRAM
-
-See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagram.svg>
-
-=head1 SYNOPSIS
-
-=head1 SEE ALSO
-
-L<DBIx::POS::Template>
-
-=head1 SQL definitions
-
-=head2 role
-
-=name role
-
-=desc
-
-=sql
-
-  select *
-  from "{% $schema %}"."{% $tables{roles} %}"
-  where id=? or lower(name)=?
-
-=head2 new role
-
-=name new role
-
-=desc
-
-=sql
-
-  insert into "{% $schema %}"."{% $tables{roles} %}" (name) values (?)
-  returning *;
-
-=head2 dsbl/enbl role
-
-=name dsbl/enbl role
-
-=desc
-
-=sql
-
-  update "{% $schema %}"."{% $tables{roles} %}" set disable=?::bit where id=? or lower(name)=?
-  returning *;
-
-=head2 access role
-
-=name access role
-
-=desc
-
-Доступ по роли
-
-=param
-
-  {cached=>1}
-
-=sql
-
-  select count(*)
-  from "{% $schema %}"."{% $tables{roles} %}"
-  where (id = ? or name = ?)
-    and id = any(?)
-    and coalesce(disable, 0::bit) <> 1::bit
-  ;
-
-=head2 role profiles
-
-=name role profiles
-
-=desc
-
-Пользователи роли
-
-=sql
-
-  select p.*
-  from
-    "{% $schema %}"."{% $tables{profiles} %}" p
-    join "{% $schema %}"."{% $tables{refs} %}" r on p.id=r.id2
-  where r.id1=?;
-
-=head2 roles
-
-=name roles
-
-=desc
-
-=sql
-
-  select *
-  from "{% $schema %}"."{% $tables{roles} %}"
-  {% $where %}
-
-
-=cut

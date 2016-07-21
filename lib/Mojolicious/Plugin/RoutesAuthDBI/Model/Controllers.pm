@@ -1,5 +1,5 @@
 package Mojolicious::Plugin::RoutesAuthDBI::Model::Controllers;
-use Mojo::Base 'Mojolicious::Plugin::RoutesAuthDBI::Model::Base';
+use Mojo::Base 'DBIx::Mojo::Model';
 
 sub new {
   state $self = shift->SUPER::new(@_);
@@ -38,84 +38,31 @@ sub controllers_ns_id {
 
 1;
 
-=pod
+__DATA__
+@@ controller?cached=1
+%# Не пустой namespace - четко привязанный контроллер, пустой - обязательно не привязанный контроллер
 
-=encoding utf8
-
-=head3 Warn
-
-B<POD ERRORS> here is normal because DBIx::POS::Template used.
-
-=head1 Mojolicious::Plugin::RoutesAuthDBI::Model::Controllers
-
-¡ ¡ ¡ ALL GLORY TO GLORIA ! ! !
-
-=head1 NAME
-
-Mojolicious::Plugin::RoutesAuthDBI::Model::Controllers - SQL model for table "controllers".
-
-=head1 DB DESIGN DIAGRAM
-
-See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagram.svg>
-
-=head1 SYNOPSIS
-
-=head1 SEE ALSO
-
-L<DBIx::POS::Template>
-
-=head1 SQL definitions
-
-=head2 controller
-
-=name controller
-
-=desc
-
-Не пустой namespace - четко привязанный контроллер, пустой - обязательно не привязанный контроллер
-
-=param
-
-  {cached=>1}
-
-=sql
-
-  select * from (
+select * from (
   select c.*, n.namespace, n.id as namespace_id, n.descr as namespace_descr
   from
-    "{% $schema %}"."{% $tables{controllers} %}" c
-    left join "{% $schema %}"."{% $tables{refs} %}" r on c.id=r.id2
-    left join "{% $schema %}"."{% $tables{namespaces} %}" n on n.id=r.id1
+    "{%= $schema %}"."{%= $tables{controllers} %}" c
+    left join "{%= $schema %}"."{%= $tables{refs} %}" r on c.id=r.id2
+    left join "{%= $schema %}"."{%= $tables{namespaces} %}" n on n.id=r.id1
   ) s
-  {% $where %}
+{%= $where %}
 
-=head2 new controller
+@@ new controller
 
-=name new controller
+insert into "{%= $schema %}"."{%= $tables{controllers} %}" (controller, descr)
+values (?,?)
+returning *;
 
-=desc
+@@ controllers
+%# Контроллер либо привязан к спейсу или нет
 
-=sql
+select c.*, n.namespace, n.id as namespace_id, n.descr as namespace_descr
+from "{%= $schema %}"."{%= $tables{controllers} %}" c
+left join "{%= $schema %}"."{%= $tables{refs} %}" r on c.id=r.id2
+left join "{%= $schema %}"."{%= $tables{namespaces} %}" n on n.id=r.id1
+{%= $where %};
 
-  insert into "{% $schema %}"."{% $tables{controllers} %}" (controller, descr)
-  values (?,?)
-  returning *;
-
-=head2 controllers
-
-=name controllers
-
-=desc
-
-Контроллер либо привязан к спейсу или нет
-
-=sql
-
-  select c.*, n.namespace, n.id as namespace_id, n.descr as namespace_descr
-    from "{% $schema %}"."{% $tables{controllers} %}" c
-    left join "{% $schema %}"."{% $tables{refs} %}" r on c.id=r.id2
-    left join "{% $schema %}"."{% $tables{namespaces} %}" n on n.id=r.id1
-    {% $where %};
-
-
-=cut
