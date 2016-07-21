@@ -8,7 +8,7 @@ my ($Init);
 has [qw(plugin controller namespace)];
 
 # state here for init and many news
-#~ has model => 
+has model => sub { shift->_model};
 sub _model { state $model = load_class('Mojolicious::Plugin::RoutesAuthDBI::Model::OAuth')->new }
 
 has _providers => sub {# default
