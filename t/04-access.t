@@ -8,25 +8,25 @@ plan skip_all => 'set env TEST_CONN_PG="DBI:Pg:dbname=<db>/<pg_user>/<passwd>" t
 
 has dbh => sub { DBI->connect(split m|[/]|, $ENV{TEST_CONN_PG})};
 
-my $prefix = 'testadmin';
-my $trust = 'footrust';
+my $config = do 't/config.pm';
 
 sub startup {
   my $app = shift;
   $app->plugin('RoutesAuthDBI',
     auth=>{current_user_fn=>'auth_user'},
-    admin=>{prefix=>$prefix, trust=>$trust,},
+    admin=>{prefix=>$config->{prefix}, trust=>$config->{trust},},
+    template=>$config,
   );
 }
 
 my $t = Test::Mojo->new(__PACKAGE__);
 
-subtest 'foo' => sub {
+#~ subtest 'foo' => sub {
 
-};
+#~ };
 
 
-#~ $t->get_ok('/man')->status_is(200)
-  #~ ->content_like(qr/system ready!/);
+$t->get_ok("/$config->{prefix}/$config->{trust}/admin/new/$config->{admin_user}/$config->{admin_pass}")->status_is(200)
+  ->content_like(qr/Success sign up new trust-admin-user/i);
 
 done_testing();

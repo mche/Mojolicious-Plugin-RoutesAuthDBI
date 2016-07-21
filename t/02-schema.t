@@ -6,24 +6,21 @@ sub startup {
   my $r = shift->routes;
   $r->route('/schema/:schema')
     ->to('Schema#schema', namespace=>'Mojolicious::Plugin::RoutesAuthDBI');
-  #~ $r->route('/drop/:schema')
-    #~ ->to('Schema#schema_drop', namespace=>'Mojolicious::Plugin::RoutesAuthDBI');
 }
 
-my $schema = 'тестовая схема 156';
-my $seq = '"public"."id 156"';
+my $config = do 't/config.pm';
 
 my $t = Test::Mojo->new(__PACKAGE__);
 
-$t->get_ok(qq{/schema/$schema?oauth_users=oauth2.users&oauth_sites=oauth2.providers&profiles=профили&refs=связи&sequence=$seq&roles=роли доступа&routes=маршруты})
+$t->get_ok("/schema/$config->{schema}?sequence=$config->{sequence}&".join('&', map("$_=$config->{tables}{$_}", keys %{$config->{tables}})))
   ->status_is(200)
-  ->content_like(qr/table\s+(?:IF NOT EXISTS)?\s*"$schema"\."связи"/i)
-  ->content_like(qr/table\s+(?:IF NOT EXISTS)?\s*"$schema"\."профили"/i)
-  ->content_like(qr/SEQUENCE\s+$seq/i)
-  ->content_like(qr/table\s+(?:IF NOT EXISTS)?\s*"$schema"\."oauth2.providers"/i)
-  ->content_like(qr/table\s+(?:IF NOT EXISTS)?\s*"$schema"\."oauth2.users"/i)
-  ->content_like(qr/table\s+(?:IF NOT EXISTS)?\s*"$schema"\."роли доступа"/i)
-  ->content_like(qr/table\s+(?:IF NOT EXISTS)?\s*"$schema"\."маршруты"/i)
+  ->content_like(qr/table\s+(?:IF NOT EXISTS)?\s*"$config->{schema}"\."$config->{tables}{refs}"/i)
+  ->content_like(qr/table\s+(?:IF NOT EXISTS)?\s*"$config->{schema}"\."$config->{tables}{profiles}"/i)
+  ->content_like(qr/SEQUENCE\s+$config->{sequence}/i)
+  ->content_like(qr/table\s+(?:IF NOT EXISTS)?\s*"$config->{schema}"\."$config->{tables}{oauth_users}"/i)
+  ->content_like(qr/table\s+(?:IF NOT EXISTS)?\s*"$config->{schema}"\."$config->{tables}{oauth_sites}"/i)
+  ->content_like(qr/table\s+(?:IF NOT EXISTS)?\s*"$config->{schema}"\."$config->{tables}{roles}"/i)
+  ->content_like(qr/table\s+(?:IF NOT EXISTS)?\s*"$config->{schema}"\."$config->{tables}{routes}"/i)
   ;
 
 my $create = $t->tx->res->text;
