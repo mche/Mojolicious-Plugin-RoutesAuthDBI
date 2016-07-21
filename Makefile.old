@@ -246,7 +246,6 @@ TO_INST_PM = Config.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Routes.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/OAuth2.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Schema.pm \
-	lib/Mojolicious/Plugin/RoutesAuthDBI/Test/Test.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Util.pm \
 	mojo-template.pl \
 	plugins.pl \
@@ -313,8 +312,6 @@ PM_TO_BLIB = Config.pm \
 	blib/lib/Mojolicious/Plugin/RoutesAuthDBI/OAuth2.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Schema.pm \
 	blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Schema.pm \
-	lib/Mojolicious/Plugin/RoutesAuthDBI/Test/Test.pm \
-	blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Test/Test.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Util.pm \
 	blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Util.pm \
 	mojo-template.pl \
@@ -671,7 +668,7 @@ realclean_subdirs :
 # Delete temporary files (via clean) and also delete dist files
 realclean purge ::  clean realclean_subdirs
 	- $(RM_F) \
-	  $(MAKEFILE_OLD) $(FIRST_MAKEFILE) 
+	  $(FIRST_MAKEFILE) $(MAKEFILE_OLD) 
 	- $(RM_RF) \
 	  $(DISTVNAME) 
 
@@ -1105,7 +1102,6 @@ pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Routes.pm blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Routes.pm \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/OAuth2.pm blib/lib/Mojolicious/Plugin/RoutesAuthDBI/OAuth2.pm \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/Schema.pm blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Schema.pm \
-	  lib/Mojolicious/Plugin/RoutesAuthDBI/Test/Test.pm blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Test/Test.pm \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/Util.pm blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Util.pm \
 	  mojo-template.pl $(INST_LIB)/Mojolicious/Plugin/mojo-template.pl \
 	  plugins.pl $(INST_LIB)/Mojolicious/Plugin/plugins.pl \

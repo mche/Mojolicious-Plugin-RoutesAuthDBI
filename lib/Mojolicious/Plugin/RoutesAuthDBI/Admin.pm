@@ -37,7 +37,7 @@ TXT
 sub sign {
   my $c = shift;
   
-  $c->authenticate($c->vars('login','pass'))
+  $c->authenticate($c->vars(qw'login pass'))
     and $c->redirect_to("admin home")
     #~ and $c->render(format=>'txt', text=>__PACKAGE__ . "\n\nSuccessfull signed! ".$c->dumper( $c->auth_user))
     and return;
@@ -72,7 +72,7 @@ TXT
 sub new_user {
   my $c = shift;
   
-  my ($login, $pass) = $c->vars('login', 'pass');
+  my ($login, $pass) = $c->vars(qw'login pass');
   
   my $r;
   ($r = $Init->plugin->model->{Profiles}->get_profile(undef, $login))
@@ -184,7 +184,7 @@ TXT
 
 sub user_roles {
   my $c = shift;
-  my ($user) = $c->vars('user');# || $c->vars('login');
+  my ($user) = $c->vars(qw'user login');# || $c->vars('login');
   my $u =  $Init->plugin->model->{Profiles}->get_profile($user =~ /\D/ ? (undef, $user) : ($user, undef,));
   
   $c->render(format=>'txt', text=><<TXT)
@@ -272,6 +272,57 @@ Success assign ROLE[$r->{name}] -> USER [@{[$c->dumper( $u) =~ s/\s+//gr]}]
 @{[$c->dumper( $ref)]}
 TXT
   
+}
+
+# доступ к контроллеру
+sub new_role_controller {
+  my $c = shift;
+  
+  my ($role) = $c->vars('role');
+  # ROLE
+  my $r = $Init->plugin->model->{Roles}->get_role($role =~ /\D/ ? (undef, $role) : ($role, undef,));
+  $c->render(format=>'txt', text=><<TXT)
+$pkg
+
+Can't create new role by only digits[$role] in name
+===
+
+TXT
+    and return
+    unless $r && $role =~ /\w/;
+  $r ||= $Init->plugin->model->{Roles}->new_role($role);
+  
+  my ($ns, $controll) = $c->vars(qw'ns controll');
+  my $cntr = $Init->plugin->model->{Controllers}->controller_id_ns($controll =~ /\D/ ? (undef, $controll) : ($controll, undef), $ns && $ns =~ /\D/ ? (undef, $ns) : ($ns, undef), $ns);
+  
+  $c->render(format=>'txt', text=><<TXT)
+$pkg
+
+No such controller [$ns::$controll]
+===
+
+TXT
+    and return
+    unless $cntr;
+  
+  my $ref = $Init->plugin->model->{Refs}->refer($cntr->{id} => $r->{id},);
+  $c->render(format=>'txt', text=><<TXT);
+$pkg
+
+Success assign access
+
+CONTROLLER 
+===
+@{[$c->dumper( $cntr) ]}
+
+ROLE
+===
+@{[$c->dumper( $r)]}
+
+REF
+===
+@{[$c->dumper( $ref)]}
+TXT
 }
 
 sub del_role_user {# удалить связь пользователя с ролью
@@ -421,10 +472,10 @@ CONTROLLERS (@{[scalar @$list]})
 TXT
 }
 
-sub controller {# /controller/:ns/:controll
+sub controll {# /controller/:ns/:controll
   my $c = shift;
   my ($ns, $controll) = $c->vars(qw(ns controll));
-  my $r = $Init->plugin->model->{Controllers}->controller_id_ns($controll =~ /\D/ ? (undef, $controll) : ($controll, undef), $ns =~ /\D/ ? (undef, $ns) : ($ns, undef), $ns);
+  my $r = $Init->plugin->model->{Controllers}->controller_id_ns($controll =~ /\D/ ? (undef, $controll) : ($controll, undef), $ns && $ns =~ /\D/ ? (undef, $ns) : ($ns, undef), $ns);
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
@@ -438,8 +489,9 @@ TXT
 sub new_controller {
   my $c = shift;
   #~ my $ns = $c->stash('ns') || $c->param('ns') ||  $c->stash('namespace') || $c->param('namespace');
-  my ($ns) = $c->vars('ns') || $c->vars('namespace');
-  my ($mod) = $c->vars('module');
+  my ($ns) = $c->vars(qw'ns namespace');# || ($c->vars('namespace'));
+  my ($mod) = $c->vars(qw'module controll');
+  my ($descr) = $c->vars(qw'descr');
   my $cn = $Init->plugin->model->{Controllers}->controller_ns($mod, ($ns) x 2,);
   $c->render(format=>'txt', text=><<TXT)
 $pkg
@@ -452,7 +504,7 @@ TXT
   and return
   if $cn;
   my $n = $c->new_namespace($ns) if $ns;
-  $cn = $Init->plugin->model->{Controllers}->new_controller($mod, undef);
+  $cn = $Init->plugin->model->{Controllers}->new_controller($mod, $descr);
   $Init->plugin->model->{Refs}->refer($n->{id}, $cn->{id})
     if $n;
   
@@ -535,7 +587,7 @@ sub routes {
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
-ROUTES list (@{[scalar @$list]})
+ROUTES (@{[scalar @$list]})
 ===
 
 @{[$c->dumper( $list )]}
@@ -559,9 +611,10 @@ TXT
 }
 
 sub new_route_c {# показать список контроллеров
+  no warnings;
   my $c = shift;
   my ($ns) = $c->vars('ns');
-  $ns = $Init->plugin->model->{Namespaces}->namespace($ns =~ /\D/ ? (undef, $ns) : ($ns, undef,))
+  $ns = $Init->plugin->model->{Namespaces}->namespace($ns && $ns =~ /\D/ ? (undef, $ns) : ($ns, undef,))
     || {namespace => $ns};
   my $list = $Init->plugin->model->{Controllers}->controllers_ns_id($ns->{id}, $ns->{id});
   $c->render(format=>'txt', text=><<TXT);
@@ -579,10 +632,11 @@ TXT
 }
 
 sub new_route_a {# показать список действий
+  no warnings;
   my $c = shift;
-  my ($ns, $controll) = $c->vars('ns', 'controll');
+  my ($ns, $controll) = $c->vars(qw'ns controll');
   
-  $ns = $Init->plugin->model->{Namespaces}->namespace($ns =~ /\D/ ? (undef, $ns) : ($ns, undef,))
+  $ns = $Init->plugin->model->{Namespaces}->namespace($ns && $ns =~ /\D/ ? (undef, $ns) : ($ns, undef,))
     || {namespace => $ns};
   
   $controll = $Init->plugin->model->{Controllers}->controller_id_ns($controll =~ /\D/ ? (undef, $controll) : ($controll, undef,), $ns->{id}, $ns->{namespace}, $ns->{namespace},)
@@ -612,9 +666,9 @@ TXT
 my @route_cols = qw(request name descr auth disable interval_ts);
 sub new_route {# показать маршруты к действию
   my $c = shift;
-  my ($ns, $controll, $act) = $c->vars('ns', 'controll', 'act');
+  my ($ns, $controll, $act) = $c->vars(qw'ns controll act');
   
-  $ns = $Init->plugin->model->{Namespaces}->namespace($ns =~ /\D/ ? (undef, $ns) : ($ns, undef,))
+  $ns = $Init->plugin->model->{Namespaces}->namespace($ns&& $ns =~ /\D/ ? (undef, $ns) : ($ns, undef,))
     || {namespace => $ns};
   
   $controll = $Init->plugin->model->{Controllers}->controller_id_ns($controll =~ /\D/ ? (undef, $controll) : ($controll, undef,), $ns->{id}, $ns->{namespace}, $ns->{namespace},)
@@ -754,7 +808,7 @@ sub self_routes {# from plugin!
 /$prefix/namespace/new/:ns/:descr/:app_ns	new_namespace	$prefix new_namespace	1	Add new ns
 /$prefix/controllers	controllers	$prefix controllers	1	Controllers list
 /$prefix/controller/new/:ns/:module	new_controller	$prefix new_controller	1	Add new controller by :ns and :module
-/$prefix/controller/:ns/:controll	controller	$prefix controller	1	View a controller (ID and name for NS and controller)
+/$prefix/controller/:ns/:controll	controll	$prefix controller	1	View a controller (ID and name for NS and controller)
 /$prefix/actions	actions	$prefix actions	1	Actions list
 #
 # Роли и доступ
@@ -765,7 +819,9 @@ sub self_routes {# from plugin!
 /$prefix/role/enbl/:role	enable_role	$prefix enable role->user	1	Enable :role by role.id|role.name.
 /$prefix/roles	roles	$prefix view roles	1	View roles table
 /$prefix/roles/:user	user_roles	$prefix roles of user	1	View roles of :user by profile.id|login
-/$prefix/role/:role/:user	new_role_user	$prefix create ref role->profile	1	Assign :user to :role by profile.id|login and role.id|role.name.
+/$prefix/role/user/:role/:user	new_role_user	$prefix create ref role->profile	1	Assign :user to :role by profile.id|login and role.id|role.name.
+/$prefix/role/namespace/:role/:ns	new_role_namespace	$prefix create ref namespace->role	1	Assign :role to :ns by role.id|role.name and namespace.id|namespace.name.
+/$prefix/role/controller/:role/:ns/:controll	new_role_controller	$prefix create ref controller->role	1	Assign :role to :controll by role.id|role.name and controller.id|controller.name+namespace(id|name).
 #
 # Последовательный ввод нового маршрута
 #

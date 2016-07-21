@@ -183,10 +183,11 @@ sub cond_access {# add_condition
     && return 1;
   
   # implicit access to non db routes
-  my $controller = $args->{controller} || ucfirst(lc($route->pattern->defaults->{controller}));
+  my $controller = $args->{controller} || $route->pattern->defaults->{controller} && ucfirst(lc($route->pattern->defaults->{controller}));
   my $namespace = $args->{namespace} || $route->pattern->defaults->{namespace};
   if ($controller && !$namespace) {
     (load_class(namespace=>$_, controller=>$controller) and ($namespace = $_) and last) for @{ $app->routes->namespaces };
+    #~ warn "FOUND CONTROLLER[$controller] in NAMESPACE: $namespace";
   }
   
   my $fail_access_cb = $conf->{access}{fail_access_cb};
@@ -304,6 +305,7 @@ First of all you will see L<SVG|https://github.com/mche/Mojolicious-Plugin-Route
     access => {...},
     admin => {...},
     oauth => {...},
+    template => {...},
   );
 
 
@@ -393,6 +395,9 @@ You might define your own controller by passing options:
 
 See L<Mojolicious::Plugin::RoutesAuthDBI::OAuth2> for detail options list.
 
+=head3 template
+
+Hashref variables for SQL templates of models dictionaries. Defaults is C<$Mojolicious::Plugin::RoutesAuthDBI::Schema::defaults>. See L<Mojolicious::Plugin::RoutesAuthDBI::Model::Base>.
 
 =head1 INSTALL
 

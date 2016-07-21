@@ -110,11 +110,11 @@ In child model must define SQL dict:
 In controller:
 
   ...
-  state $mFoo = do {require Model::Foo; Model::Foo->new;};
+  has model => sub {require Model::Foo; Model::Foo->new;};
   
   sub actionFoo {
     my $c = shift;
-    my $foo = $mFoo->foo($c->param('id'));
+    my $foo = $c->model->foo($c->param('id'));
     ...
   
   }

@@ -66,7 +66,7 @@ SQL
   #!!! пустой has sth=>sub{{};}; в app !!!
   sth => { main=>{},},# prepared sth
 #~ now=>"select now();"
-  namespaces => [],
+  namespaces => ['Test'],
   routes => [
   [
     route=>'/callback',
@@ -92,10 +92,11 @@ SQL
   ],[
     route=>'/test1',
     over=>{access=>{auth=>1,}},
-    to=>'test#test1',
+    to=>'test1#test1',
   ],[
-    route=>'/test5/:action',
-    to=>{controller=>'Test'},
+    route=>'/test1/:action',
+    over=>{access=>{auth=>1,}},
+    to=>{controller=>'Test1'},
   ],
   ],
 };

@@ -3,7 +3,7 @@
 
 package TestApp;
 #~ use lib './lib';
-use Mojo::Base::Che 'Mojolicious::Che', -lib, qw(lib);
+use Mojo::Base::Che 'Mojolicious::Che', -lib, qw(lib t);
 
 sub startup {# 
   my $app = shift;

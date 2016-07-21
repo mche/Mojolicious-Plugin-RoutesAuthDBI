@@ -1,5 +1,6 @@
 use Mojo::Base -strict;
 {
+  namespace=>'Mojolicious::Plugin::RoutesAuthDBI',
   prefix => 'test-admin',
   trust =>'foo-trust',
   schema => 'тестовая схема 156',
@@ -24,5 +25,15 @@ use Mojo::Base -strict;
     $desc ||= "Location: $value";
     local $Test::Builder::Level = $Test::Builder::Level + 1;
     return $t->success(is($t->tx->res->headers->location, $value, $desc));
+  },
+  app_routes => sub {
+    my $t = shift;
+    my $stdout;
+    local *STDOUT;
+    open(STDOUT, ">", \$stdout);
+    $t->app->commands->run('routes');
+    #~ like $stdout, qr/\/$config->{prefix}\/$config->{trust}\/admin\/new\/:login\/:pass/, 'routes';
+    #~ like $stdout, qr/signin stash/, 'sign in route';
+    return $stdout;
   },
 };
