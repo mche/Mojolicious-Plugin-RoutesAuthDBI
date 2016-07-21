@@ -46,15 +46,15 @@ sub roles {
 __DATA__
 @@ role
 select *
-from "{%= $schema %}"."{%= $tables{roles} %}"
+from "{%= $schema %}"."{%= $tables->{roles} %}"
 where id=? or lower(name)=?
 
 @@ new role
-insert into "{%= $schema %}"."{%= $tables{roles} %}" (name) values (?)
+insert into "{%= $schema %}"."{%= $tables->{roles} %}" (name) values (?)
 returning *;
 
 @@ dsbl/enbl role
-update "{%= $schema %}"."{%= $tables{roles} %}"
+update "{%= $schema %}"."{%= $tables->{roles} %}"
 set disable=?::bit
 where id=? or lower(name)=?
 returning *;
@@ -62,7 +62,7 @@ returning *;
 @@ access role?cached=1
 %# Доступ по роли
 select count(*)
-from "{%= $schema %}"."{%= $tables{roles} %}"
+from "{%= $schema %}"."{%= $tables->{roles} %}"
 where (id = ? or name = ?)
   and id = any(?)
   and coalesce(disable, 0::bit) <> 1::bit
@@ -72,12 +72,12 @@ where (id = ? or name = ?)
 %# Пользователи роли
 select p.*
 from
-  "{%= $schema %}"."{%= $tables{profiles} %}" p
-  join "{%= $schema %}"."{%= $tables{refs} %}" r on p.id=r.id2
+  "{%= $schema %}"."{%= $tables->{profiles} %}" p
+  join "{%= $schema %}"."{%= $tables->{refs} %}" r on p.id=r.id2
 where r.id1=?;
 
 @@ roles
 select *
-from "{%= $schema %}"."{%= $tables{roles} %}"
+from "{%= $schema %}"."{%= $tables->{roles} %}"
 {%= $where %}
 

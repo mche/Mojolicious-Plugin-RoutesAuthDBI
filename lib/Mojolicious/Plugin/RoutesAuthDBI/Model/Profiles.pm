@@ -35,26 +35,26 @@ sub new_profile {
 __DATA__
 @@ profiles
 select p.*, l.login, l.pass
-from "{%= $schema %}"."{%= $tables{profiles} %}" p
+from "{%= $schema %}"."{%= $tables->{profiles} %}" p
 left join (
   select l.*, r.id1
-  from "{%= $schema %}"."{%= $tables{refs} %}" r 
-    join "{%= $schema %}"."{%= $tables{logins} %}" l on l.id=r.id2
+  from "{%= $schema %}"."{%= $tables->{refs} %}" r 
+    join "{%= $schema %}"."{%= $tables->{logins} %}" l on l.id=r.id2
 ) l on p.id=l.id1
 
 @@ new profile
-insert into "{%= $schema %}"."{%= $tables{profiles} %}" (names) values (?)
+insert into "{%= $schema %}"."{%= $tables->{profiles} %}" (names) values (?)
 returning *;
 
 @@ profile?cached=1
 %# Load auth profile
 
 select p.*, l.login, l.pass
-from "{%= $schema %}"."{%= $tables{profiles} %}" p
+from "{%= $schema %}"."{%= $tables->{profiles} %}" p
 left join (
   select l.*, r.id1
-  from "{%= $schema %}"."{%= $tables{refs} %}" r 
-    join "{%= $schema %}"."{%= $tables{logins} %}" l on l.id=r.id2
+  from "{%= $schema %}"."{%= $tables->{refs} %}" r 
+    join "{%= $schema %}"."{%= $tables->{logins} %}" l on l.id=r.id2
 ) l on p.id=l.id1
 where p.id=? or l.login=?
 
@@ -62,8 +62,8 @@ where p.id=? or l.login=?
 %# Роли пользователя(профиля)
 select g.*
 from
-  "{%= $schema %}"."{%= $tables{roles} %}" g
-  join "{%= $schema %}"."{%= $tables{refs} %}" r on g.id=r.id1
+  "{%= $schema %}"."{%= $tables->{roles} %}" g
+  join "{%= $schema %}"."{%= $tables->{refs} %}" r on g.id=r.id1
 where r.id2=?;
 --and coalesce(g.disable, 0::bit) <> 1::bit
 

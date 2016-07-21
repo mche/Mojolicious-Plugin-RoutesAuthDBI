@@ -40,7 +40,7 @@ sub namespaces {
 __DATA__
 @@ namespaces
 select *
-from "{%= $schema %}"."{%= $tables{namespaces} %}"
+from "{%= $schema %}"."{%= $tables->{namespaces} %}"
 {%= $where %}
 {%= $order %}
 
@@ -48,9 +48,9 @@ from "{%= $schema %}"."{%= $tables{namespaces} %}"
 %# доступ ко всем действиям по имени спейса
 select count(n.*)
 from 
-  "{%= $schema %}"."{%= $tables{namespaces} %}" n
-  join "{%= $schema %}"."{%= $tables{refs} %}" r on n.id=r.id1
-  ---join "{%= $schema %}"."{%= $tables{roles} %}" o on r.id2=o.id
+  "{%= $schema %}"."{%= $tables->{namespaces} %}" n
+  join "{%= $schema %}"."{%= $tables->{refs} %}" r on n.id=r.id1
+  ---join "{%= $schema %}"."{%= $tables->{roles} %}" o on r.id2=o.id
 where
   n.namespace=?
   and r.id2=any(?) --- roles ids
@@ -59,11 +59,11 @@ where
 
 @@ namespace
 select *
-from "{%= $schema %}"."{%= $tables{namespaces} %}"
+from "{%= $schema %}"."{%= $tables->{namespaces} %}"
 where id=? or namespace = ?
 ;
 
 @@ new namespace
-insert into "{%= $schema %}"."{%= $tables{namespaces} %}" (namespace, descr, app_ns, interval_ts) values (?,?,?,?)
+insert into "{%= $schema %}"."{%= $tables->{namespaces} %}" (namespace, descr, app_ns, interval_ts) values (?,?,?,?)
 returning *;
 

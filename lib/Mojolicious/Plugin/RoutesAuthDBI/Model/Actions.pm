@@ -53,10 +53,10 @@ __DATA__
 
 select count(r.*)
 from
-  "{%= $schema %}"."{%= $tables{refs} %}" rc 
-  join "{%= $schema %}"."{%= $tables{actions} %}" a on a.id=rc.id2
-  join "{%= $schema %}"."{%= $tables{refs} %}" r on a.id=r.id1
-  ---join "{%= $schema %}"."{%= $tables{roles} %}" o on o.id=r.id2
+  "{%= $schema %}"."{%= $tables->{refs} %}" rc 
+  join "{%= $schema %}"."{%= $tables->{actions} %}" a on a.id=rc.id2
+  join "{%= $schema %}"."{%= $tables->{refs} %}" r on a.id=r.id1
+  ---join "{%= $schema %}"."{%= $tables->{roles} %}" o on o.id=r.id2
 where
   rc.id1=? ---controller id
   and a.action=?
@@ -69,19 +69,19 @@ where
 
 select * from (
   select a.*, ac.controller_id, ac.controller
-  from "{%= $schema %}"."{%= $tables{actions} %}" a
+  from "{%= $schema %}"."{%= $tables->{actions} %}" a
     left join (
       select a.id, c.id as controller_id, c.controller
-      from "{%= $schema %}"."{%= $tables{actions} %}" a
-        join "{%= $schema %}"."{%= $tables{refs} %}" r on a.id=r.id2
-        join "{%= $schema %}"."{%= $tables{controllers} %}" c on c.id=r.id1
+      from "{%= $schema %}"."{%= $tables->{actions} %}" a
+        join "{%= $schema %}"."{%= $tables->{refs} %}" r on a.id=r.id2
+        join "{%= $schema %}"."{%= $tables->{controllers} %}" c on c.id=r.id1
       ) ac on a.id=ac.id-- действия с контроллером
   ) as a
 {%= $where %}
 
 @@ new action
 
-insert into "{%= $schema %}"."{%= $tables{actions} %}" (action, callback, descr)
+insert into "{%= $schema %}"."{%= $tables->{actions} %}" (action, callback, descr)
 values (?,?,?)
 returning *;
 

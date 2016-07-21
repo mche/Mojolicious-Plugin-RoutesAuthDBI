@@ -33,7 +33,7 @@
       "runtime" : {
          "requires" : {
             "DBI" : "1.6",
-            "DBIx::Mojo::Template" : "0.03",
+            "DBIx::POS::Template" : "0.01",
             "Hash::Merge" : "0.2",
             "Mojolicious" : "6",
             "Mojolicious::Plugin::Authentication" : "1.29",
@@ -42,6 +42,6 @@
       }
    },
    "release_status" : "stable",
-   "version" : "0.780",
+   "version" : "0.777",
    "x_serialization_backend" : "JSON::PP version 2.27300"
 }

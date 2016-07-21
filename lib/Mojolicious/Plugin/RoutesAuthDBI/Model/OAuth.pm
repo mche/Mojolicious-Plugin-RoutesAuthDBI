@@ -40,29 +40,29 @@ sub detach {
 
 __DATA__
 @@ update oauth site
-update "{%= $schema %}"."{%= $tables{oauth_sites} %}"
+update "{%= $schema %}"."{%= $tables->{oauth_sites} %}"
 set conf = ?
 where name =?
 returning *;
 
 @@ new oauth site
-insert into "{%= $schema %}"."{%= $tables{oauth_sites} %}" (conf,name) values (?,?)
+insert into "{%= $schema %}"."{%= $tables->{oauth_sites} %}" (conf,name) values (?,?)
 returning *;
 
 @@ update oauth user
-update "{%= $schema %}"."{%= $tables{oauth_users} %}"
+update "{%= $schema %}"."{%= $tables->{oauth_users} %}"
 set profile = ?, profile_ts=now()
 where site_id =? and user_id=?
 returning 1::int as "old", *;
 
 @@ new oauth user
-insert into "{%= $schema %}"."{%= $tables{oauth_users} %}" (profile, site_id, user_id) values (?,?,?)
+insert into "{%= $schema %}"."{%= $tables->{oauth_users} %}" (profile, site_id, user_id) values (?,?,?)
 returning 1::int as "new", *;
 
 @@ profile by oauth user
 select p.*
-from "{%= $schema %}"."{%= $tables{profiles} %}" p
-  join "{%= $schema %}"."{%= $tables{refs} %}" r on p.id=r.id1
+from "{%= $schema %}"."{%= $tables->{profiles} %}" p
+  join "{%= $schema %}"."{%= $tables->{refs} %}" r on p.id=r.id1
 
 where r.id2=?;
 
@@ -71,15 +71,15 @@ where r.id2=?;
 %# Только один сайт на профиль
 
 select o.*
-from "{%= $schema %}"."{%= $tables{profiles} %}" p
-  join "{%= $schema %}"."{%= $tables{refs} %}" r on p.id=r.id1
-  join "{%= $schema %}"."{%= $tables{oauth_users} %}" o on o.id=r.id2
+from "{%= $schema %}"."{%= $tables->{profiles} %}" p
+  join "{%= $schema %}"."{%= $tables->{refs} %}" r on p.id=r.id1
+  join "{%= $schema %}"."{%= $tables->{oauth_users} %}" o on o.id=r.id2
 
 where p.id=? and o.site_id=?
 
 @@ отсоединить oauth
-delete from "{%= $schema %}"."{%= $tables{oauth_users} %}" d
-using "{%= $schema %}"."{%= $tables{refs} %}" r
+delete from "{%= $schema %}"."{%= $tables->{oauth_users} %}" d
+using "{%= $schema %}"."{%= $tables->{refs} %}" r
 where d.site_id = ?
   and r.id1=? -- ид профиля
   and d.id=r.id2
@@ -90,9 +90,9 @@ RETURNING d.*, r.id as ref_id;
 %# список внешних профилей по внутреннему профилю
 
 select u.*, s.name as site_name
-from "{%= $schema %}"."{%= $tables{oauth_sites} %}" s
-  join "{%= $schema %}"."{%= $tables{oauth_users} %}" u on s.id = u.site_id
-  join "{%= $schema %}"."{%= $tables{refs} %}" r on u.id=r.id2
+from "{%= $schema %}"."{%= $tables->{oauth_sites} %}" s
+  join "{%= $schema %}"."{%= $tables->{oauth_users} %}" u on s.id = u.site_id
+  join "{%= $schema %}"."{%= $tables->{refs} %}" r on u.id=r.id2
 
 where s.id=? and r.id1=? -- профиль ид
 

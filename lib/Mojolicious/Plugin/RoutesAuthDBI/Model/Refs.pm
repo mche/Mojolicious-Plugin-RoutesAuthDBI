@@ -31,21 +31,21 @@ __DATA__
 @@ cnt refs?cached=1
 %# check if ref between [IDs1] and [IDs2] exists
 select count(*)
-from "{%= $schema %}"."{%= $tables{refs} %}"
+from "{%= $schema %}"."{%= $tables->{refs} %}"
 where id1 = any(?) and id2 = ANY(?);
 
 @@ ref
 select *
-from "{%= $schema %}"."{%= $tables{refs} %}"
+from "{%= $schema %}"."{%= $tables->{refs} %}"
 where id1=? and id2=?;
 
 @@ new ref
-insert into "{%= $schema %}"."{%= $tables{refs} %}" (id1,id2) values (?,?)
+insert into "{%= $schema %}"."{%= $tables->{refs} %}" (id1,id2) values (?,?)
 returning *;
 
 @@ del ref
 %# Delete ref
-delete from "{%= $schema %}"."{%= $tables{refs} %}"
+delete from "{%= $schema %}"."{%= $tables->{refs} %}"
 where id=? or (id1=? and id2=?)
 returning *;
 

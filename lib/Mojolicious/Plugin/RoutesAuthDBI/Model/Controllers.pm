@@ -45,15 +45,15 @@ __DATA__
 select * from (
   select c.*, n.namespace, n.id as namespace_id, n.descr as namespace_descr
   from
-    "{%= $schema %}"."{%= $tables{controllers} %}" c
-    left join "{%= $schema %}"."{%= $tables{refs} %}" r on c.id=r.id2
-    left join "{%= $schema %}"."{%= $tables{namespaces} %}" n on n.id=r.id1
+    "{%= $schema %}"."{%= $tables->{controllers} %}" c
+    left join "{%= $schema %}"."{%= $tables->{refs} %}" r on c.id=r.id2
+    left join "{%= $schema %}"."{%= $tables->{namespaces} %}" n on n.id=r.id1
   ) s
 {%= $where %}
 
 @@ new controller
 
-insert into "{%= $schema %}"."{%= $tables{controllers} %}" (controller, descr)
+insert into "{%= $schema %}"."{%= $tables->{controllers} %}" (controller, descr)
 values (?,?)
 returning *;
 
@@ -61,8 +61,8 @@ returning *;
 %# Контроллер либо привязан к спейсу или нет
 
 select c.*, n.namespace, n.id as namespace_id, n.descr as namespace_descr
-from "{%= $schema %}"."{%= $tables{controllers} %}" c
-left join "{%= $schema %}"."{%= $tables{refs} %}" r on c.id=r.id2
-left join "{%= $schema %}"."{%= $tables{namespaces} %}" n on n.id=r.id1
+from "{%= $schema %}"."{%= $tables->{controllers} %}" c
+left join "{%= $schema %}"."{%= $tables->{refs} %}" r on c.id=r.id2
+left join "{%= $schema %}"."{%= $tables->{namespaces} %}" n on n.id=r.id1
 {%= $where %};
 

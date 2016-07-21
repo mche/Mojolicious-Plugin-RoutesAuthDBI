@@ -23,11 +23,11 @@ sub login {
 
 __DATA__
 @@ new login
-insert into "{%= $schema %}"."{%= $tables{logins} %}" (login, pass) values (?,?)
+insert into "{%= $schema %}"."{%= $tables->{logins} %}" (login, pass) values (?,?)
 returning *;
 
 @@ login
 select *
-from "{%= $schema %}"."{%= $tables{logins} %}"
+from "{%= $schema %}"."{%= $tables->{logins} %}"
 where id=? or login=?;
 

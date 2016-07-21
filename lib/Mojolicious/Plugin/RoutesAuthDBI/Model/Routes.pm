@@ -38,26 +38,26 @@ __DATA__
 %# Маршруты роли/действия
 select t.*
 from
-  "{%= $schema %}"."{%= $tables{routes} %}" t
-  join "{%= $schema %}"."{%= $tables{refs} %}" r on t.id=r.id1
+  "{%= $schema %}"."{%= $tables->{routes} %}" t
+  join "{%= $schema %}"."{%= $tables->{refs} %}" r on t.id=r.id1
 where r.id2=?;
 
 @@ apply routes
 %# Генерация маршрутов приложения
 select r.*, ac.controller, ac.namespace, ac.action, ac.callback, ac.id as action_id, ac.controller_id, ac.namespace_id
-from "{%= $schema %}"."{%= $tables{routes} %}" r
-  join "{%= $schema %}"."{%= $tables{refs} %}" rf on r.id=rf.id1
+from "{%= $schema %}"."{%= $tables->{routes} %}" r
+  join "{%= $schema %}"."{%= $tables->{refs} %}" rf on r.id=rf.id1
   join 
   (
     select a.*, c.*
-    from "{%= $schema %}"."{%= $tables{actions} %}" a 
+    from "{%= $schema %}"."{%= $tables->{actions} %}" a 
     left join (
       select r.id2 as _id, c.controller, c.id as controller_id, n.namespace, n.id as namespace_id
       from 
-        "{%= $schema %}"."{%= $tables{refs} %}" r
-        join "{%= $schema %}"."{%= $tables{controllers} %}" c on r.id1=c.id
-        left join "{%= $schema %}"."{%= $tables{refs} %}" r2 on c.id=r2.id2
-        left join "{%= $schema %}"."{%= $tables{namespaces} %}" n on n.id=r2.id1
+        "{%= $schema %}"."{%= $tables->{refs} %}" r
+        join "{%= $schema %}"."{%= $tables->{controllers} %}" c on r.id1=c.id
+        left join "{%= $schema %}"."{%= $tables->{refs} %}" r2 on c.id=r2.id2
+        left join "{%= $schema %}"."{%= $tables->{namespaces} %}" n on n.id=r2.id1
     ) c on a.id=c._id
   ) ac on rf.id2=ac.id
 order by r.ts - (coalesce(r.interval_ts, 0::int)::varchar || ' second')::interval;
@@ -66,18 +66,18 @@ order by r.ts - (coalesce(r.interval_ts, 0::int)::varchar || ' second')::interva
 %# маршрут может быть не привязан к действию
 select * from (
 select r.*, s.action_id
-from "{%= $schema %}"."{%= $tables{routes} %}" r
+from "{%= $schema %}"."{%= $tables->{routes} %}" r
   left join (
    select s.id1, a.id as action_id
-   from "{%= $schema %}"."{%= $tables{refs} %}" s
-    join "{%= $schema %}"."{%= $tables{actions} %}" a on a.id=s.id2
+   from "{%= $schema %}"."{%= $tables->{refs} %}" s
+    join "{%= $schema %}"."{%= $tables->{actions} %}" a on a.id=s.id2
   ) s on r.id=s.id1
 ) s
 {%= $where %}; -- action_id is null - free routes; or action(id) routes
 ;
 
 @@ new route
-insert into "{%= $schema %}"."{%= $tables{routes} %}" (request, name, descr, auth, disable, interval_ts)
+insert into "{%= $schema %}"."{%= $tables->{routes} %}" (request, name, descr, auth, disable, interval_ts)
 values (?,?,?,?,?,?)
 returning *;
 
