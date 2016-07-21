@@ -4,7 +4,7 @@ use Test::Mojo;
 
 sub startup {
   shift->routes->route('/app')
-    ->to('install#test_app', namespace=>'Mojolicious::Plugin::RoutesAuthDBI');
+    ->to('install#sampl_app', namespace=>'Mojolicious::Plugin::RoutesAuthDBI');
 }
 
 my $t = Test::Mojo->new(__PACKAGE__);

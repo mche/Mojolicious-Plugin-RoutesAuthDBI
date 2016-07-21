@@ -1,16 +1,12 @@
 package Mojolicious::Plugin::RoutesAuthDBI::Install;
 use Mojo::Base 'Mojolicious::Controller';
-use DBIx::POS::Template;
+use DBIx::Mojo::Template;
 
-my $sql = DBIx::POS::Template->new(__FILE__);
+my $sql = DBIx::Mojo::Template->new(__PACKAGE__);
 
 =pod
 
 =encoding utf8
-
-=head3 Warn
-
-B<POD ERRORS> here is normal because DBIx::POS::Template used.
 
 =head1 Mojolicious::Plugin::RoutesAuthDBI::Install
 
@@ -66,35 +62,10 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
   use Mojo::Base 'Mojolicious';
   sub startup {
     shift->routes->route('/app')
-      ->to('install#test_app', namespace=>'Mojolicious::Plugin::RoutesAuthDBI');
+      ->to('install#sampl_app', namespace=>'Mojolicious::Plugin::RoutesAuthDBI');
   }
   __PACKAGE__->new->start;
   PERL
-
-=name sample.app
-
-=desc 
-
-  use Mojo::Base 'Mojolicious';
-  use DBI;
-
-  has dbh => sub { DBI->connect("DBI:Pg:dbname=<dbname>;", "postgres", undef); };
-
-  sub startup {
-    my $app = shift;
-    # $app->plugin(Config =>{file => 'Config.pm'});
-    $app->plugin('RoutesAuthDBI',
-      dbh=>$app->dbh,
-      auth=>{current_user_fn=>'auth_user'},
-      # access=> {},
-      admin=>{prefix=>'myadmin', trust=>'fooobaaar',},
-    );
-  }
-  __PACKAGE__->new->start;
-
-=sql
-
-  --
 
 =head1 Define DBI->connect(...) and some plugin options in test-app.pl
 
@@ -135,7 +106,7 @@ $ perl -e "use Mojo::Base 'Mojolicious'; __PACKAGE__->new()->start(); sub startu
 2. Create test-app.pl and then define in them DBI->connect(...) and some plugin options:
 ------------
 
-$ perl -e "use Mojo::Base 'Mojolicious'; __PACKAGE__->new()->start(); sub startup {shift->routes->route('/')->to('install#test_app', namespace=>'Mojolicious::Plugin::RoutesAuthDBI');}" get / 2>/dev/null > test-app.pl
+$ perl -e "use Mojo::Base 'Mojolicious'; __PACKAGE__->new()->start(); sub startup {shift->routes->route('/')->to('install#sampl_app', namespace=>'Mojolicious::Plugin::RoutesAuthDBI');}" get / 2>/dev/null > test-app.pl
 
 3. View admin routes:
 ------------
@@ -167,9 +138,9 @@ TXT
 }
 
 
-sub test_app {
+sub sampl_app {
   my $c = shift;
-  my $code = $sql->{'sample.app'}->desc;
+  my $code = $sql->{'sample.app'}->render;
   $c->render(format=>'txt', text => <<TXT);
 $code
 TXT
@@ -179,5 +150,21 @@ TXT
 1;
 
 __DATA__
+@@ sample.app
+use Mojo::Base 'Mojolicious';
+use DBI;
 
+has dbh => sub { DBI->connect("DBI:Pg:dbname=<dbname>;", "postgres", undef); };
+
+sub startup {
+  my $app = shift;
+  # $app->plugin(Config =>{file => 'Config.pm'});
+  $app->plugin('RoutesAuthDBI',
+    dbh=>$app->dbh,
+    auth=>{current_user_fn=>'auth_user'},
+    # access=> {},
+    admin=>{prefix=>'myadmin', trust=>'fooobaaar',},
+  );
+}
+__PACKAGE__->new->start;
 
