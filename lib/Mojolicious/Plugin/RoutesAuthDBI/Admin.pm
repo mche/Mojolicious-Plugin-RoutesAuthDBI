@@ -897,22 +897,28 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
     );
 
 
-=over 4
+=head2 OPTIONS
 
-=item * B<namespace> - default 'Mojolicious::Plugin::RoutesAuthDBI',
+=head3 namespace
 
-=item * B<controller> - module controller name, default 'Admin',
+Namespace (string). Defaults to 'Mojolicious::Plugin::RoutesAuthDBI'.
 
-Both above options determining the module controller for web actions on tables routes, roles, users and refs between them.
+=head3 controller
 
-=item * B<prefix> -is a prefix for admin urls of this module. Default as name of controller lowcase.
+Module controller name. Defaults to 'Admin'.
 
-=item * B<trust> is a url subprefix for trust admin urls of this module. See defaults below.
+Both above options determining the loadable module controller as concatenation C<namespace>::C<controller>.
+
+=head3 prefix
+
+String. Is a prefix for admin urls of this module. Default as name of controller to low case.
+
+=head3 trust
+
+String. Is a url subprefix for trust admin urls of this module. See defaults below.
 
 
-=back
-
-=head2 Defaults
+=head2 Default options
 
   admin = > {
     namespace => 'Mojolicious::Plugin::RoutesAuthDBI',
@@ -920,7 +926,9 @@ Both above options determining the module controller for web actions on tables r
     prefix => 'admin', # lc(<module>)
     trust => hmac_sha1_sum('admin', $app->secrets->[0]),
   },
-    
+
+Examples options:
+
   admin = {}, # empty hashref sets defaults above
   
   admin => undef, # disable admin controller

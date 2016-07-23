@@ -291,7 +291,7 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
 
 =head3 namespace
 
-Namespace (string). Default to 'Mojolicious::Plugin::RoutesAuthDBI'.
+Namespace (string). Defaults to 'Mojolicious::Plugin::RoutesAuthDBI'.
 
 =head3 controller
 
