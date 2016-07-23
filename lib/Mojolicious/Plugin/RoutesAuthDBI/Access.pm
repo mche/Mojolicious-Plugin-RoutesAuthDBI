@@ -246,10 +246,6 @@ Heart of routes generation from db tables and not only. Insert to app->routes an
 
 Fetch records for apply_routes. Must return arrayref of hashrefs routes.
 
-=item * B<load_user_roles($user)>
-
-Fetch records roles for session user.
-
 =item * B<access_explicit($id1, $id2)>
 
 Check access to route ($id1 arrayref - either route id or action id or controller id or namespace id) by roles ids ($id2 arrayref). Must return false for deny access or true - allow access.

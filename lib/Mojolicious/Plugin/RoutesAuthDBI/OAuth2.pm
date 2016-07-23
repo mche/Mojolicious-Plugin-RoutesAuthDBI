@@ -287,15 +287,20 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
         ...
     );
 
+=head2 OPTIONS
 
-=over 4
+=head3 namespace
 
-=item * B<namespace> - default 'Mojolicious::Plugin::RoutesAuthDBI',
+Namespace (string). Default to 'Mojolicious::Plugin::RoutesAuthDBI'.
 
-=item * B<controller> - module controller name, default 'OAuth2',
+=head3 controller
+
+Module controller name. Defaults to 'OAuth2'.
 
 
-=item * B<providers> - hashref. Required.
+=head3 providers
+
+Hashref for key/value per each need provider. Required.
 
   providers => {google=>{key=> ..., secret=>..., }, ...},
 
@@ -303,11 +308,11 @@ See L<Mojolicious::Plugin::OAuth2>. But two additional parameters (keys of provi
 
 =over 4
 
-=item * B<profile_url> abs url string
+=item * B<profile_url> abs url string to fetch profile info after success oauth.
 
   profile_url=> 'https://www.googleapis.com/oauth2/v1/userinfo',
 
-=item * B<profile_query> coderef
+=item * B<profile_query> coderef which prepare additional query params for C<profile_url>
 
 Example for google:
 
@@ -320,11 +325,12 @@ Example for google:
   },
 
 In: $auth hash ref with access_token.
-Out: hashref profile query params.
+
+Out: hashref C<profile_url> query params.
 
 =back
 
-=head2 Defaults
+=head2 Defaults options for oauth:
 
   oauth = > {
     namespace => 'Mojolicious::Plugin::RoutesAuthDBI',
