@@ -23,6 +23,7 @@ requires:
   Hash::Merge: '0.2'
   Mojolicious: '6'
   Mojolicious::Plugin::Authentication: '1.29'
+  Mojolicious::Plugin::OAuth2::Che: '1.539'
   perl: '5.014'
-version: '0.781'
+version: '0.782'
 x_serialization_backend: 'CPAN::Meta::YAML version 0.018'

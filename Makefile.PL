@@ -21,6 +21,7 @@ WriteMakefile(
     PREREQ_PM => {
         'Mojolicious'=>6.00,
         'Mojolicious::Plugin::Authentication'=>1.29,
+        'Mojolicious::Plugin::OAuth2::Che'=>1.539,
         'DBI'=>1.6,
         'DBIx::Mojo::Template'=>0.03,
         'Hash::Merge'=>0.200,

@@ -94,7 +94,7 @@ sub init {# from plugin
     if $self->app->renderer->helpers->{'oauth2.get_token'};
   
   #~ $self->app->log->debug($self->app->dumper($self->config));
-  $self->app->plugin("OAuth2" => $self->config);
+  $self->app->plugin("OAuth2::Che" => $self->config);
   
   $Init = $self;
   return $self;
