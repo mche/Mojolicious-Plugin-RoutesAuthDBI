@@ -273,7 +273,7 @@ sub deny_log {
   );
 }
 
-our $VERSION = '0.782';
+our $VERSION = '0.783';
 
 =pod
 
@@ -287,7 +287,7 @@ our $VERSION = '0.782';
 
 =head1 VERSION
 
-0.782
+0.783
 
 =head1 NAME
 
@@ -335,7 +335,9 @@ The options:
 
 are imported from package access module. See below.
 
-=item * B<access> - hashref options for special access module. This module has subs and methods for manage auth and access operations, has appling routes from sql-table. By default plugin will load the builtin module:
+=head3 access
+
+Hashref options for special access module. This module has subs/methods for manage auth and access operations, has appling routes from DBI table. By default plugin will load the builtin module:
 
   access => {
     module => 'Access',
