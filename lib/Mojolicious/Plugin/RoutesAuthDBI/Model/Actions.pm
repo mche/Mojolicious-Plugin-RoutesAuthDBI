@@ -7,7 +7,7 @@ sub new {
 
 sub access {
   my $self = ref($_[0]) ? shift : shift->new;
-  $self->dbh->selectrow_array($self->sth('access action'), undef, ( $_[0..2] ));
+  $self->dbh->selectrow_array($self->sth('access action'), undef, ( @_ ));
 }
 
 sub actions {
