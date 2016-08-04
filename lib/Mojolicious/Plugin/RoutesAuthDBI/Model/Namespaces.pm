@@ -45,7 +45,7 @@ from "{%= $schema %}"."{%= $tables->{namespaces} %}"
 {%= $order %}
 
 @@ access namespace?cached=1
-%# доступ ко всем действиям по имени спейса
+-- доступ ко всем действиям по имени спейса
 select count(n.*)
 from 
   "{%= $schema %}"."{%= $tables->{namespaces} %}" n
