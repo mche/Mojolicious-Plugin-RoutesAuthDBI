@@ -273,7 +273,7 @@ sub deny_log {
   );
 }
 
-our $VERSION = '0.784';
+our $VERSION = '0.785';
 
 =pod
 
@@ -287,7 +287,7 @@ our $VERSION = '0.784';
 
 =head1 VERSION
 
-0.784
+0.785
 
 =head1 NAME
 

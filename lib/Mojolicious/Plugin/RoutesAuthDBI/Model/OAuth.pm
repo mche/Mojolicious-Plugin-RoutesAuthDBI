@@ -36,6 +36,12 @@ sub detach {
   $self->dbh->selectrow_hashref($self->sth('отсоединить oauth'), undef, (@_));
 }
 
+sub oauth_users_by_profile {
+  my $self = ref($_[0]) ? shift : shift->new;
+  $self->dbh->selectall_hashref($self->sth('profile oauth.users'), 'site_name', undef, (@_));
+  
+}
+
 1;
 
 __DATA__
@@ -87,12 +93,13 @@ where d.site_id = ?
 RETURNING d.*, r.id as ref_id;
 
 @@ profile oauth.users
-%# список внешних профилей по внутреннему профилю
+-- список внешних профилей по внутреннему профилю
 
 select u.*, s.name as site_name
 from "{%= $schema %}"."{%= $tables->{oauth_sites} %}" s
   join "{%= $schema %}"."{%= $tables->{oauth_users} %}" u on s.id = u.site_id
   join "{%= $schema %}"."{%= $tables->{refs} %}" r on u.id=r.id2
 
-where s.id=? and r.id1=? -- профиль ид
+where -- s.id=* and 
+  r.id1=? -- профиль ид
 

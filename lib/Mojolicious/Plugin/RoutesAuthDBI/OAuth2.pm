@@ -72,7 +72,7 @@ has _providers => sub {# default
   
 };
 
-has config => sub {# только $Init !
+has config => sub {# только $Init ! имя providers уже занято
   my $self = shift;
   
   while (my ($name, $val) = each %{$self->{providers}}) {
@@ -83,7 +83,7 @@ has config => sub {# только $Init !
   merge $self->{providers}, $self->_providers;
 };
 
-has auth_profile => sub { shift->${ \$Init->plugin->merge_conf->{auth}{current_user_fn} };};
+has curr_profile => sub { shift->${ \$Init->plugin->merge_conf->{auth}{current_user_fn} };};
 
 has ua => sub {shift->app->ua->connect_timeout(30);};
 
@@ -119,12 +119,12 @@ sub login {
     die "OAuth provider [$site_name] does not configured: [@fatal] is not defined";
   }
   
-  my $auth_profile = $c->auth_profile;
+  my $curr_profile = $c->curr_profile;
   
-  my $r; $r = $c->_model->check_profile($auth_profile->{id}, $site->{id})
-    and $c->app->log->warn("Попытка двойной авторизации сайта $site_name", $c->dumper($r), "профиль: ", $c->dumper($auth_profile),)
+  my $r; $r = $c->_model->check_profile($curr_profile->{id}, $site->{id})
+    and $c->app->log->warn("Попытка двойной авторизации сайта $site_name", $c->dumper($r), "профиль: ", $c->dumper($curr_profile),)
     and return $c->redirect_to($c->url_for(${ delete $c->session->{oauth_init} }{redirect})->query(err=> "Уже есть авторизация сайта $site_name"))
-    if $auth_profile;
+    if $curr_profile;
 
   $c->delay(
     sub { # шаг авторизации
@@ -174,7 +174,7 @@ sub login {
       
       my $профиль = 
       
-        $auth_profile
+        $curr_profile
         
         || $c->_model->profile($u->{id})
 
@@ -184,7 +184,7 @@ sub login {
       my $r = $Init->plugin->model->{Refs}->refer($профиль->{id}, $u->{id},);
       
       $c->authenticate(undef, undef, $профиль)
-        unless $auth_profile;
+        unless $curr_profile;
 
 
       #~ $c->app->log->debug("Профиль: ", $c->dumper($профиль));
@@ -201,10 +201,10 @@ sub отсоединить {
   my $site = $c->oauth2->providers->{$site_name}
     or die "No such oauth provider [$site_name]" ;
   
-  my $auth_profile = $c->auth_profile;
+  my $curr_profile = $c->curr_profile;
   
-  my $r = $c->_model->detach($site->{id}, $auth_profile->{id},);
-  #~ $c->app->log->debug("Убрал авторизацию сайта [$site_name] профиля [$auth_profile->{id}]", $c->dumper($r));
+  my $r = $c->_model->detach($site->{id}, $curr_profile->{id},);
+  #~ $c->app->log->debug("Убрал авторизацию сайта [$site_name] профиля [$curr_profile->{id}]", $c->dumper($r));
   
   $Init->plugin->model->{Refs}->del($r->{ref_id}, undef, undef);
   
