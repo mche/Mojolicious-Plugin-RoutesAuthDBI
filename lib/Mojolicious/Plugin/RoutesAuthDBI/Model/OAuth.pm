@@ -55,7 +55,7 @@ returning *;
 insert into "{%= $schema %}"."{%= $tables->{oauth_sites} %}" (conf,name) values (?,?)
 returning *;
 
-@@ update oauth user
+@@ update oauth user?cached=1
 update "{%= $schema %}"."{%= $tables->{oauth_users} %}"
 set profile = ?, profile_ts=now()
 where site_id =? and user_id=?
@@ -65,7 +65,7 @@ returning 1::int as "old", *;
 insert into "{%= $schema %}"."{%= $tables->{oauth_users} %}" (profile, site_id, user_id) values (?,?,?)
 returning 1::int as "new", *;
 
-@@ profile by oauth user
+@@ profile by oauth user?cached=1
 select p.*
 from "{%= $schema %}"."{%= $tables->{profiles} %}" p
   join "{%= $schema %}"."{%= $tables->{refs} %}" r on p.id=r.id1

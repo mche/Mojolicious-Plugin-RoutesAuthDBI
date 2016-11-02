@@ -61,11 +61,11 @@ DIRFILESEP = /
 DFSEP = $(DIRFILESEP)
 NAME = Mojolicious::Plugin::RoutesAuthDBI
 NAME_SYM = Mojolicious_Plugin_RoutesAuthDBI
-VERSION = 0.785
+VERSION = 0.786
 VERSION_MACRO = VERSION
-VERSION_SYM = 0_785
+VERSION_SYM = 0_786
 DEFINE_VERSION = -D$(VERSION_MACRO)=\"$(VERSION)\"
-XS_VERSION = 0.785
+XS_VERSION = 0.786
 XS_VERSION_MACRO = XS_VERSION
 XS_DEFINE_VERSION = -D$(XS_VERSION_MACRO)=\"$(XS_VERSION)\"
 INST_ARCHLIB = blib/arch
@@ -181,7 +181,6 @@ MAN3PODS = Config.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Access.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Admin.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Install.pm \
-	lib/Mojolicious/Plugin/RoutesAuthDBI/Model/0000Base.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Model1POS/Actions.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Model1POS/Base.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Model1POS/Controllers.pm \
@@ -234,7 +233,6 @@ TO_INST_PM = Config.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Access.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Admin.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Install.pm \
-	lib/Mojolicious/Plugin/RoutesAuthDBI/Model/0000Base.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Actions.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Controllers.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Logins.pm \
@@ -332,7 +330,7 @@ RCS_LABEL = rcs -Nv$(VERSION_SYM): -q
 DIST_CP = best
 DIST_DEFAULT = tardist
 DISTNAME = Mojolicious-Plugin-RoutesAuthDBI
-DISTVNAME = Mojolicious-Plugin-RoutesAuthDBI-0.785
+DISTVNAME = Mojolicious-Plugin-RoutesAuthDBI-0.786
 
 
 # --- MakeMaker macro section:
@@ -505,7 +503,6 @@ manifypods : pure_all config  \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Access.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Admin.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Install.pm \
-	lib/Mojolicious/Plugin/RoutesAuthDBI/Model/0000Base.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Model1POS/Actions.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Model1POS/Base.pm \
 	lib/Mojolicious/Plugin/RoutesAuthDBI/Model1POS/Controllers.pm \
@@ -536,13 +533,12 @@ manifypods : pure_all config  \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/Access.pm $(INST_MAN3DIR)/Mojolicious::Plugin::RoutesAuthDBI::Access.$(MAN3EXT) \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/Admin.pm $(INST_MAN3DIR)/Mojolicious::Plugin::RoutesAuthDBI::Admin.$(MAN3EXT) \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/Install.pm $(INST_MAN3DIR)/Mojolicious::Plugin::RoutesAuthDBI::Install.$(MAN3EXT) \
-	  lib/Mojolicious/Plugin/RoutesAuthDBI/Model/0000Base.pm $(INST_MAN3DIR)/Mojolicious::Plugin::RoutesAuthDBI::Model::0000Base.$(MAN3EXT) \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/Model1POS/Actions.pm $(INST_MAN3DIR)/Mojolicious::Plugin::RoutesAuthDBI::Model1POS::Actions.$(MAN3EXT) \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/Model1POS/Base.pm $(INST_MAN3DIR)/Mojolicious::Plugin::RoutesAuthDBI::Model1POS::Base.$(MAN3EXT) \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/Model1POS/Controllers.pm $(INST_MAN3DIR)/Mojolicious::Plugin::RoutesAuthDBI::Model1POS::Controllers.$(MAN3EXT) \
-	  lib/Mojolicious/Plugin/RoutesAuthDBI/Model1POS/Logins.pm $(INST_MAN3DIR)/Mojolicious::Plugin::RoutesAuthDBI::Model1POS::Logins.$(MAN3EXT) 
+	  lib/Mojolicious/Plugin/RoutesAuthDBI/Model1POS/Logins.pm $(INST_MAN3DIR)/Mojolicious::Plugin::RoutesAuthDBI::Model1POS::Logins.$(MAN3EXT) \
+	  lib/Mojolicious/Plugin/RoutesAuthDBI/Model1POS/Namespaces.pm $(INST_MAN3DIR)/Mojolicious::Plugin::RoutesAuthDBI::Model1POS::Namespaces.$(MAN3EXT) 
 	$(NOECHO) $(POD2MAN) --section=3 --perm_rw=$(PERM_RW) -u \
-	  lib/Mojolicious/Plugin/RoutesAuthDBI/Model1POS/Namespaces.pm $(INST_MAN3DIR)/Mojolicious::Plugin::RoutesAuthDBI::Model1POS::Namespaces.$(MAN3EXT) \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/Model1POS/OAuth.pm $(INST_MAN3DIR)/Mojolicious::Plugin::RoutesAuthDBI::Model1POS::OAuth.$(MAN3EXT) \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/Model1POS/Profiles.pm $(INST_MAN3DIR)/Mojolicious::Plugin::RoutesAuthDBI::Model1POS::Profiles.$(MAN3EXT) \
 	  lib/Mojolicious/Plugin/RoutesAuthDBI/Model1POS/Refs.pm $(INST_MAN3DIR)/Mojolicious::Plugin::RoutesAuthDBI::Model1POS::Refs.$(MAN3EXT) \
@@ -644,7 +640,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '  Mojolicious::Plugin::Authentication: '\''1.29'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Mojolicious::Plugin::OAuth2::Che: '\''1.539'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  perl: '\''5.014'\''' >> META_new.yml
-	$(NOECHO) $(ECHO) 'version: '\''0.785'\''' >> META_new.yml
+	$(NOECHO) $(ECHO) 'version: '\''0.786'\''' >> META_new.yml
 	-$(NOECHO) $(MV) META_new.yml $(DISTVNAME)/META.yml
 	$(NOECHO) $(ECHO) Generating META.json
 	$(NOECHO) $(ECHO) '{' > META_new.json
@@ -692,7 +688,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '      }' >> META_new.json
 	$(NOECHO) $(ECHO) '   },' >> META_new.json
 	$(NOECHO) $(ECHO) '   "release_status" : "stable",' >> META_new.json
-	$(NOECHO) $(ECHO) '   "version" : "0.785"' >> META_new.json
+	$(NOECHO) $(ECHO) '   "version" : "0.786"' >> META_new.json
 	$(NOECHO) $(ECHO) '}' >> META_new.json
 	-$(NOECHO) $(MV) META_new.json $(DISTVNAME)/META.json
 
@@ -1001,7 +997,7 @@ testdb_static :: static pure_all
 # --- MakeMaker ppd section:
 # Creates a PPD (Perl Package Description) for a binary distribution.
 ppd :
-	$(NOECHO) $(ECHO) '<SOFTPKG NAME="Mojolicious-Plugin-RoutesAuthDBI" VERSION="0.785">' > Mojolicious-Plugin-RoutesAuthDBI.ppd
+	$(NOECHO) $(ECHO) '<SOFTPKG NAME="Mojolicious-Plugin-RoutesAuthDBI" VERSION="0.786">' > Mojolicious-Plugin-RoutesAuthDBI.ppd
 	$(NOECHO) $(ECHO) '    <ABSTRACT>from DBI tables does generate routes, make authentication and make restrict access (authorization) to requests. Plugin makes an auth operations throught the plugin L&lt;Mojolicious::Plugin::Authentication&gt; and OAuth2 by L&lt;Mojolicious::Plugin::OAuth2&gt;.</ABSTRACT>' >> Mojolicious-Plugin-RoutesAuthDBI.ppd
 	$(NOECHO) $(ECHO) '    <AUTHOR>Mikhail Che &lt;mche@cpan.org&gt;</AUTHOR>' >> Mojolicious-Plugin-RoutesAuthDBI.ppd
 	$(NOECHO) $(ECHO) '    <IMPLEMENTATION>' >> Mojolicious-Plugin-RoutesAuthDBI.ppd
@@ -1039,15 +1035,14 @@ pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	  'lib/Mojolicious/Plugin/RoutesAuthDBI/Access.pm' 'blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Access.pm' \
 	  'lib/Mojolicious/Plugin/RoutesAuthDBI/Admin.pm' 'blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Admin.pm' \
 	  'lib/Mojolicious/Plugin/RoutesAuthDBI/Install.pm' 'blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Install.pm' \
-	  'lib/Mojolicious/Plugin/RoutesAuthDBI/Model/0000Base.pm' 'blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Model/0000Base.pm' \
 	  'lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Actions.pm' 'blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Actions.pm' \
 	  'lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Controllers.pm' 'blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Controllers.pm' \
 	  'lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Logins.pm' 'blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Logins.pm' \
 	  'lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Namespaces.pm' 'blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Namespaces.pm' \
-	  'lib/Mojolicious/Plugin/RoutesAuthDBI/Model/OAuth.pm' 'blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Model/OAuth.pm' 
-	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_LIB)/auto'\'', q[$(PM_FILTER)], '\''$(PERM_DIR)'\'')' -- \
+	  'lib/Mojolicious/Plugin/RoutesAuthDBI/Model/OAuth.pm' 'blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Model/OAuth.pm' \
 	  'lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Profiles.pm' 'blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Profiles.pm' \
-	  'lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Refs.pm' 'blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Refs.pm' \
+	  'lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Refs.pm' 'blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Refs.pm' 
+	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_LIB)/auto'\'', q[$(PM_FILTER)], '\''$(PERM_DIR)'\'')' -- \
 	  'lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Roles.pm' 'blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Roles.pm' \
 	  'lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Routes.pm' 'blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Routes.pm' \
 	  'lib/Mojolicious/Plugin/RoutesAuthDBI/Model1POS/Actions.pm' 'blib/lib/Mojolicious/Plugin/RoutesAuthDBI/Model1POS/Actions.pm' \

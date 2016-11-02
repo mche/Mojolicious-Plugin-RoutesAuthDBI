@@ -76,7 +76,7 @@ has config => sub {# только $Init ! имя providers уже занято
   my $self = shift;
   
   while (my ($name, $val) = each %{$self->{providers}}) {
-    my $site = $self->_model->site( json_enc($val), $name,);
+    my $site = $self->model->site( json_enc($val), $name,);
     @$val{qw(id)} = @$site{qw(id)};
     $val->{name} = $name;
   }
@@ -121,7 +121,7 @@ sub login {
   
   my $curr_profile = $c->curr_profile;
   
-  my $r; $r = $c->_model->check_profile($curr_profile->{id}, $site->{id})
+  my $r; $r = $c->model->check_profile($curr_profile->{id}, $site->{id})
     and $c->app->log->warn("Попытка двойной авторизации сайта $site_name", $c->dumper($r), "профиль: ", $c->dumper($curr_profile),)
     and return $c->redirect_to($c->url_for(${ delete $c->session->{oauth_init} }{redirect})->query(err=> "Уже есть авторизация сайта $site_name"))
     if $curr_profile;
@@ -168,7 +168,7 @@ sub login {
       @$profile{keys %$auth} = values %$auth;
       
       my @bind = (json_enc($profile), $site->{id}, $auth->{uid} || $auth->{user_id} || $profile->{uid} || $profile->{id} );
-      my $u = $c->_model->user(@bind);
+      my $u = $c->model->user(@bind);
 
       #~ $c->app->log->debug("Oauth user row: ", $c->dumper($u));
       
@@ -176,7 +176,7 @@ sub login {
       
         $curr_profile
         
-        || $c->_model->profile($u->{id})
+        || $c->model->profile($u->{id})
 
 
         || $Init->plugin->model->{Profiles}->new_profile([$profile->{first_name} || $profile->{given_name}, $profile->{last_name} || $profile->{family_name},]);
@@ -203,7 +203,7 @@ sub отсоединить {
   
   my $curr_profile = $c->curr_profile;
   
-  my $r = $c->_model->detach($site->{id}, $curr_profile->{id},);
+  my $r = $c->model->detach($site->{id}, $curr_profile->{id},);
   #~ $c->app->log->debug("Убрал авторизацию сайта [$site_name] профиля [$curr_profile->{id}]", $c->dumper($r));
   
   $Init->plugin->model->{Refs}->del($r->{ref_id}, undef, undef);
