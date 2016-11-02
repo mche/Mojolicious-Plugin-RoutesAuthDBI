@@ -174,7 +174,8 @@ sub login {
       
       #~ $c->app->log->error("Автоизация $site_name:")
         #~ and return $c->$fail_auth_cb()
-      return $c->redirect_to($c->url_for(${ delete $c->session->{oauth_init} }{redirect})->query(err=>"Вход на сайт через [$site_name] пользователя #$u->{user_id} уже используется. Невозможно привязать дважды."))
+        $c->session(oauth_err => "Вход на сайт через [$site_name] пользователя #$u->{user_id} уже используется. Невозможно привязать дважды. Можно <a href='/logout?redirect=/login/$site_name' class='waves-effect waves-light btn'>переключиться</a> на этот вход.")
+        and return $c->redirect_to($c->url_for(${ delete $c->session->{oauth_init} }{redirect})) #->query(err=>)
         if $u->{old} && $curr_profile;
       
       my $профиль = 
