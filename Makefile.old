@@ -19,7 +19,7 @@
 #     MIN_PERL_VERSION => q[5.014]
 #     NAME => q[Mojolicious::Plugin::RoutesAuthDBI]
 #     PL_FILES => {  }
-#     PREREQ_PM => { DBI=>q[1.6], DBIx::Mojo::Template=>q[0.03], Hash::Merge=>q[0.2], Mojolicious=>q[6], Mojolicious::Plugin::Authentication=>q[1.29], Mojolicious::Plugin::OAuth2::Che=>q[1.539], Test::More=>q[0] }
+#     PREREQ_PM => { DBI=>q[1.6], DBIx::Mojo::Template=>q[0.05], Hash::Merge=>q[0.2], Mojolicious=>q[6], Mojolicious::Plugin::Authentication=>q[1.29], Mojolicious::Plugin::OAuth2::Che=>q[1.539], Test::More=>q[0] }
 #     TEST_REQUIRES => {  }
 #     VERSION_FROM => q[lib/Mojolicious/Plugin/RoutesAuthDBI.pm]
 #     dist => { COMPRESS=>q[gzip -9f], SUFFIX=>q[gz] }
@@ -61,11 +61,11 @@ DIRFILESEP = /
 DFSEP = $(DIRFILESEP)
 NAME = Mojolicious::Plugin::RoutesAuthDBI
 NAME_SYM = Mojolicious_Plugin_RoutesAuthDBI
-VERSION = 0.786
+VERSION = 0.787
 VERSION_MACRO = VERSION
-VERSION_SYM = 0_786
+VERSION_SYM = 0_787
 DEFINE_VERSION = -D$(VERSION_MACRO)=\"$(VERSION)\"
-XS_VERSION = 0.786
+XS_VERSION = 0.787
 XS_VERSION_MACRO = XS_VERSION
 XS_DEFINE_VERSION = -D$(XS_VERSION_MACRO)=\"$(XS_VERSION)\"
 INST_ARCHLIB = blib/arch
@@ -330,7 +330,7 @@ RCS_LABEL = rcs -Nv$(VERSION_SYM): -q
 DIST_CP = best
 DIST_DEFAULT = tardist
 DISTNAME = Mojolicious-Plugin-RoutesAuthDBI
-DISTVNAME = Mojolicious-Plugin-RoutesAuthDBI-0.786
+DISTVNAME = Mojolicious-Plugin-RoutesAuthDBI-0.787
 
 
 # --- MakeMaker macro section:
@@ -634,13 +634,13 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '    - inc' >> META_new.yml
 	$(NOECHO) $(ECHO) 'requires:' >> META_new.yml
 	$(NOECHO) $(ECHO) '  DBI: '\''1.6'\''' >> META_new.yml
-	$(NOECHO) $(ECHO) '  DBIx::Mojo::Template: '\''0.03'\''' >> META_new.yml
+	$(NOECHO) $(ECHO) '  DBIx::Mojo::Template: '\''0.05'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Hash::Merge: '\''0.2'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Mojolicious: '\''6'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Mojolicious::Plugin::Authentication: '\''1.29'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Mojolicious::Plugin::OAuth2::Che: '\''1.539'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  perl: '\''5.014'\''' >> META_new.yml
-	$(NOECHO) $(ECHO) 'version: '\''0.786'\''' >> META_new.yml
+	$(NOECHO) $(ECHO) 'version: '\''0.787'\''' >> META_new.yml
 	-$(NOECHO) $(MV) META_new.yml $(DISTVNAME)/META.yml
 	$(NOECHO) $(ECHO) Generating META.json
 	$(NOECHO) $(ECHO) '{' > META_new.json
@@ -678,7 +678,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '      "runtime" : {' >> META_new.json
 	$(NOECHO) $(ECHO) '         "requires" : {' >> META_new.json
 	$(NOECHO) $(ECHO) '            "DBI" : "1.6",' >> META_new.json
-	$(NOECHO) $(ECHO) '            "DBIx::Mojo::Template" : "0.03",' >> META_new.json
+	$(NOECHO) $(ECHO) '            "DBIx::Mojo::Template" : "0.05",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "Hash::Merge" : "0.2",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "Mojolicious" : "6",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "Mojolicious::Plugin::Authentication" : "1.29",' >> META_new.json
@@ -688,7 +688,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '      }' >> META_new.json
 	$(NOECHO) $(ECHO) '   },' >> META_new.json
 	$(NOECHO) $(ECHO) '   "release_status" : "stable",' >> META_new.json
-	$(NOECHO) $(ECHO) '   "version" : "0.786"' >> META_new.json
+	$(NOECHO) $(ECHO) '   "version" : "0.787"' >> META_new.json
 	$(NOECHO) $(ECHO) '}' >> META_new.json
 	-$(NOECHO) $(MV) META_new.json $(DISTVNAME)/META.json
 
@@ -997,13 +997,13 @@ testdb_static :: static pure_all
 # --- MakeMaker ppd section:
 # Creates a PPD (Perl Package Description) for a binary distribution.
 ppd :
-	$(NOECHO) $(ECHO) '<SOFTPKG NAME="Mojolicious-Plugin-RoutesAuthDBI" VERSION="0.786">' > Mojolicious-Plugin-RoutesAuthDBI.ppd
+	$(NOECHO) $(ECHO) '<SOFTPKG NAME="Mojolicious-Plugin-RoutesAuthDBI" VERSION="0.787">' > Mojolicious-Plugin-RoutesAuthDBI.ppd
 	$(NOECHO) $(ECHO) '    <ABSTRACT>from DBI tables does generate routes, make authentication and make restrict access (authorization) to requests. Plugin makes an auth operations throught the plugin L&lt;Mojolicious::Plugin::Authentication&gt; and OAuth2 by L&lt;Mojolicious::Plugin::OAuth2&gt;.</ABSTRACT>' >> Mojolicious-Plugin-RoutesAuthDBI.ppd
 	$(NOECHO) $(ECHO) '    <AUTHOR>Mikhail Che &lt;mche@cpan.org&gt;</AUTHOR>' >> Mojolicious-Plugin-RoutesAuthDBI.ppd
 	$(NOECHO) $(ECHO) '    <IMPLEMENTATION>' >> Mojolicious-Plugin-RoutesAuthDBI.ppd
 	$(NOECHO) $(ECHO) '        <PERLCORE VERSION="5,014,0,0" />' >> Mojolicious-Plugin-RoutesAuthDBI.ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="DBI::" VERSION="1.6" />' >> Mojolicious-Plugin-RoutesAuthDBI.ppd
-	$(NOECHO) $(ECHO) '        <REQUIRE NAME="DBIx::Mojo::Template" VERSION="0.03" />' >> Mojolicious-Plugin-RoutesAuthDBI.ppd
+	$(NOECHO) $(ECHO) '        <REQUIRE NAME="DBIx::Mojo::Template" VERSION="0.05" />' >> Mojolicious-Plugin-RoutesAuthDBI.ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Hash::Merge" VERSION="0.2" />' >> Mojolicious-Plugin-RoutesAuthDBI.ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Mojolicious::" VERSION="6" />' >> Mojolicious-Plugin-RoutesAuthDBI.ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Mojolicious::Plugin::Authentication" VERSION="1.29" />' >> Mojolicious-Plugin-RoutesAuthDBI.ppd

@@ -172,6 +172,11 @@ sub login {
 
       #~ $c->app->log->debug("Oauth user row: ", $c->dumper($u));
       
+      #~ $c->app->log->error("Автоизация $site_name:")
+        #~ and return $c->$fail_auth_cb()
+      return $c->redirect_to($c->url_for(${ delete $c->session->{oauth_init} }{redirect})->query(err=>"Вход на сайт через [$site_name] пользователя #$u->{user_id} уже используется. Невозможно привязать дважды."))
+        if $u->{old} && $curr_profile;
+      
       my $профиль = 
       
         $curr_profile
