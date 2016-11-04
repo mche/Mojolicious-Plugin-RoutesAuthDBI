@@ -131,7 +131,7 @@ sub cond_access {# add_condition
     $route->pattern->unparsed,
   ))
     and return 1 # не проверяем доступ
-    unless $args->{auth} && $args->{role};
+    unless $args->{auth} || $args->{role};
   
   my $fail_auth_cb = $conf->{access}{fail_auth_cb};
   
