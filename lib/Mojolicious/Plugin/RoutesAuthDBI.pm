@@ -34,6 +34,7 @@ has default => sub {
     controller => 'Admin',
     prefix => lc($self->conf->{admin}{controller} || 'admin'),
     trust => hmac_sha1_sum('admin', $self->app->secrets->[0]),
+    #~ role_admin => 'admin',
   },
   oauth => {
     namespace => $pkg,
@@ -130,7 +131,7 @@ sub cond_access {# add_condition
     $route->pattern->unparsed,
   ))
     and return 1 # не проверяем доступ
-    unless $args->{auth};
+    unless $args->{auth} && $args->{role};
   
   my $fail_auth_cb = $conf->{access}{fail_auth_cb};
   
@@ -273,7 +274,7 @@ sub deny_log {
   );
 }
 
-our $VERSION = '0.788';
+our $VERSION = '0.789';
 
 =pod
 
@@ -287,7 +288,7 @@ our $VERSION = '0.788';
 
 =head1 VERSION
 
-0.788
+0.789
 
 =head1 NAME
 

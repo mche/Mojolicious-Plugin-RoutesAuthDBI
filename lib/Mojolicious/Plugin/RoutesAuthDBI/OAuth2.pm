@@ -182,7 +182,7 @@ sub login {
       
         $curr_profile
         
-        || $c->model->profile($u->{id})
+        || $c->model->profile($u->{id}) # по внешнему профилю получить наш профиль
 
 
         || $Init->plugin->model->{Profiles}->new_profile([$profile->{first_name} || $profile->{given_name}, $profile->{last_name} || $profile->{family_name},]);

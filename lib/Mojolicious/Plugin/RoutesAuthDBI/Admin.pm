@@ -3,7 +3,7 @@ use Mojo::Base 'Mojolicious::Controller';
 
 my $pkg = __PACKAGE__;
 my ($Init);
-has [qw(plugin controller namespace prefix trust)];
+has [qw(plugin controller namespace prefix trust role_admin)];
 
 sub init {# from plugin! init Class vars
   state $self = shift->SUPER::new(@_);
@@ -112,8 +112,8 @@ sub trust_new_user {
   my $u = $c->new_user;
   
   # ROLE
-  my $rl = $Init->plugin->model->{Roles}->get_role(undef, 'admin')
-    || $Init->plugin->model->{Roles}->new_role('admin');
+  my $rl = $Init->plugin->model->{Roles}->get_role(undef, $Init->role_admin || $Init->controller)
+    || $Init->plugin->model->{Roles}->new_role($Init->role_admin || $Init->controller);
   
   # REF role->user
   my $ru = $Init->plugin->model->{Refs}->refer($rl->{id} => $u->{id});
@@ -800,6 +800,8 @@ sub self_routes {# from plugin!
   my $trust = $Init->trust;
 
   my $t = <<TABLE;
+#format
+#<route path>\t<method>\t<route name>\t<need auth>\tDescription
 /$prefix	index	admin home	1	Main page
 #
 # Namespaces, controllers, actions
@@ -849,6 +851,7 @@ sub self_routes {# from plugin!
 /$prefix/sign/in/:login/:pass	sign	signin stash	0	Auth by stash
 /$prefix/sign/out	signout	go away	1	Exit
 #
+
 /$prefix/$trust/admin/new/:login/:pass	trust_new_user	$prefix/$trust !trust create user!	0	Add new user by :login & :pass and auto assign to role 'Admin' and assign to access this controller!
 
 TABLE
