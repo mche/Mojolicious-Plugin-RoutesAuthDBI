@@ -798,6 +798,7 @@ sub self_routes {# from plugin!
   my $c = shift;
   my $prefix = $Init->prefix;
   my $trust = $Init->trust;
+  my $role_admin = $Init->role_admin;
 
   my $t = <<TABLE;
 #format
@@ -852,7 +853,7 @@ sub self_routes {# from plugin!
 /$prefix/sign/out	signout	go away	1	Exit
 #
 
-/$prefix/$trust/admin/new/:login/:pass	trust_new_user	$prefix/$trust !trust create user!	0	Add new user by :login & :pass and auto assign to role 'Admin' and assign to access this controller!
+/$prefix/$trust/$role_admin/new/:login/:pass	trust_new_user	$prefix/$trust !trust create user!	0	Add new user by :login & :pass and auto assign to role 'Admin' and assign to access this controller!
 
 TABLE
   
