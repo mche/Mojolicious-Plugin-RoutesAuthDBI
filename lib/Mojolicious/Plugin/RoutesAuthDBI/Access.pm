@@ -18,9 +18,14 @@ sub load_user {# import for Mojolicious::Plugin::Authentication
   my ($c, $uid) = @_;
   
   my $p = load_class("Mojolicious::Plugin::RoutesAuthDBI::Model::Profiles")->get_profile($uid, undef);
-  $c->app->log->debug("Loading profile by id=$uid ". ($p->{id} ? 'success' : 'failed'));
-  $p->{pass} = '**********************';
-  return $p;
+  if ($p->{id}) {
+    $c->app->log->debug("Loading profile by id=$uid success");
+    $p->{pass} = '**********************';
+    return $p;
+  }
+  $c->app->log->debug("Loading profile by id=$uid failed");
+  
+  return undef;
 }
 
 sub validate_user {# import for Mojolicious::Plugin::Authentication

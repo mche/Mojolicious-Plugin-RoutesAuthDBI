@@ -139,7 +139,7 @@ sub cond_access {# add_condition
   $self->deny_log($route, $args, $u)
     and $c->$fail_auth_cb()
     and return undef
-    unless $u;
+    unless $u && $u->{id};
   
   # допустить если {auth=>'only'}
   $app->log->debug(sprintf(qq[Access allow [%s] for {auth}='only'],
