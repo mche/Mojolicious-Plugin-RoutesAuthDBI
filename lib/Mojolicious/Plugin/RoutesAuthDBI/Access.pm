@@ -2,10 +2,11 @@ package Mojolicious::Plugin::RoutesAuthDBI::Access;
 use Mojo::Base -base;
 use Exporter 'import'; 
 our @EXPORT_OK = qw(load_user validate_user);
-use Mojolicious::Plugin::RoutesAuthDBI::Util qw(load_class);
+#~ use Mojolicious::Plugin::RoutesAuthDBI::Util qw(load_class);
 
 has [qw(app plugin)];
 
+has model_profiles => sub { shift->plugin->model->{Profiles} };
 #~ has model => sub {
   #~ { map $_ => load_class("Mojolicious::Plugin::RoutesAuthDBI::Model::$_")->new, qw(Profiles Namespaces Routes Refs Controllers Actions Roles) }
 #~ };
@@ -17,7 +18,8 @@ sub new {# from plugin! init Class vars
 sub load_user {# import for Mojolicious::Plugin::Authentication
   my ($c, $uid) = @_;
   
-  my $p = load_class("Mojolicious::Plugin::RoutesAuthDBI::Model::Profiles")->get_profile($uid, undef);
+  #~ my $p = load_class("Mojolicious::Plugin::RoutesAuthDBI::Model::Profiles")->get_profile($uid, undef);
+  my $p = $c->model_profiles->get_profile($uid, undef);
   if ($p->{id}) {
     $c->app->log->debug("Loading profile by id=$uid success");
     $p->{pass} = '**********************';
@@ -33,8 +35,9 @@ sub validate_user {# import for Mojolicious::Plugin::Authentication
   
   return $extradata->{id}
     if $extradata && $extradata->{id};
-    
-  if (my $p = load_class("Mojolicious::Plugin::RoutesAuthDBI::Model::Profiles")->get_profile(undef, $login)) {
+  
+  # if (my $p = load_class("Mojolicious::Plugin::RoutesAuthDBI::Model::Profiles")->get_profile(undef, $login)) {
+  if (my $p = $c->model_profiles->get_profile(undef, $login)) {
     $c->app->log->debug("Success authenticate by login[$login]/pass[$pass] for profile id[$p->{id}]")
       and return $p->{id}
       if $p->{pass} eq $pass  && !$p->{disable};
