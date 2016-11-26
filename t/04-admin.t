@@ -14,7 +14,7 @@ sub startup {
   my $app = shift;
   $app->plugin('RoutesAuthDBI',
     auth=>{current_user_fn=>'auth_user'},
-    admin=>{prefix=>$config->{prefix}, trust=>$config->{trust},},
+    admin=>{prefix=>$config->{prefix}, trust=>$config->{trust}, role_admin=>$config->{role_admin},},
     template=>$config,
   );
 }
@@ -27,7 +27,8 @@ subtest 'routes' => sub {
   #~ open(STDOUT, ">", \$stdout);
   #~ $t->app->commands->run('routes');
   my $stdout = $config->{app_routes}($t);
-  like $stdout, qr/\/$config->{prefix}\/$config->{trust}\/admin\/new\/:login\/:pass/, 'routes';
+  warn $stdout;
+  like $stdout, qr/\/$config->{prefix}\/$config->{trust}\/$config->{role_admin}\/new\/:login\/:pass/, 'routes';
   like $stdout, qr/signin stash/, 'sign in route';
 };
 
@@ -35,8 +36,9 @@ subtest 'routes' => sub {
 $t->get_ok("/$config->{prefix}")->status_is(200)
   ->content_like(qr/Deny access at auth step/i);
 
-$t->get_ok("/$config->{prefix}/$config->{trust}/admin/new/$config->{admin_user}/$config->{admin_pass}")->status_is(200)
+$t->get_ok("/$config->{prefix}/$config->{trust}/$config->{role_admin}/new/$config->{admin_user}/$config->{admin_pass}")->status_is(200)
   ->content_like(qr/Success sign up new trust-admin-user/i);
+  #~ ->content_like(qr/$config->{role_admin}-000/i);
 
 $t->get_ok("/$config->{prefix}/sign/in/$config->{admin_user}/$config->{admin_pass}")->status_is(302)
   ->${ \$config->{location_is} }("/$config->{prefix}");
@@ -56,8 +58,8 @@ $t->get_ok("/$config->{prefix}/user/new?login=$config->{user2}&pass=$config->{pa
 $t->get_ok("/$config->{prefix}/users")->status_is(200)
   ->content_like(qr/Profiles\(3\)/i);
 
-$t->get_ok("/$config->{prefix}/users/admin")->status_is(200)
-  ->content_like(qr/Profile\/users\(1\) by role \[admin\]/i);
+$t->get_ok("/$config->{prefix}/users/$config->{role_admin}")->status_is(200)
+  ->content_like(qr/Profile\/users\(1\) by role \[$config->{role_admin}\]/i);
 
 $t->get_ok("/$config->{prefix}/role/new/$config->{role}")->status_is(200)
   ->content_like(qr/Success created role/i);
@@ -122,7 +124,7 @@ $t->get_ok("/$config->{prefix}/route/new/undef/Test1/test1?request=GET FOO /test
 $t->get_ok("/$config->{prefix}/routes")->status_is(200)
   ->content_like(qr/ROUTES \(1\)/i);
 
-$t->get_ok("/$config->{prefix}/role/controller/admin/undef/Test1")->status_is(200)
+$t->get_ok("/$config->{prefix}/role/controller/$config->{role_admin}/undef/Test1")->status_is(200)
   ->content_like(qr/Success assign access/i);
 
 done_testing();

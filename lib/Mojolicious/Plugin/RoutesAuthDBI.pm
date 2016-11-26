@@ -34,7 +34,7 @@ has default => sub {
     controller => 'Admin',
     prefix => lc($self->conf->{admin}{controller} || 'admin'),
     trust => hmac_sha1_sum('admin', $self->app->secrets->[0]),
-    #~ role_admin => 'admin',
+    role_admin => 'administrators',
   },
   oauth => {
     namespace => $pkg,

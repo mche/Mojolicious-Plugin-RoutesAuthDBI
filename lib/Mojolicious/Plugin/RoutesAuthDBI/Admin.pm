@@ -921,6 +921,9 @@ String. Is a prefix for admin urls of this module. Default as name of controller
 
 String. Is a url subprefix for trust admin urls of this module. See defaults below.
 
+=head3 role_admin
+
+String. Is a name of role for admonistrators.
 
 =head2 Default options
 
@@ -929,6 +932,7 @@ String. Is a url subprefix for trust admin urls of this module. See defaults bel
     controller => 'Admin',
     prefix => 'admin', # lc(<module>)
     trust => hmac_sha1_sum('admin', $app->secrets->[0]),
+    role_admin => 'administrators',
   },
 
 Examples options:

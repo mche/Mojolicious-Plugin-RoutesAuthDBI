@@ -47,7 +47,7 @@ __DATA__
 @@ role
 select *
 from "{%= $schema %}"."{%= $tables->{roles} %}"
-where id=? or lower(name)=?
+where id=? or name=?
 
 @@ new role
 insert into "{%= $schema %}"."{%= $tables->{roles} %}" (name) values (?)
@@ -56,7 +56,7 @@ returning *;
 @@ dsbl/enbl role
 update "{%= $schema %}"."{%= $tables->{roles} %}"
 set disable=?::bit
-where id=? or lower(name)=?
+where id=? or name=?
 returning *;
 
 @@ access role?cached=1

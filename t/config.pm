@@ -3,6 +3,7 @@ use Mojo::Base -strict;
   namespace=>'Mojolicious::Plugin::RoutesAuthDBI',
   prefix => 'test-admin',
   trust =>'foo-trust',
+  role_admin => 'Admins',
   schema => 'тестовая схема 156',
   sequence => '"public"."seq 156"',
   tables=>{

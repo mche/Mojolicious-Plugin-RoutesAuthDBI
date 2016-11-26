@@ -1,12 +1,21 @@
+package Profile;
+use Mojo::Base -base;
+
+has [qw(roles)];
+
+#==========
+# END Profie pkg
+#==========
+
 package Mojolicious::Plugin::RoutesAuthDBI::Model::Profiles;
 use Mojo::Base 'DBIx::Mojo::Model';
 
 
-has roles => sub {
-  my $self=shift;
-  $self->dbh->selectall_arrayref($self->sth('profile roles'), { Slice => {} }, ($self->{id}));
+#~ has roles => sub {
+  #~ my $self=shift;
+  #~ $self->dbh->selectall_arrayref($self->sth('profile roles'), { Slice => {} }, ($self->{id}));
   
-};
+#~ };
 
 sub new {
   state $self = shift->SUPER::new(@_);
@@ -15,9 +24,16 @@ sub new {
 sub get_profile {
   my $self = ref($_[0]) ? shift : shift->new;
   my $p = $self->dbh->selectrow_hashref($self->sth('profile'), undef, (shift, shift,));
-  bless($p)->SUPER::new# reinit from singleton dict
+  #~ bless($p)->SUPER::new# reinit from singleton dict Это работало, но большая портянка объекта модели
+  bless($p, "Profile")->roles($self->roles($p->{id}))#->model($self)
     if $p;
 }
+
+sub roles {
+  my ($self, $profile_id) = @_;
+  $self->dbh->selectall_arrayref($self->sth('profile roles'), { Slice => {} }, ($profile_id));
+  
+};
 
 sub profiles {
   my $self = ref($_[0]) ? shift : shift->new;

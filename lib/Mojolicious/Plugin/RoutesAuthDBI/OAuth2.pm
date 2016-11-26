@@ -158,7 +158,7 @@ sub login {
     sub {# профиль сайта получен
       my ($delay, $tx, $auth) = @_;
       
-      my $profile = $c->_process_oprofile_tx($site, $auth, $tx);
+      my $profile = $c->_process_profile_tx($site, $auth, $tx);
       
       $c->session(oauth_err => $profile)
         #~ and return $c->redirect_to($c->url_for(${ delete $c->session->{oauth_init} }{redirect}))#->query(err=> $profile)
@@ -210,7 +210,7 @@ sub login {
   
 }
 
-sub _process_oprofile_tx {
+sub _process_profile_tx {
   my $c = shift;
   my ($site, $auth, $tx) = @_;
   my $curr_profile = $c->curr_profile;
@@ -263,7 +263,7 @@ sub remote_profile {# получить по access_token
   $c->ua->get($url, sub {
     my ($ua, $tx) = @_;
     
-    my $profile = $c->_process_oprofile_tx($site, $auth, $tx);
+    my $profile = $c->_process_profile_tx($site, $auth, $tx);
       
     return $c->render(json=>{ error=>$profile })
       unless ref $profile;

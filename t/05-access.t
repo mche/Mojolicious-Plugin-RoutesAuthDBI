@@ -15,7 +15,7 @@ sub startup {
   my $app = shift;
   $app->plugin('RoutesAuthDBI',
     auth=>{current_user_fn=>'auth_user'},
-    admin=>{prefix=>$config->{prefix}, trust=>$config->{trust},},
+    admin=>{prefix=>$config->{prefix}, trust=>$config->{trust}, role_admin=>$config->{role_admin},},
     template=>$config,
   );
   my $routes = $app->routes;
@@ -32,7 +32,7 @@ sub startup {
   
   $routes->route('/test1/:action')->over(access=>{auth=>1})->to(controller=>'Test1',);
   
-  $routes->route('/callback')->over(access=>{auth=>1, role=>'admin'})
+  $routes->route('/callback')->over(access=>{role=>$config->{role_admin}})
     ->to(cb=>sub {shift->render(format=>'txt', text=>'Admin role have access')},);
 }
 
