@@ -63,9 +63,8 @@ insert into "{%= $schema %}"."{%= $tables->{profiles} %}" (names) values (?)
 returning *;
 
 @@ profile?cached=1
-%# Load auth profile
-
-select p.*, l.login, l.pass
+--  Load auth profile
+select p.*, l.login, l.pass ---, md5(l.pass) as pass_md5
 from "{%= $schema %}"."{%= $tables->{profiles} %}" p
 left join (
   select l.*, r.id1

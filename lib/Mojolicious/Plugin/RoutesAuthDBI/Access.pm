@@ -3,6 +3,7 @@ use Mojo::Base -base;
 use Exporter 'import'; 
 our @EXPORT_OK = qw(load_user validate_user);
 use Mojolicious::Plugin::RoutesAuthDBI::Util qw(load_class);
+use Mojo::Util qw(md5_sum);
 
 has [qw(app plugin)];
 
@@ -40,8 +41,16 @@ sub validate_user {# import for Mojolicious::Plugin::Authentication
   #~ if (my $p = $c->model_profiles->get_profile(undef, $login)) {
     $c->app->log->debug("Success authenticate by login[$login]/pass[$pass] for profile id[$p->{id}]")
       and return $p->{id}
-      if $p->{pass} eq $pass  && !$p->{disable};
+      if ($p->{pass} eq $pass || $p->{pass} eq md5_sum($pass))
+        && !$p->{disable};
+    
+    $c->app->log->debug("Failure authenticate by login[$login]/pass[$pass]:[@{[md5_sum($pass)]}] for profile id[$p->{id}:$p->{pass}]");
+    
+    return undef;
   }
+  
+  $c->app->log->debug("Failure authenticate by login[$login]/pass[$pass]:[@{[md5_sum($pass)]}]");
+  
   return undef;
 }
 

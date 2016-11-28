@@ -1,5 +1,6 @@
 package Mojolicious::Plugin::RoutesAuthDBI::Admin;
 use Mojo::Base 'Mojolicious::Controller';
+#~ use Mojo::Util qw(md5_sum);
 
 my $pkg = __PACKAGE__;
 my ($Init);
@@ -43,7 +44,7 @@ sub sign {
     and return;
     
   
-  $c->render(format=>'txt', text=>__PACKAGE__ . "\n\nBad sign!!! Try again");
+  $c->render(format=>'txt', text=>__PACKAGE__ . "\n\nBad sign! Try again");
 }
 
 sub signout {
