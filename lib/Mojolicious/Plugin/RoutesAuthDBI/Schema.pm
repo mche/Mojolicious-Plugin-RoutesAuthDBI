@@ -16,6 +16,7 @@ our $defaults = {# copy to pod!
     namespaces => 'namespaces',
     oauth_sites => 'oauth.sites',
     oauth_users => 'oauth.users',
+    guests => 'guests',
   },
   
 };
@@ -55,6 +56,7 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
     namespaces => 'namespaces',
     oauth_sites => 'oauth.sites',
     oauth_users => 'oauth.users',
+    guests => 'guests',
     },
   }
 
@@ -67,14 +69,17 @@ sub _vars {
   my $template = {};
 
   for my $var (keys %$defaults) {
-    my $val = $c->stash($var) || $c->param($var);
-    $template->{$var} = $val
-      and next
-      if $val;
+    if (my $val = $c->stash($var) || $c->param($var)) {
+      $template->{$var} = $val
+        unless $val eq 'undef';
+      next;
+    }
       
     $template->{$var} = { map {
-      my $val = $c->stash($_) || $c->param($_);
-      $val ? ($_ => $val) : ();
+      if (my $val = $c->stash($_) || $c->param($_)) {
+        $val ? ($val ne 'undef' ? ($_ => $val) : ()) : ();
+      }
+      
     
     } keys %{$defaults->{$var}}  }
       if ref $defaults->{$var};
@@ -84,37 +89,17 @@ sub _vars {
 
 sub schema {
   my $c = shift;
-  my $template = $c->_vars;
+  my $vars = $c->_vars;
   
-  $c->app->log->debug($c->dumper($template));
+  $c->app->log->debug($c->dumper($vars));
   
-  #~ my $schema2 = qq{"$schema".} if $schema;
-  $c->render(format=>'txt', text => <<TXT);
-@{[$dict->{'schema'}->template(%$template)]}
+  my $text = $dict->{'schema'}->template(%$vars);
+  $text .= "\n\n".$dict->{'sequence'}->template(%$vars);
+  $text .= "\n\n".$dict->{$_}->template(%$vars)
+    for grep $vars->{tables}{$_}, qw(routes namespaces controllers actions profiles logins roles refs oauth_sites oauth_users guests);
+  
+  $c->render(format=>'txt', text => $text);
 
-@{[$dict->{'sequence'}->template(%$template)]}
-
-@{[$dict->{'routes'}->template(%$template)]}
-
-@{[$dict->{'namespaces'}->template(%$template)]}
-
-@{[$dict->{'controllers'}->template(%$template)]}
-
-@{[$dict->{'actions'}->template(%$template)]}
-
-@{[$dict->{profiles}->template(%$template)]}
-
-@{[$dict->{'logins'}->template(%$template)]}
-
-@{[$dict->{'roles'}->template(%$template)]}
-
-@{[$dict->{'refs'}->template(%$template)]}
-
-@{[$dict->{'oauth_sites'}->template(%$template)]}
-
-@{[$dict->{'oauth_users'}->template(%$template)]}
-
-TXT
 }
 
 sub schema_drop {
@@ -257,6 +242,13 @@ create table IF NOT EXISTS "{%= $schema %}"."{%= $tables->{oauth_users} %}" (
   profile jsonb,
   profile_ts timestamp without time zone NOT NULL DEFAULT now(),
   unique (site_id, user_id)
+);
+
+@@ guests
+create table IF NOT EXISTS "{%= $schema %}"."{%= $tables->{guests} %}" (
+  id integer NOT NULL DEFAULT nextval('{%= $sequence %}'::regclass) primary key,
+  ts timestamp without time zone NOT NULL DEFAULT now()
+  
 );
 
 @@ drop
