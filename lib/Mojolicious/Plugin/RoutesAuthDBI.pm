@@ -14,10 +14,11 @@ has default => sub {
   {
   auth => {
     stash_key => $pkg,
-    current_user_fn => 'auth_user',
+    current_user_fn => 'auth_user',# helper
     load_user => \&load_user,
     validate_user => \&validate_user,
   },
+  
   access => {
     namespace => $pkg,
     module => 'Access',
@@ -29,6 +30,7 @@ has default => sub {
     },
     import => [qw(load_user validate_user)],
   },
+  
   admin => {
     namespace => $pkg,
     controller => 'Admin',
@@ -36,13 +38,30 @@ has default => sub {
     trust => hmac_sha1_sum('admin', $self->app->secrets->[0]),
     role_admin => 'administrators',
   },
+  
   oauth => {
     namespace => $pkg,
     controller => 'OAuth2',
     fail_auth_cb => sub {shift->render(format=>'txt', text=>"@_")},
   },
+  
   template => $Mojolicious::Plugin::RoutesAuthDBI::Schema::defaults,
-}};
+  
+  guest => {# for Mojolicious::Plugin::Authentication
+    autoload_user => 1,
+    session_key => 'guest_data',
+    stash_key => $pkg."__guest__",
+    current_user_fn => 'current_guest',# helper
+    load_user => \&load_guest,
+    #~ validate_user => not need
+    #~ fail_render => not need
+    #######end Mojolicious::Plugin::Authentication conf#######
+    namespace => $pkg,
+    module => 'Guest',
+    import => [qw(load_guest)],
+  },
+  };
+};
 
 has merge_conf => sub {#hashref
   my $self = shift;
@@ -71,6 +90,15 @@ has oauth => sub {
   load_class($conf)->init(%$conf, app=>$self->app, plugin=>$self,);
 };
 
+has guest => sub {# object
+  my $self = shift;
+  my $conf = $self->merge_conf->{'guest'};
+  my $class = load_class($conf);
+  $class->import( @{ $conf->{import} });
+  
+  $class->register($self->app, $conf);# plugin=>$self,
+};
+
 has model => sub {
   my $m = { map {$_ => load_class("Mojolicious::Plugin::RoutesAuthDBI::Model::$_")->new} qw(Profiles Namespaces Routes Refs Controllers Actions Roles Logins) };
   
@@ -94,7 +122,11 @@ sub register {
   die "Plugin [Authentication] already loaded"
     if $self->app->renderer->helpers->{'authenticate'};
   
-  $self->SUPER::register($self->app, $self->merge_conf->{auth});
+  # !!! WARN !!! BEFORE SUPER::register !!!
+  #~ $self->guest
+    #~ if $self->conf->{guest};
+  
+  #~ $self->SUPER::register($self->app, $self->merge_conf->{auth});
   
   $self->app->routes->add_condition(access => sub {$self->cond_access(@_)});
   $access->apply_ns();
@@ -110,6 +142,11 @@ sub register {
     $access->apply_route($_) for $admin->self_routes;
   }
   
+  # !!! WARN !!! BEFORE SUPER::register !!!
+  $self->guest
+    if $self->conf->{guest};
+  
+  $self->SUPER::register($self->app, $self->merge_conf->{auth});
   
   $self->app->helper('access', sub {$access});
   
@@ -127,9 +164,10 @@ sub cond_access {# add_condition
   
   my $auth_helper = $conf->{auth}{current_user_fn};
   my $u = $c->$auth_helper;
-  $app->log->debug(sprintf(qq[Access allow [%s] for {auth}=false],
-    $route->pattern->unparsed,
-  ))
+  
+  $app->log->debug(
+    sprintf(qq[Access allow [%s] for {auth}=false], $route->pattern->unparsed)
+  )
     and return 1 # не проверяем доступ
     unless $args->{auth} || $args->{role};
   

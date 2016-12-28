@@ -289,8 +289,6 @@ Check implicit access to route by $role (id|name) and profile roles ids ($id2 ar
 
 L<Mojolicious::Plugin::RoutesAuthDBI>
 
-L<Mojolicious::Plugin::RoutesAuthDBI::Sth>
-
 =head1 AUTHOR
 
 Михаил Че (Mikhail Che), C<< <mche [on] cpan.org> >>
