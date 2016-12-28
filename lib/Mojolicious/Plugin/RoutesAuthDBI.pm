@@ -123,10 +123,10 @@ sub register {
     if $self->app->renderer->helpers->{'authenticate'};
   
   # !!! WARN !!! BEFORE SUPER::register !!!
-  #~ $self->guest
-    #~ if $self->conf->{guest};
+  $self->guest
+    if $self->conf->{guest};
   
-  #~ $self->SUPER::register($self->app, $self->merge_conf->{auth});
+  $self->SUPER::register($self->app, $self->merge_conf->{auth});
   
   $self->app->routes->add_condition(access => sub {$self->cond_access(@_)});
   $access->apply_ns();
@@ -143,10 +143,10 @@ sub register {
   }
   
   # !!! WARN !!! BEFORE SUPER::register !!!
-  $self->guest
-    if $self->conf->{guest};
+  #~ $self->guest
+    #~ if $self->conf->{guest};
   
-  $self->SUPER::register($self->app, $self->merge_conf->{auth});
+  #~ $self->SUPER::register($self->app, $self->merge_conf->{auth});
   
   $self->app->helper('access', sub {$access});
   
@@ -312,7 +312,7 @@ sub deny_log {
   );
 }
 
-our $VERSION = '0.790';
+our $VERSION = '0.800';
 
 =pod
 
@@ -326,7 +326,7 @@ our $VERSION = '0.790';
 
 =head1 VERSION
 
-0.790
+0.800
 
 =head1 NAME
 
