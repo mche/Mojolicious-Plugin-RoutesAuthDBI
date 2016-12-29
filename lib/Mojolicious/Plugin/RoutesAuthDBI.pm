@@ -335,9 +335,11 @@ our $VERSION = '0.801';
 
 Доброго всем
 
+¡ ¡ ¡ ALL GLORY TO GLORIA ! ! !
+
 =head1 Mojolicious::Plugin::RoutesAuthDBI
 
-¡ ¡ ¡ ALL GLORY TO GLORIA ! ! !
+Plugin makes an auth operations throught the plugin L<Mojolicious::Plugin::Authentication> and OAuth2 by L<Mojolicious::Plugin::OAuth2>.
 
 =head1 VERSION
 
@@ -345,7 +347,7 @@ our $VERSION = '0.801';
 
 =head1 NAME
 
-Mojolicious::Plugin::RoutesAuthDBI - from DBI tables does generate routes, make authentication and make restrict access (authorization) to requests. Plugin makes an auth operations throught the plugin L<Mojolicious::Plugin::Authentication> and OAuth2 by L<Mojolicious::Plugin::OAuth2>.
+Mojolicious::Plugin::RoutesAuthDBI - from DBI tables does generate routes, make authentication and make restrict access (authorization) to app routes.
 
 =head1 DB DESIGN DIAGRAM
 
