@@ -468,6 +468,10 @@ Hashref options for guest module. Defaults are:
     
   },
 
+Disable guest module usage:
+
+  guest => undef, # or none in config
+
 See L<Mojolicious::Plugin::RoutesAuthDBI::Guest>
 
 =head3 model_namespace

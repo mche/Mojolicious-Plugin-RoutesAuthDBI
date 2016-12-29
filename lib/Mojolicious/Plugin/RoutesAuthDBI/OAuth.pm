@@ -353,6 +353,8 @@ sub conf {
 
 =encoding utf8
 
+Доброго всем
+
 =head1 Mojolicious::Plugin::RoutesAuthDBI::OAuth
 
 ¡ ¡ ¡ ALL GLORY TO GLORIA ! ! !

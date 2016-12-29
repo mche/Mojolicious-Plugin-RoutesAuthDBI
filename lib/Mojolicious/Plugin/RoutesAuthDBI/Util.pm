@@ -26,7 +26,7 @@ sub load_class {
   
   
   my $e; $e = Mojo::Loader::load_class($class)# success undef
-    and ($e eq 1 or warn("None load_class[$class]: ", $e))
+    and ($e eq 1 ? 1 : warn("None load_class[$class]: ", $e)) # warn("Class [$class] not found ", sprintf("[%s] [%s] [%s]", caller))
     and return undef;
   return $class;
 }
