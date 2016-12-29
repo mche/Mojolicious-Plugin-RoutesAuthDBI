@@ -133,29 +133,29 @@ Mojolicious::Plugin::RoutesAuthDBI::Guest - session for guests. The code of modu
 
 =head1 METHODS
 
-=head2 current
+=head2 current($controller)
 
   my $guest $c->access->plugin->guest->current($c);
 
-=head2 store
+=head2 store($controller, $data)
 
 Store guest data in DB table and set session_key. Headers of request save in "data" column.
 
   $c->access->plugin->guest->store($c, {"Glory"=>"is ♥ for me"});
 
-=head2 is_guest
+=head2 is_guest($controller)
 
 True if current session of guest.
 
   if( $c->access->plugin->guest->is_guest($c) ) {...}
 
-=head2 load
+=head2 load($id)
 
 Loads guest data from DB table by its ID row. JSON column "data" will expand.
 
   my $data = $c->access->plugin->guest->load($id);
 
-=head2 reload
+=head2 reload($controller)
 
 Cleanup stash and reload guest data.
 
