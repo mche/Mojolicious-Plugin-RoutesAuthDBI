@@ -23,10 +23,10 @@ has default => sub {
     namespace => $pkg,
     module => 'Access',
     fail_auth_cb => sub {
-      shift->render(format=>'txt', text=>"Deny access at auth step. Please sign in.\n");
+      shift->render(status => 404, format=>'txt', text=>"Deny access at auth step. Please sign in.\n");
     },
     fail_access_cb => sub {
-      shift->render(format=>'txt', text=>"You don`t have access on this route (url, action).\n");
+      shift->render(status => 404, format=>'txt', text=>"You don`t have access on this route (url, action).\n");
     },
     import => [qw(load_user validate_user)],
   },
@@ -159,32 +159,8 @@ sub cond_access {# add_condition
   
   my $auth_helper = $conf->{auth}{current_user_fn};
   my $u = $c->$auth_helper;
-  
-  $app->log->debug(
-    sprintf(qq[Access allow [%s] for {auth}=false], $route->pattern->unparsed)
-  )
-    and return 1 # не проверяем доступ
-    unless $args->{auth} || $args->{role};
-  
-  if ($args->{auth} && lc($args->{auth}) eq 'guest') {
-    my $guest = $c->access->plugin->guest->current($c);
-    
-    $app->log->debug(sprintf(qq[Access allow [%s] for {auth} => 'guest'],
-        $route->pattern->unparsed,
-      ))
-      and return 1
-      if $guest;
-    
-  }
-  
   my $fail_auth_cb = $conf->{access}{fail_auth_cb};
   
-  # не авторизовался
-  $self->deny_log($route, $args, $u)
-    and $c->$fail_auth_cb()
-    and return undef
-    unless $u && $u->{id};
-
   if (ref $args eq 'CODE') {
     $args->($u, @_)
       or $self->deny_log($route, $args, $u)
@@ -196,12 +172,33 @@ sub cond_access {# add_condition
     return 0x01;
   }
   
+  $app->log->debug(
+    sprintf(qq[Access allow [%s] for none {auth} and none {role} and none {guest}], $route->pattern->unparsed)
+  )
+    and return 1 # не проверяем доступ
+    unless $args->{auth} || $args->{role} || $args->{guest};
+  
+  
+  if ($args->{guest}) {#  && $args->{auth} =~ m'\bguest\b'i
+    $app->log->debug(sprintf(qq[Access allow [%s] for {guest}],
+        $route->pattern->unparsed,
+      ))
+      and return 1
+      if $self->guest->is_guest($c);
+  }
+  
+  # не авторизовался
+  $self->deny_log($route, $args, $u)
+    and $c->$fail_auth_cb()
+    and return undef
+    unless $u && $u->{id};
+  
   # допустить если {auth=>'only'}
-  $app->log->debug(sprintf(qq[Access allow [%s] for {auth}='only'],
+  $app->log->debug(sprintf(qq[Access allow [%s] for {auth}=~'only'],
     $route->pattern->unparsed,
   ))
     and return 1
-    if $args->{auth} && lc($args->{auth}) eq 'only';
+    if $args->{auth} && $args->{auth} =~ m'\bonly\b'i;
 
   my $id2 = [$u->{id}, map($_->{id}, grep !$_->{disable},@{$u->roles})];
   my $id1 = [grep $_, @$args{qw(id route_id action_id controller_id namespace_id)}];

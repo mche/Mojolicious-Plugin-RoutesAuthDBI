@@ -14,6 +14,7 @@ my $pkg = __PACKAGE__;
 sub startup {
   my $app = shift;
   $app->plugin('RoutesAuthDBI',
+    admin=>{prefix=>$config->{prefix}, trust=>$config->{trust}, role_admin=>$config->{role_admin},},
     guest=>{},
     template=>$config,
   );
@@ -37,6 +38,13 @@ sub startup {
     
     $c->render(json=>$guest);
   });
+  
+  $r->get('/access')->over(access=>{guest=>1, auth=>'only'})->to( cb => sub {
+    my $c = shift;
+    
+    $c->render(text=>'you have access');
+    
+  } );
 }
 
 my $t = Test::Mojo->new($pkg);
@@ -44,6 +52,12 @@ my $t = Test::Mojo->new($pkg);
 $t->get_ok("/guest/is")->status_is(404)
   #~ ->content_like(qr/Deny access at auth step/i)
   ;
+
+$t->get_ok("/access")->status_is(404);
+
+$t->get_ok("/$config->{prefix}/sign/in/$config->{admin_user}/$config->{admin_pass}")->status_is(302);
+
+$t->get_ok("/access")->status_is(200);
 
 $t->get_ok("/guest/new")->status_is(200)
   ->content_is('stored')
@@ -54,6 +68,8 @@ $t->get_ok("/guest/is")->status_is(200)
   #~ ->content_is('stored')
   #~ ->content_like(qr/Deny access at auth step/i)
   ;
+
+$t->get_ok("/access")->status_is(200);
 
 
 done_testing();
