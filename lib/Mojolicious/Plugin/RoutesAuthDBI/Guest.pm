@@ -1,12 +1,7 @@
 package Mojolicious::Plugin::RoutesAuthDBI::Guest;
 use Mojo::Base -base;#'Mojolicious::Plugin::Authentication'
-#~ use Exporter 'import'; 
-#~ our @EXPORT_OK = qw(load_guest);
-#~ use Mojolicious::Plugin::RoutesAuthDBI::Util qw(load_class);
 use Mojolicious::Plugin::RoutesAuthDBI::Util qw(json_enc json_dec);
-#~ use Mojolicious::Plugin::RoutesAuthDBI::Model::Guest;
 
-#~ my $model = Mojolicious::Plugin::RoutesAuthDBI::Model::Guest->new;
 
 has [qw(session_key stash_key app plugin model)];
 
@@ -90,7 +85,6 @@ sub logout {
     my ($self, $c, $data) = @_;
     
     $data ||= {};
-    #~ $data->{UA} = $c->req->headers->user_agent;
     $data->{headers} = $c->req->headers->to_hash(1);
 
     my $guest = $self->model->store(json_enc($data));
@@ -111,7 +105,7 @@ sub logout {
 
 =head1 NAME
 
-Mojolicious::Plugin::RoutesAuthDBI::Guest - session for guest
+Mojolicious::Plugin::RoutesAuthDBI::Guest - session for guests. The code of module is copy/paste from Mojolicious::Plugin::Authentication 1.29
 
 =head1 SYNOPSIS
 
@@ -121,7 +115,7 @@ Mojolicious::Plugin::RoutesAuthDBI::Guest - session for guest
         ...
     );
 
-=head1 OPTIONS for plugin
+=head1 OPTIONS
 
 =over 4
 
@@ -129,25 +123,43 @@ Mojolicious::Plugin::RoutesAuthDBI::Guest - session for guest
 
 =item * B<module> - default 'Guest' (this module),
 
-=item * B<> - 
+=item * B<session_key> - session storage of guest data. Default 'guest_data'.
+
+=item * B<stash_key> - 
 
 =item * B<> - 
-
-=item * B<> - 
-
-=back
-
-=head1 EXPORT SUBS
-
-=over 4
-
-=item * B<load_guest($c, $gid)> - fetch user record from table profiles by COOKIES. Import for Mojolicious::Plugin::Authentication. Required.
 
 =back
 
 =head1 METHODS
 
-None
+=head2 current
+
+  my $guest $c->access->plugin->guest->current($c);
+
+=head2 store
+
+Store guest data in DB table and set session_key. Headers of request save in "data" column.
+
+  $c->access->plugin->guest->store($c, {"Glory"=>"is ♥ for me"});
+
+=head2 is_guest
+
+True if current session of guest.
+
+  if( $c->access->plugin->guest->is_guest($c) ) {...}
+
+=head2 load
+
+Loads guest data from DB table by its ID row. JSON column "data" will expand.
+
+  my $data = $c->access->plugin->guest->load($id);
+
+=head2 reload
+
+Cleanup stash and reload guest data.
+
+  my $guest = $c->access->plugin->guest->reload($c);
 
 =head1 SEE ALSO
 

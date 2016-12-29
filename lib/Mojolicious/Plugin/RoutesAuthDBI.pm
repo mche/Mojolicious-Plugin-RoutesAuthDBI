@@ -166,6 +166,17 @@ sub cond_access {# add_condition
     and return 1 # не проверяем доступ
     unless $args->{auth} || $args->{role};
   
+  if ($args->{auth} && lc($args->{auth}) eq 'guest') {
+    my $guest = $c->access->plugin->guest->current($c);
+    
+    $app->log->debug(sprintf(qq[Access allow [%s] for {auth} => 'guest'],
+        $route->pattern->unparsed,
+      ))
+      and return 1
+      if $guest;
+    
+  }
+  
   my $fail_auth_cb = $conf->{access}{fail_auth_cb};
   
   # не авторизовался
