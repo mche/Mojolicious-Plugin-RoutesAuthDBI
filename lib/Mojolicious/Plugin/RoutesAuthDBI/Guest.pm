@@ -11,8 +11,7 @@ use Mojolicious::Plugin::RoutesAuthDBI::Util qw(json_enc json_dec);
 has [qw(session_key stash_key app plugin model)];
 
 sub new {
-  state shift->SUPER::new(@_);
-  
+  state $self = shift->SUPER::new(@_);
 }
 
 sub current {# Fetch the current guest object from the stash - loading it if not already loaded
@@ -38,9 +37,9 @@ sub _loader {
   my $gid = $c->session($self->session_key);
   
   my $guest = $self->load($gid)
-    if defined gid;
+    if defined $gid;
 
-  if ($user) {
+  if ($guest) {
       $c->stash($self->stash_key => { guest => $guest });
   }
   else {
@@ -52,10 +51,10 @@ sub _loader {
 sub load {
   my ($self, $gid) = @_;
   
-  my $guest = $model->get_guest($gid);
+  my $guest = $self->model->get_guest($gid);
   
   if ( $guest && $guest->{id}) {
-    my $json = json_dec($guest->{data})
+    my $json = json_dec(delete $guest->{data})
       if $guest->{data};
   
     @$guest{ keys %$json } = values %$json
@@ -88,9 +87,13 @@ sub logout {
 }
 
  sub store {# new guest
-    my ($self, $c,) = @_;
+    my ($self, $c, $data) = @_;
+    
+    $data ||= {};
+    #~ $data->{UA} = $c->req->headers->user_agent;
+    $data->{headers} = $c->req->headers->to_hash(1);
 
-    my $guest = $model->store(json_enc({"замечательно"=>"да"}));
+    my $guest = $self->model->store(json_enc($data));
     $c->session($self->session_key => $guest->{id});
     $c->stash($self->stash_key => { guest => $guest });
 }

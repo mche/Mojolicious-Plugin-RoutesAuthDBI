@@ -173,14 +173,7 @@ sub cond_access {# add_condition
     and $c->$fail_auth_cb()
     and return undef
     unless $u && $u->{id};
-  
-  # допустить если {auth=>'only'}
-  $app->log->debug(sprintf(qq[Access allow [%s] for {auth}='only'],
-    $route->pattern->unparsed,
-  ))
-    and return 1
-    if lc($args->{auth}) eq 'only';
-  
+
   if (ref $args eq 'CODE') {
     $args->($u, @_)
       or $self->deny_log($route, $args, $u)
@@ -191,6 +184,13 @@ sub cond_access {# add_condition
     ));
     return 0x01;
   }
+  
+  # допустить если {auth=>'only'}
+  $app->log->debug(sprintf(qq[Access allow [%s] for {auth}='only'],
+    $route->pattern->unparsed,
+  ))
+    and return 1
+    if $args->{auth} && lc($args->{auth}) eq 'only';
 
   my $id2 = [$u->{id}, map($_->{id}, grep !$_->{disable},@{$u->roles})];
   my $id1 = [grep $_, @$args{qw(id route_id action_id controller_id namespace_id)}];

@@ -18,24 +18,42 @@ sub startup {
     template=>$config,
   );
   my $r = $app->routes;
-  $r->get('/guest/new')->to("$pkg#create");
-}
-
-sub create {
-  my $c = shift;
-  $c->render(text=>'ok');
+  $r->get('/guest/new')->to( cb => sub {
+    my $c = shift;
+    
+    $c->access->plugin->guest->store($c, {"foo"=>"♥"});
+    
+    $c->render(text=>'stored');
+    
+  } );
   
+  $r->get('/guest/is')->to( cb => sub {
+    my $c = shift;
+    
+    my $guest = $c->access->plugin->guest->current($c);
+    
+    return $c->reply->not_found
+      unless $guest;
+    
+    $c->render(json=>$guest);
+  });
 }
 
 my $t = Test::Mojo->new($pkg);
 
-$t->get_ok("/guest/new")->status_is(200)
+$t->get_ok("/guest/is")->status_is(404)
   #~ ->content_like(qr/Deny access at auth step/i)
   ;
 
-#~ $t->get_ok("/$config->{prefix}/$config->{trust}/$config->{role_admin}/new/$config->{admin_user}/$config->{admin_pass}")->status_is(200)
-  #~ ->content_like(qr/Success sign up new trust-admin-user/i);
-  #~ ->content_like(qr/$config->{role_admin}-000/i);
+$t->get_ok("/guest/new")->status_is(200)
+  ->content_is('stored')
+  #~ ->content_like(qr/Deny access at auth step/i)
+  ;
+
+$t->get_ok("/guest/is")->status_is(200)
+  #~ ->content_is('stored')
+  #~ ->content_like(qr/Deny access at auth step/i)
+  ;
 
 
 done_testing();
