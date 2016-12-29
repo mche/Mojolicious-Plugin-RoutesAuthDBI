@@ -13,6 +13,7 @@ use Mojo::Base -strict;
     refs=>'связи',
     roles=>'роли доступа',
     routes=>'маршруты',
+    guests=>'гости',
   },
   admin_user => 'admin3',
   admin_pass => 'секрет',

@@ -9,7 +9,7 @@ lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Controllers.pm
 lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Namespaces.pm
 lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Roles.pm
 lib/Mojolicious/Plugin/RoutesAuthDBI/Util.pm
-lib/Mojolicious/Plugin/RoutesAuthDBI/OAuth2.pm
+lib/Mojolicious/Plugin/RoutesAuthDBI/OAuth.pm
 lib/Mojolicious/Plugin/RoutesAuthDBI/Schema.pm
 lib/Mojolicious/Plugin/RoutesAuthDBI/Install.pm
 lib/Mojolicious/Plugin/RoutesAuthDBI/Admin.pm
@@ -24,6 +24,7 @@ t/02-schema.t
 t/03-sample-app.t
 t/04-admin.t
 t/05-access.t
+t/06-guest.t
 t/99-drop.t
 t/Test/Test1.pm
 t/config.pm
