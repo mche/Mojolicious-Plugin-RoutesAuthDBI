@@ -66,25 +66,25 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
 
 sub _vars {
   my $c = shift;
-  my $template = {};
+  my $vars = {};
 
   for my $var (keys %$defaults) {
-    if (my $val = $c->stash($var) || $c->param($var)) {
-      $template->{$var} = $val
-        unless $val eq 'undef';
-      next;
-    }
-      
-    $template->{$var} = { map {
-      if (my $val = $c->stash($_) || $c->param($_)) {
-        $val ? ($val ne 'undef' ? ($_ => $val) : ()) : ();
-      }
-      
     
-    } keys %{$defaults->{$var}}  }
-      if ref $defaults->{$var};
+    if (ref $defaults->{$var} eq 'HASH') {
+      
+      for (keys %{$defaults->{$var}}) {
+        my $val = $c->stash($_) || $c->param($_) || $defaults->{$var}{$_};
+        $vars->{$var}{$_} = $val
+          unless $val =~ m'undef|none';
+      }
+    } else {
+      my $val = $c->stash($var) || $c->param($var) || $defaults->{$var};
+      $vars->{$var} = $val
+        unless $val =~ m'undef|none';
+    }
+    
   }
-  $template;
+  $vars;
 }
 
 sub schema {
@@ -94,7 +94,8 @@ sub schema {
   $c->app->log->debug($c->dumper($vars));
   
   my $text = $dict->{'schema'}->template(%$vars);
-  $text .= "\n\n".$dict->{'sequence'}->template(%$vars);
+  $text .= "\n\n".$dict->{'sequence'}->template(%$vars)
+    if $vars->{sequence};
   $text .= "\n\n".$dict->{$_}->template(%$vars)
     for grep $vars->{tables}{$_}, qw(routes namespaces controllers actions profiles logins roles refs oauth_sites oauth_users guests);
   
@@ -104,20 +105,20 @@ sub schema {
 
 sub schema_drop {
   my $c = shift;
-  my $template = $c->_vars;
+  my $vars = $c->_vars;
   #~ $schema = qq{"$schema".} if $schema;
   $c->render(format=>'txt', text => <<TXT);
-@{[$dict->{'drop'}->template(%$template)]}
+@{[$dict->{'drop'}->template(%$vars)]}
 
 TXT
 }
 
 sub schema_flush {
   my $c = shift;
-  my $template = $c->_vars;
+  my $vars = $c->_vars;
   $c->render(format=>'txt', text => <<TXT);
 
-@{[$dict->{'flush'}->template(%$template)]}
+@{[$dict->{'flush'}->template(%$vars)]}
 
 TXT
 }
