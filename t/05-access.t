@@ -46,7 +46,7 @@ my $t = Test::Mojo->new(__PACKAGE__);
 $t->get_ok("/noauth")->status_is(200)
   ->content_like(qr/Welcome  Mojolicious::Plugin::RoutesAuthDBI/i);
 
-$t->get_ok("/auth-only")->status_is(404)
+$t->get_ok("/auth-only")->status_is(401)
   ->content_like(qr/Please sign in/i);
 
 $t->get_ok("/authenticated")->status_is(404);

@@ -23,10 +23,10 @@ has default => sub {
     namespace => $pkg,
     module => 'Access',
     fail_auth_cb => sub {
-      shift->render(status => 404, format=>'txt', text=>"Deny access at auth step. Please sign in.\n");
+      shift->render(status => 401, format=>'txt', text=>"Please sign in.\n");
     },
     fail_access_cb => sub {
-      shift->render(status => 404, format=>'txt', text=>"You don`t have access on this route (url, action).\n");
+      shift->render(status => 403, format=>'txt', text=>"You don`t have access on this route (url, action).\n");
     },
     import => [qw(load_user validate_user)],
   },

@@ -53,7 +53,7 @@ $t->get_ok("/guest/is")->status_is(404)
   #~ ->content_like(qr/Deny access at auth step/i)
   ;
 
-$t->get_ok("/access")->status_is(404);
+$t->get_ok("/access")->status_is(401);
 
 $t->get_ok("/$config->{prefix}/sign/in/$config->{admin_user}/$config->{admin_pass}")->status_is(302);
 

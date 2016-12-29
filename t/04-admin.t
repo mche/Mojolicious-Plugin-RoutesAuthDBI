@@ -33,8 +33,8 @@ subtest 'routes' => sub {
 };
 
 
-$t->get_ok("/$config->{prefix}")->status_is(404)
-  ->content_like(qr/Deny access at auth step/i);
+$t->get_ok("/$config->{prefix}")->status_is(401)
+  ->content_like(qr/Please sign in/i);
 
 $t->get_ok("/$config->{prefix}/$config->{trust}/$config->{role_admin}/new/$config->{admin_user}/$config->{admin_pass}")->status_is(200)
   ->content_like(qr/Success sign up new trust-admin-user/i);
