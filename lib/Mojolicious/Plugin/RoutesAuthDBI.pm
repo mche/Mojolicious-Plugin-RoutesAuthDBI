@@ -13,7 +13,7 @@ has default => sub {
   require Mojolicious::Plugin::RoutesAuthDBI::Schema;
   {
   auth => {
-    stash_key => $pkg,
+    stash_key => $pkg."__user__",
     current_user_fn => 'auth_user',# helper
     load_user => \&load_user,
     validate_user => \&validate_user,
@@ -383,6 +383,7 @@ Hashref options pass to base plugin L<Mojolicious::Plugin::Authentication>.
 By default the option:
 
   current_user_fn => 'auth_user',
+  stash_key => "Mojolicious::Plugin::RoutesAuthDBI__user__",
     
 The options:
 
@@ -465,6 +466,8 @@ Hashref options for guest module. Defaults are:
     
   },
 
+See L<Mojolicious::Plugin::RoutesAuthDBI::Guest>
+
 =head3 model_namespace
 
 Where are your models place. Default to "Mojolicious::Plugin::RoutesAuthDBI::Model".
@@ -494,6 +497,16 @@ Heart of this plugin! This condition apply for all db routes even if column auth
   $r->route('/foo')->...->over(access=>{auth=>'only'})->...;
   # same as
   # $r->route('/foo')->...->over(authenticated => 1)->...; # see Mojolicious::Plugin::Authentication
+
+=item * Allow for guest
+
+  $r->route('/foo')->...->over(access=>{guest=>1})->...;
+  
+To makes guest session:
+
+  $c->access->plugin->guest->store($c, {<...some data...>});
+
+See L<Mojolicious::Plugin::RoutesAuthDBI::Guest>
 
 =item * Route accessible if profile roles assigned to either B<loadable> namespace or controller 'Bar.pm' (which assigned neither namespece on db or assigned to that loadable namespace) or action 'bar' on controller Bar.pm (action record in db table actions):
 

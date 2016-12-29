@@ -99,13 +99,17 @@ sub logout {
 
 =encoding utf8
 
-=head1 Mojolicious::Plugin::RoutesAuthDBI::Guest
+Доброго всем
 
 ¡ ¡ ¡ ALL GLORY TO GLORIA ! ! !
 
+=head1 Mojolicious::Plugin::RoutesAuthDBI::Guest
+
+The code of module is mostly copy/paste from Mojolicious::Plugin::Authentication 1.29
+
 =head1 NAME
 
-Mojolicious::Plugin::RoutesAuthDBI::Guest - session for guests. The code of module is copy/paste from Mojolicious::Plugin::Authentication 1.29
+Mojolicious::Plugin::RoutesAuthDBI::Guest - session for guests. Store guests in separate DBI table.
 
 =head1 SYNOPSIS
 
@@ -135,7 +139,9 @@ Mojolicious::Plugin::RoutesAuthDBI::Guest - session for guests. The code of modu
 
 =head2 current($controller)
 
-  my $guest $c->access->plugin->guest->current($c);
+Get current guest hashref by session and undef overwise.
+
+  my $guest = $c->access->plugin->guest->current($c);
 
 =head2 store($controller, $data)
 
