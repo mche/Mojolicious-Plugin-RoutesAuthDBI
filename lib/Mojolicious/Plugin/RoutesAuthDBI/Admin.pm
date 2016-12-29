@@ -59,7 +59,7 @@ sub signout {
 sub users {
   my $c = shift;
   
-  my $p = $Init->plugin->model->{Profiles}->profiles;
+  my $p = $Init->plugin->model('Profiles')->profiles;
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
@@ -76,7 +76,7 @@ sub new_user {
   my ($login, $pass) = $c->vars(qw'login pass');
   
   my $r;
-  ($r = $Init->plugin->model->{Profiles}->get_profile(undef, $login))
+  ($r = $Init->plugin->model('Profiles')->get_profile(undef, $login))
     and $c->render(format=>'txt', text=><<TXT)
 $pkg
 
@@ -88,11 +88,11 @@ TXT
     and ($r->{not_new} = '!')
     and return $r;
   
-  $r = $Init->plugin->model->{Logins}->new_login($login, $pass);
+  $r = $Init->plugin->model('Logins')->new_login($login, $pass);
   
-  my $p = $Init->plugin->model->{Profiles}->new_profile([$login],);
+  my $p = $Init->plugin->model('Profiles')->new_profile([$login],);
   
-  $Init->plugin->model->{Refs}->refer($p->{id} => $r->{id});
+  $Init->plugin->model('Refs')->refer($p->{id} => $r->{id});
   
   @$p{qw(login pass)} = @$r{qw(login pass)};
   
@@ -113,25 +113,25 @@ sub trust_new_user {
   my $u = $c->new_user;
   
   # ROLE
-  my $rl = $Init->plugin->model->{Roles}->get_role(undef, $Init->role_admin || $Init->controller)
-    || $Init->plugin->model->{Roles}->new_role($Init->role_admin || $Init->controller);
+  my $rl = $Init->plugin->model('Roles')->get_role(undef, $Init->role_admin || $Init->controller)
+    || $Init->plugin->model('Roles')->new_role($Init->role_admin || $Init->controller);
   
   # REF role->user
-  my $ru = $Init->plugin->model->{Refs}->refer($rl->{id} => $u->{id});
+  my $ru = $Init->plugin->model('Refs')->refer($rl->{id} => $u->{id});
   
   # CONTROLLER
-  my $cc = $Init->plugin->model->{Controllers}->controller_ns($Init->{controller}, ($Init->{namespace}) x 2,)
-    || $Init->plugin->model->{Controllers}->new_controller($Init->{controller}, 'admin actions');
+  my $cc = $Init->plugin->model('Controllers')->controller_ns($Init->{controller}, ($Init->{namespace}) x 2,)
+    || $Init->plugin->model('Controllers')->new_controller($Init->{controller}, 'admin actions');
   
   #Namespace
-  my $ns = $Init->plugin->model->{Namespaces}->namespace(undef, $Init->{namespace},)
-    || $Init->plugin->model->{Namespaces}->new_namespace($Init->{namespace}, 'plugin ns!', undef, undef,);
+  my $ns = $Init->plugin->model('Namespaces')->namespace(undef, $Init->{namespace},)
+    || $Init->plugin->model('Namespaces')->new_namespace($Init->{namespace}, 'plugin ns!', undef, undef,);
   
   #ref namespace -> controller
-  my $nc = $Init->plugin->model->{Refs}->refer($ns->{id}, $cc->{id});
+  my $nc = $Init->plugin->model('Refs')->refer($ns->{id}, $cc->{id});
   
   #REF namespace->role
-  my $cr = $Init->plugin->model->{Refs}->refer($ns->{id}, $rl->{id});
+  my $cr = $Init->plugin->model('Refs')->refer($ns->{id}, $rl->{id});
   
   $c->render(format=>'txt', text=><<TXT);
 $pkg
@@ -157,7 +157,7 @@ TXT
 sub new_role {
 	my $c = shift;
 	my ($name) = $c->vars('name');
-	my $r = $Init->plugin->model->{Roles}->get_role(undef, $name);
+	my $r = $Init->plugin->model('Roles')->get_role(undef, $name);
 	$c->render(format=>'txt', text=><<TXT)
 $pkg
 
@@ -169,7 +169,7 @@ Role exists
 TXT
 		and return $c
 		if $r;
-	$r = $Init->plugin->model->{Roles}->new_role($name);
+	$r = $Init->plugin->model('Roles')->new_role($name);
 	
 	$c->render(format=>'txt', text=><<TXT);
 $pkg
@@ -186,7 +186,7 @@ TXT
 sub user_roles {
   my $c = shift;
   my ($user) = $c->vars(qw'user login');# || $c->vars('login');
-  my $u =  $Init->plugin->model->{Profiles}->get_profile($user =~ /\D/ ? (undef, $user) : ($user, undef,));
+  my $u =  $Init->plugin->model('Profiles')->get_profile($user =~ /\D/ ? (undef, $user) : ($user, undef,));
   
   $c->render(format=>'txt', text=><<TXT)
 $pkg
@@ -220,7 +220,7 @@ TXT
 
 sub roles {
   my $c = shift;
-  my $r = $Init->plugin->model->{Roles}->roles;
+  my $r = $Init->plugin->model('Roles')->roles;
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
@@ -237,7 +237,7 @@ sub new_role_user {
   
   my ($role) = $c->vars('role');
   # ROLE
-  my $r = $Init->plugin->model->{Roles}->get_role($role =~ /\D/ ? (undef, $role) : ($role, undef,));
+  my $r = $Init->plugin->model('Roles')->get_role($role =~ /\D/ ? (undef, $role) : ($role, undef,));
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
@@ -247,10 +247,10 @@ Can't create new role by only digits[$role] in name
 TXT
     and return
     unless $r && $role =~ /\w/;
-  $r ||= $Init->plugin->model->{Roles}->new_role($role);
+  $r ||= $Init->plugin->model('Roles')->new_role($role);
   
   my ($user) = $c->vars('user');
-  my $u = $Init->plugin->model->{Profiles}->get_profile($user =~ /\D/ ? (undef, $user) : ($user, undef,));
+  my $u = $Init->plugin->model('Profiles')->get_profile($user =~ /\D/ ? (undef, $user) : ($user, undef,));
   
   $c->render(format=>'txt', text=><<TXT)
 $pkg
@@ -262,7 +262,7 @@ TXT
     and return
     unless $u;
   
-  my $ref = $Init->plugin->model->{Refs}->refer($r->{id} => $u->{id});
+  my $ref = $Init->plugin->model('Refs')->refer($r->{id} => $u->{id});
   
   $c->render(format=>'txt', text=><<TXT);
 $pkg
@@ -281,7 +281,7 @@ sub new_role_controller {
   
   my ($role) = $c->vars('role');
   # ROLE
-  my $r = $Init->plugin->model->{Roles}->get_role($role =~ /\D/ ? (undef, $role) : ($role, undef,));
+  my $r = $Init->plugin->model('Roles')->get_role($role =~ /\D/ ? (undef, $role) : ($role, undef,));
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
@@ -291,10 +291,10 @@ Can't create new role by only digits[$role] in name
 TXT
     and return
     unless $r && $role =~ /\w/;
-  $r ||= $Init->plugin->model->{Roles}->new_role($role);
+  $r ||= $Init->plugin->model('Roles')->new_role($role);
   
   my ($ns, $controll) = $c->vars(qw'ns controll');
-  my $cntr = $Init->plugin->model->{Controllers}->controller_id_ns($controll =~ /\D/ ? (undef, $controll) : ($controll, undef), $ns && $ns =~ /\D/ ? (undef, $ns) : ($ns, undef), $ns);
+  my $cntr = $Init->plugin->model('Controllers')->controller_id_ns($controll =~ /\D/ ? (undef, $controll) : ($controll, undef), $ns && $ns =~ /\D/ ? (undef, $ns) : ($ns, undef), $ns);
   
   $c->render(format=>'txt', text=><<TXT)
 $pkg
@@ -306,7 +306,7 @@ TXT
     and return
     unless $cntr;
   
-  my $ref = $Init->plugin->model->{Refs}->refer($cntr->{id} => $r->{id},);
+  my $ref = $Init->plugin->model('Refs')->refer($cntr->{id} => $r->{id},);
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
@@ -331,7 +331,7 @@ sub del_role_user {# удалить связь пользователя с ро�
   
   my ($role) = $c->vars('role');
   # ROLE
-  my $r = $Init->plugin->model->{Roles}->get_role($role =~ /\D/ ? (undef, $role) : ($role, undef,));
+  my $r = $Init->plugin->model('Roles')->get_role($role =~ /\D/ ? (undef, $role) : ($role, undef,));
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
@@ -343,7 +343,7 @@ TXT
     unless $r;
 
   my ($user) = $c->vars('user');
-  my $u = $Init->plugin->model->{Profiles}->get_profile($user =~ /\D/ ? (undef, $user) : ($user, undef,));
+  my $u = $Init->plugin->model('Profiles')->get_profile($user =~ /\D/ ? (undef, $user) : ($user, undef,));
   
   $c->render(format=>'txt', text=><<TXT)
 $pkg
@@ -355,7 +355,7 @@ TXT
     and return
     unless $u;
   
-  my $ref = $Init->plugin->model->{Refs}->del(undef, $r->{id}, $u->{id});
+  my $ref = $Init->plugin->model('Refs')->del(undef, $r->{id}, $u->{id});
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
@@ -383,7 +383,7 @@ sub disable_role {
   
   my ($role) = $c->vars('role');
   # ROLE
-  my $r = $Init->plugin->model->{Roles}->dsbl_enbl($a, $role =~ /\D/ ? (undef, $role) : ($role, undef,));
+  my $r = $Init->plugin->model('Roles')->dsbl_enbl($a, $role =~ /\D/ ? (undef, $role) : ($role, undef,));
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
@@ -413,7 +413,7 @@ sub role_users {# все пользователи роли по запросу /
   
   my ($role) = $c->vars('role');
   # ROLE
-  my $r = $Init->plugin->model->{Roles}->get_role($role =~ /\D/ ? (undef, $role) : ($role, undef,));
+  my $r = $Init->plugin->model('Roles')->get_role($role =~ /\D/ ? (undef, $role) : ($role, undef,));
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
@@ -424,7 +424,7 @@ TXT
     and return
     unless $r;
   
-  my $u = $Init->plugin->model->{Roles}->profiles($r->{id});
+  my $u = $Init->plugin->model('Roles')->profiles($r->{id});
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
@@ -440,7 +440,7 @@ sub role_routes {# все маршруты роли по запросу /myadmin
   
    my ($role) = $c->vars('role');
   # ROLE
-  my $r = $Init->plugin->model->{Roles}->get_role($role =~ /\D/ ? (undef, $role) : ($role, undef,));
+  my $r = $Init->plugin->model('Roles')->get_role($role =~ /\D/ ? (undef, $role) : ($role, undef,));
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
@@ -450,7 +450,7 @@ TXT
     and return
     unless $r;
   
-  my $t = $Init->plugin->model->{Routes}->routes_ref($r->{id});
+  my $t = $Init->plugin->model('Routes')->routes_ref($r->{id});
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
@@ -462,7 +462,7 @@ TXT
 
 sub controllers {
   my $c = shift;
-  my $list = $Init->plugin->model->{Controllers}->controllers;
+  my $list = $Init->plugin->model('Controllers')->controllers;
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
@@ -476,7 +476,7 @@ TXT
 sub controll {# /controller/:ns/:controll
   my $c = shift;
   my ($ns, $controll) = $c->vars(qw(ns controll));
-  my $r = $Init->plugin->model->{Controllers}->controller_id_ns($controll =~ /\D/ ? (undef, $controll) : ($controll, undef), $ns && $ns =~ /\D/ ? (undef, $ns) : ($ns, undef), $ns);
+  my $r = $Init->plugin->model('Controllers')->controller_id_ns($controll =~ /\D/ ? (undef, $controll) : ($controll, undef), $ns && $ns =~ /\D/ ? (undef, $ns) : ($ns, undef), $ns);
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
@@ -493,7 +493,7 @@ sub new_controller {
   my ($ns) = $c->vars(qw'ns namespace');# || ($c->vars('namespace'));
   my ($mod) = $c->vars(qw'module controll');
   my ($descr) = $c->vars(qw'descr');
-  my $cn = $Init->plugin->model->{Controllers}->controller_ns($mod, ($ns) x 2,);
+  my $cn = $Init->plugin->model('Controllers')->controller_ns($mod, ($ns) x 2,);
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
@@ -505,11 +505,11 @@ TXT
   and return
   if $cn;
   my $n = $c->new_namespace($ns) if $ns;
-  $cn = $Init->plugin->model->{Controllers}->new_controller($mod, $descr);
-  $Init->plugin->model->{Refs}->refer($n->{id}, $cn->{id})
+  $cn = $Init->plugin->model('Controllers')->new_controller($mod, $descr);
+  $Init->plugin->model('Refs')->refer($n->{id}, $cn->{id})
     if $n;
   
-  $cn = $Init->plugin->model->{Controllers}->controller_ns($mod, ($ns) x 2,);
+  $cn = $Init->plugin->model('Controllers')->controller_ns($mod, ($ns) x 2,);
   
   $c->render(format=>'txt', text=><<TXT);
 $pkg
@@ -524,7 +524,7 @@ TXT
 
 sub namespaces {
   my $c = shift;
-  my $list = $Init->plugin->model->{Namespaces}->namespaces;
+  my $list = $Init->plugin->model('Namespaces')->namespaces;
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
@@ -541,7 +541,7 @@ sub new_namespace {
   my ($descr) = $_[0] ? (shift) :  $c->vars('descr');
   my ($app_ns) = $_[0] ? (shift) : $c->vars('app_ns');
   my ($interval_ts) = $_[0] ? (shift) : $c->vars('interval_ts');
-  my $n = $Init->plugin->model->{Namespaces}->namespace($ns =~ /\D/ ? (undef, $ns) : ($ns, undef,));
+  my $n = $Init->plugin->model('Namespaces')->namespace($ns =~ /\D/ ? (undef, $ns) : ($ns, undef,));
   $c->render(format=>'txt', text=><<TXT)
 $pkg
 
@@ -552,7 +552,7 @@ Namespace already exists
 TXT
   and return $n
   if $n;
-  $n = $Init->plugin->model->{Namespaces}->new_namespace($ns, $descr, $app_ns, $interval_ts);
+  $n = $Init->plugin->model('Namespaces')->new_namespace($ns, $descr, $app_ns, $interval_ts);
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
@@ -567,9 +567,9 @@ TXT
 
 sub actions {
   my $c = shift;
-  my $list = $Init->plugin->model->{Actions}->actions;
+  my $list = $Init->plugin->model('Actions')->actions;
   map {
-    $_->{routes} = $Init->plugin->model->{Routes}->routes_action($_->{id});
+    $_->{routes} = $Init->plugin->model('Routes')->routes_action($_->{id});
   } @$list;
   $c->render(format=>'txt', text=><<TXT);
 $pkg
@@ -583,7 +583,7 @@ TXT
 
 sub routes {
   my $c = shift;
-  my $list = $Init->plugin->model->{Routes}->routes;
+  my $list = $Init->plugin->model('Routes')->routes;
   
   $c->render(format=>'txt', text=><<TXT);
 $pkg
@@ -597,7 +597,7 @@ TXT
 
 sub new_route_ns {# показать список мест-имен
   my $c = shift;
-  my $list = $Init->plugin->model->{Namespaces}->namespaces;
+  my $list = $Init->plugin->model('Namespaces')->namespaces;
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
@@ -615,9 +615,9 @@ sub new_route_c {# показать список контроллеров
   no warnings;
   my $c = shift;
   my ($ns) = $c->vars('ns');
-  $ns = $Init->plugin->model->{Namespaces}->namespace($ns && $ns =~ /\D/ ? (undef, $ns) : ($ns, undef,))
+  $ns = $Init->plugin->model('Namespaces')->namespace($ns && $ns =~ /\D/ ? (undef, $ns) : ($ns, undef,))
     || {namespace => $ns};
-  my $list = $Init->plugin->model->{Controllers}->controllers_ns_id($ns->{id}, $ns->{id});
+  my $list = $Init->plugin->model('Controllers')->controllers_ns_id($ns->{id}, $ns->{id});
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
@@ -637,14 +637,14 @@ sub new_route_a {# показать список действий
   my $c = shift;
   my ($ns, $controll) = $c->vars(qw'ns controll');
   
-  $ns = $Init->plugin->model->{Namespaces}->namespace($ns && $ns =~ /\D/ ? (undef, $ns) : ($ns, undef,))
+  $ns = $Init->plugin->model('Namespaces')->namespace($ns && $ns =~ /\D/ ? (undef, $ns) : ($ns, undef,))
     || {namespace => $ns};
   
-  $controll = $Init->plugin->model->{Controllers}->controller_id_ns($controll =~ /\D/ ? (undef, $controll) : ($controll, undef,), $ns->{id}, $ns->{namespace}, $ns->{namespace},)
+  $controll = $Init->plugin->model('Controllers')->controller_id_ns($controll =~ /\D/ ? (undef, $controll) : ($controll, undef,), $ns->{id}, $ns->{namespace}, $ns->{namespace},)
     || {controller=>$controll};
   
-  my $list = $Init->plugin->model->{Actions}->actions_controller($controll->{id});
-  my $list2 = $Init->plugin->model->{Actions}->actions_controller_null();
+  my $list = $Init->plugin->model('Actions')->actions_controller($controll->{id});
+  my $list2 = $Init->plugin->model('Actions')->actions_controller_null();
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
@@ -669,14 +669,14 @@ sub new_route {# показать маршруты к действию
   my $c = shift;
   my ($ns, $controll, $act) = $c->vars(qw'ns controll act');
   
-  $ns = $Init->plugin->model->{Namespaces}->namespace($ns&& $ns =~ /\D/ ? (undef, $ns) : ($ns, undef,))
+  $ns = $Init->plugin->model('Namespaces')->namespace($ns&& $ns =~ /\D/ ? (undef, $ns) : ($ns, undef,))
     || {namespace => $ns};
   
-  $controll = $Init->plugin->model->{Controllers}->controller_id_ns($controll =~ /\D/ ? (undef, $controll) : ($controll, undef,), $ns->{id}, $ns->{namespace}, $ns->{namespace},)
+  $controll = $Init->plugin->model('Controllers')->controller_id_ns($controll =~ /\D/ ? (undef, $controll) : ($controll, undef,), $ns->{id}, $ns->{namespace}, $ns->{namespace},)
     || {controller=>$controll};
   
-  $act = $Init->plugin->model->{Actions}->action_controller($controll->{id}, $act =~ /\D/ ? (undef, $act) : ($act, undef,),)
-    || $Init->plugin->model->{Actions}->action_controller_null($act =~ /\D/ ? (undef, $act) : ($act, undef,),)
+  $act = $Init->plugin->model('Actions')->action_controller($controll->{id}, $act =~ /\D/ ? (undef, $act) : ($act, undef,),)
+    || $Init->plugin->model('Actions')->action_controller_null($act =~ /\D/ ? (undef, $act) : ($act, undef,),)
     || {action => $act};
   
   # Проверка на похожий $request ?? TODO
@@ -717,10 +717,10 @@ TXT
   
   
   # маршруты действия
-  my $list = $act->{id} ? $Init->plugin->model->{Routes}->routes_action($act->{id})
+  my $list = $act->{id} ? $Init->plugin->model('Routes')->routes_action($act->{id})
     : [];
   # свободные маршруты
-  my $list2 = $Init->plugin->model->{Routes}->routes_action_null;
+  my $list2 = $Init->plugin->model('Routes')->routes_action_null;
   
   no warnings;
   $c->render(format=>'txt', text=><<TXT);
@@ -758,17 +758,17 @@ sub route_save {
   my $c = shift;
   my ($ns, $controll, $act, $route) = @_;
   local $Init->plugin->dbh->{AutoCommit} = 0;
-  $ns = $Init->plugin->model->{Namespaces}->new_namespace(@$ns{qw(namespace descr app_ns interval_ts)})
+  $ns = $Init->plugin->model('Namespaces')->new_namespace(@$ns{qw(namespace descr app_ns interval_ts)})
     if $ns->{namespace} && ! $ns->{id};
-  $controll = $Init->plugin->model->{Controllers}->new_controller(@$controll{qw(controller descr)})
+  $controll = $Init->plugin->model('Controllers')->new_controller(@$controll{qw(controller descr)})
     unless $controll->{id};
-  $act = $Init->plugin->model->{Actions}->new_action(@$act{qw(action callback descr)})
+  $act = $Init->plugin->model('Actions')->new_action(@$act{qw(action callback descr)})
     unless $act->{id};
     
-  $route = $Init->plugin->model->{Routes}->new_route(@$route{@route_cols})
+  $route = $Init->plugin->model('Routes')->new_route(@$route{@route_cols})
     unless $route->{id};
   my $ref = [map {
-    $Init->plugin->model->{Refs}->refer($$_[0]{id}, $$_[1]{id},)
+    $Init->plugin->model('Refs')->refer($$_[0]{id}, $$_[1]{id},)
       if $$_[0]{id} && $$_[1]{id};
   } ([$ns, $controll], [$controll, $act], [$route, $act],)];
   $Init->plugin->dbh->commit;
@@ -789,7 +789,7 @@ sub vars {# получить из stash || param
 #~ sub ref {# get or save
   #~ my $c = shift;
   #~ my ($id1, $id2) = @_;
-  #~ $Init->plugin->model->{Refs}->refer($id1, $id2,);
+  #~ $Init->plugin->model('Refs')->refer($id1, $id2,);
 #~ }
 
 

@@ -194,9 +194,9 @@ sub login {
         #~ || $c->model->profile($oau->{id}) # по внешнему профилю получить наш профиль
 
 
-        #~ || $Init->plugin->model->{Profiles}->new_profile([$profile->{first_name} || $profile->{given_name}, $profile->{last_name} || $profile->{family_name},]);
+        #~ || $Init->plugin->model('Profiles')->new_profile([$profile->{first_name} || $profile->{given_name}, $profile->{last_name} || $profile->{family_name},]);
 
-      #~ my $r = $Init->plugin->model->{Refs}->refer($профиль->{id}, $oau->{id},);
+      #~ my $r = $Init->plugin->model('Refs')->refer($профиль->{id}, $oau->{id},);
       
       #~ $c->authenticate(undef, undef, $профиль) # session only store
         #~ unless $curr_profile;
@@ -239,9 +239,9 @@ sub _process_profile_tx {
         
         || $c->model->profile($oau->{id}) # по внешнему профилю получить наш профиль
 
-        || $Init->plugin->model->{Profiles}->new_profile([$data->{first_name} || $data->{given_name}, $data->{last_name} || $data->{family_name},]);
+        || $Init->plugin->model('Profiles')->new_profile([$data->{first_name} || $data->{given_name}, $data->{last_name} || $data->{family_name},]);
 
-  my $r = $Init->plugin->model->{Refs}->refer($profile->{id}, $oau->{id},);
+  my $r = $Init->plugin->model('Refs')->refer($profile->{id}, $oau->{id},);
       
   $c->authenticate(undef, undef, $profile) # session only store
     unless $curr_profile;
@@ -285,7 +285,7 @@ sub отсоединить {
   my $r = $c->model->detach($site->{id}, $curr_profile->{id},);
   #~ $c->app->log->debug("Убрал авторизацию сайта [$site_name] профиля [$curr_profile->{id}]", $c->dumper($r));
   
-  $Init->plugin->model->{Refs}->del($r->{ref_id}, undef, undef);
+  $Init->plugin->model('Refs')->del($r->{ref_id}, undef, undef);
   
   my $redirect = $c->param('redirect') || ($c->req->headers->referrer && Mojo::URL->new($c->req->headers->referrer)->path) || 'profile';
   $c->redirect_to($redirect);

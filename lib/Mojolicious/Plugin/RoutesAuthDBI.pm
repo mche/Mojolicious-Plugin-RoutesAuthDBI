@@ -47,18 +47,20 @@ has default => sub {
   
   template => $Mojolicious::Plugin::RoutesAuthDBI::Schema::defaults,
   
+  model_namespace => $pkg.'::Model',
+  
   guest => {# for Mojolicious::Plugin::Authentication
-    autoload_user => 1,
+    #~ autoload_user => 1,
     session_key => 'guest_data',
     stash_key => $pkg."__guest__",
-    current_user_fn => 'current_guest',# helper
-    load_user => \&load_guest,
+    #~ current_user_fn => 'current_guest',# helper
+    #~ load_user => \&load_guest,
     #~ validate_user => not need
     #~ fail_render => not need
     #######end Mojolicious::Plugin::Authentication conf#######
     namespace => $pkg,
     module => 'Guest',
-    import => [qw(load_guest)],
+    #~ import => [qw(load_guest)],
   },
   };
 };
@@ -99,10 +101,10 @@ has guest => sub {# object
   $class->register($self->app, $conf);# plugin=>$self,
 };
 
-has model => sub {
-  my $m = { map {$_ => load_class("Mojolicious::Plugin::RoutesAuthDBI::Model::$_")->new} qw(Profiles Namespaces Routes Refs Controllers Actions Roles Logins) };
+#~ has model => sub {
+  #~ my $m = { map {$_ => load_class("Mojolicious::Plugin::RoutesAuthDBI::Model::$_")->new} qw(Profiles Namespaces Routes Refs Controllers Actions Roles Logins) };
   
-};
+#~ };
 
 sub register {
   my $self = shift;
@@ -312,7 +314,19 @@ sub deny_log {
   );
 }
 
-our $VERSION = '0.800';
+sub model {
+  my ($self, $name) = @_;
+  my $ns = $self->merge_conf->{'model_namespace'};
+  my $class =  load_class(namespace => $ns, module=> $name)
+    or die "Model module [$name] not found at namespace [$ns] or has errors";
+  
+  $class->new; # синглетоны в общем
+  
+  #~ my $m = { map {$_ => load_class("Mojolicious::Plugin::RoutesAuthDBI::Model::$_")->new} qw(Profiles Namespaces Routes Refs Controllers Actions Roles Logins) };
+  
+};
+
+our $VERSION = '0.801';
 
 =pod
 
@@ -326,7 +340,7 @@ our $VERSION = '0.800';
 
 =head1 VERSION
 
-0.800
+0.801
 
 =head1 NAME
 
@@ -344,7 +358,9 @@ First of all you will see L<SVG|https://github.com/mche/Mojolicious-Plugin-Route
     access => {...},
     admin => {...},
     oauth => {...},
+    guest => {...},
     template => {...},
+    model_namespace=>...,
   );
 
 
@@ -435,6 +451,22 @@ You might define your own controller by passing options:
   },
 
 See L<Mojolicious::Plugin::RoutesAuthDBI::OAuth2> for detail options list.
+
+=head3 guest
+
+Hashref options for guest module. Defaults are:
+
+  guest => {
+    namespace => 'Mojolicious::Plugin::RoutesAuthDBI',
+    module => 'Guest',
+    session_key => 'guest_data',
+    stash_key => "Mojolicious::Plugin::RoutesAuthDBI__guest__",
+    
+  },
+
+=head3 model_namespace
+
+Where are your models place. Default to "Mojolicious::Plugin::RoutesAuthDBI::Model".
 
 =head3 template
 

@@ -7,7 +7,7 @@ use Mojo::Util qw(md5_sum);
 
 has [qw(app plugin)];
 
-#~ has model_profiles => sub { shift->plugin->model->{Profiles} };
+#~ has model_profiles => sub { shift->plugin->model('Profiles') };
 #~ has model => sub {
   #~ { map $_ => load_class("Mojolicious::Plugin::RoutesAuthDBI::Model::$_")->new, qw(Profiles Namespaces Routes Refs Controllers Actions Roles) }
 #~ };
@@ -56,7 +56,7 @@ sub validate_user {# import for Mojolicious::Plugin::Authentication
 
 sub apply_ns {# Plugin
   my ($self,) = @_;
-  my $ns = $self->plugin->model->{Namespaces}->app_ns;
+  my $ns = $self->plugin->model('Namespaces')->app_ns;
   return unless @$ns;
   my $r = $self->app->routes;
   push @{ $r->namespaces() }, $_->{namespace} for @$ns;
@@ -116,37 +116,37 @@ sub apply_route {# meth in Plugin
 
 sub routes {
   my ($self,) = @_;
-  $self->plugin->model->{Routes}->routes;
+  $self->plugin->model('Routes')->routes;
 }
 
 sub access_explicit {# i.e. by refs table
   my ($self, $id1, $id2,) = @_;
-  return scalar $self->plugin->model->{Refs}->cnt($id1, $id2);
+  return scalar $self->plugin->model('Refs')->cnt($id1, $id2);
 }
 
 
 sub access_namespace {#implicit
   my ($self, $namespace, $id2,) = @_;
-  return scalar $self->plugin->model->{Namespaces}->access($namespace, $id2);
+  return scalar $self->plugin->model('Namespaces')->access($namespace, $id2);
 }
 
 sub access_controller {#implicit
   my ($self, $namespace, $controller, $id2,) = @_;
-  my $c = $self->plugin->model->{Controllers}->controller_ns( $controller, ($namespace) x 2,)
+  my $c = $self->plugin->model('Controllers')->controller_ns( $controller, ($namespace) x 2,)
     or return undef;
   $self->access_explicit([$c->{id}], $id2);
 }
 
 sub access_action {#implicit
   my ($self, $namespace, $controller, $action, $id2,) = @_;
-  my $c = $self->plugin->model->{Controllers}->controller_ns( $controller, ($namespace) x 2,)
+  my $c = $self->plugin->model('Controllers')->controller_ns( $controller, ($namespace) x 2,)
     or return undef;
-  return scalar $self->plugin->model->{Actions}->access( $c->{id}, $action, $id2);
+  return scalar $self->plugin->model('Actions')->access( $c->{id}, $action, $id2);
 }
 
 sub access_role {#implicit
   my ($self, $role, $id2,) = @_;
-  return scalar $self->plugin->model->{Roles}->access($role =~ /\D/ ? (undef, $role) : ($role, undef), $id2);
+  return scalar $self->plugin->model('Roles')->access($role =~ /\D/ ? (undef, $role) : ($role, undef), $id2);
 }
 
 1;
