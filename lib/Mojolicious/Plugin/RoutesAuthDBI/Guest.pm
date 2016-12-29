@@ -1,24 +1,98 @@
 package Mojolicious::Plugin::RoutesAuthDBI::Guest;
-use Mojo::Base 'Mojolicious::Plugin::Authentication';
-use Exporter 'import'; 
-our @EXPORT_OK = qw(load_guest);
+use Mojo::Base -base;#'Mojolicious::Plugin::Authentication'
+#~ use Exporter 'import'; 
+#~ our @EXPORT_OK = qw(load_guest);
 #~ use Mojolicious::Plugin::RoutesAuthDBI::Util qw(load_class);
-use Mojolicious::Plugin::RoutesAuthDBI::Model::Guest;
+use Mojolicious::Plugin::RoutesAuthDBI::Util qw(json_enc json_dec);
+#~ use Mojolicious::Plugin::RoutesAuthDBI::Model::Guest;
 
-my $model = Mojolicious::Plugin::RoutesAuthDBI::Model::Guest->new;
+#~ my $model = Mojolicious::Plugin::RoutesAuthDBI::Model::Guest->new;
 
-sub load_guest {# import for Mojolicious::Plugin::Authentication
-  my ($c, $gid) = @_;
+has [qw(session_key stash_key app plugin model)];
+
+sub new {
+  state shift->SUPER::new(@_);
   
-  my $g = $model->get_guest($gid);
-  #~ my $p = $c->model_profiles->get_profile($uid, undef);
-  if ($g->{id}) {
-    $c->app->log->debug("Loading guest by id=$gid success");
-    return $g;
+}
+
+sub current {# Fetch the current guest object from the stash - loading it if not already loaded
+  my ($self, $c) = @_;
+  
+  my $stash_key = $self->stash_key;
+  
+  $self->_loader($c)
+    unless
+      defined($c->stash($stash_key))
+      && ($c->stash($stash_key)->{no_guest}
+        || defined($c->stash($stash_key)->{guest}));
+
+  my $guest_def = defined($c->stash($stash_key))
+                    && defined($c->stash($stash_key)->{guest});
+
+  return $guest_def ? $c->stash($stash_key)->{guest} : undef;
+}
+
+# Unconditionally load the guest based on id in session
+sub _loader {
+  my ($self, $c) = @_;
+  my $gid = $c->session($self->session_key);
+  
+  my $guest = $self->load($gid)
+    if defined gid;
+
+  if ($user) {
+      $c->stash($self->stash_key => { guest => $guest });
   }
-  $c->app->log->debug("Loading guest by id=$gid failed");
+  else {
+      # cache result that guest does not exist
+      $c->stash($self->stash_key => { no_guest => 1 });
+  }
+}
+
+sub load {
+  my ($self, $gid) = @_;
+  
+  my $guest = $model->get_guest($gid);
+  
+  if ( $guest && $guest->{id}) {
+    my $json = json_dec($guest->{data})
+      if $guest->{data};
+  
+    @$guest{ keys %$json } = values %$json
+      if $json;
+    
+    $self->app->log->debug("Success loading guest by id=$gid");
+    return $guest;
+  }
+  $self->app->log->debug("Failed loading guest by id=$gid");
   
   return undef;
+}
+
+ sub reload {
+  my ($self, $c) = @_;
+  # Clear stash to force a reload of the guest object
+  delete $c->stash->{$self->stash_key};
+  return $self->current($c);
+}
+
+sub is_guest {
+  my ($self, $c) = @_;
+  return defined($self->current($c)) ? 1 : 0;
+}
+
+sub logout {
+  my ($self, $c) = @_;
+  delete $c->stash->{$self->stash_key};
+  delete $c->session->{$self->session_key};
+}
+
+ sub store {# new guest
+    my ($self, $c,) = @_;
+
+    my $guest = $model->store(json_enc({"замечательно"=>"да"}));
+    $c->session($self->session_key => $guest->{id});
+    $c->stash($self->stash_key => { guest => $guest });
 }
 
 

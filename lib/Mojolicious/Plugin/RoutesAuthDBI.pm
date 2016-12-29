@@ -41,7 +41,7 @@ has default => sub {
   
   oauth => {
     namespace => $pkg,
-    controller => 'OAuth2',
+    controller => 'OAuth',
     fail_auth_cb => sub {shift->render(format=>'txt', text=>"@_")},
   },
   
@@ -49,7 +49,7 @@ has default => sub {
   
   model_namespace => $pkg.'::Model',
   
-  guest => {# for Mojolicious::Plugin::Authentication
+  guest => {# from Mojolicious::Plugin::Authentication
     #~ autoload_user => 1,
     session_key => 'guest_data',
     stash_key => $pkg."__guest__",
@@ -89,16 +89,16 @@ has admin => sub {# object
 has oauth => sub {
   my $self = shift;
   my $conf = $self->merge_conf->{'oauth'};
-  load_class($conf)->init(%$conf, app=>$self->app, plugin=>$self,);
+  load_class($conf)->init(%$conf, app=>$self->app, plugin=>$self, model=>$self->model($conf->{controller}),);
 };
 
 has guest => sub {# object
   my $self = shift;
   my $conf = $self->merge_conf->{'guest'};
   my $class = load_class($conf);
-  $class->import( @{ $conf->{import} });
+  #~ $class->import( @{ $conf->{import} });
   
-  $class->register($self->app, $conf);# plugin=>$self,
+  $class->new( %$conf, app=>$self->app, plugin=>$self, model=>$self->model($conf->{module}), );# plugin=>$self,
 };
 
 #~ has model => sub {
@@ -124,10 +124,6 @@ sub register {
   die "Plugin [Authentication] already loaded"
     if $self->app->renderer->helpers->{'authenticate'};
   
-  # !!! WARN !!! BEFORE SUPER::register !!!
-  $self->guest
-    if $self->conf->{guest};
-  
   $self->SUPER::register($self->app, $self->merge_conf->{auth});
   
   $self->app->routes->add_condition(access => sub {$self->cond_access(@_)});
@@ -144,11 +140,8 @@ sub register {
     $access->apply_route($_) for $admin->self_routes;
   }
   
-  # !!! WARN !!! BEFORE SUPER::register !!!
-  #~ $self->guest
-    #~ if $self->conf->{guest};
-  
-  #~ $self->SUPER::register($self->app, $self->merge_conf->{auth});
+  $self->guest
+    if $self->conf->{guest};
   
   $self->app->helper('access', sub {$access});
   
@@ -437,7 +430,7 @@ See L<Mojolicious::Plugin::RoutesAuthDBI::Admin> for detail options list.
 Hashref options for oauth controller. By default the builtin module:
 
   oauth => {
-    controller => 'OAuth2',
+    controller => 'OAuth',
     namespace => 'Mojolicious::Plugin::RoutesAuthDBI',
     ...,
   },
@@ -450,7 +443,7 @@ You might define your own controller by passing options:
     ...,
   },
 
-See L<Mojolicious::Plugin::RoutesAuthDBI::OAuth2> for detail options list.
+See L<Mojolicious::Plugin::RoutesAuthDBI::OAuth> for detail options list.
 
 =head3 guest
 
