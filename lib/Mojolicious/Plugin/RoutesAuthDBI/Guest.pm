@@ -90,6 +90,8 @@ sub logout {
     my $guest = $self->model->store(json_enc($data));
     $c->session($self->session_key => $guest->{id});
     $c->stash($self->stash_key => { guest => $guest });
+    
+    return $guest;
 }
 
 
