@@ -620,7 +620,7 @@ realclean purge :: realclean_subdirs
 metafile : create_distdir
 	$(NOECHO) $(ECHO) Generating META.yml
 	$(NOECHO) $(ECHO) '---' > META_new.yml
-	$(NOECHO) $(ECHO) 'abstract: '\''from DBI tables does generate routes, make authentication and make restrict access (authorization) to requests. Plugin makes an auth operations throught the plugin L<Mojolicious::Plugin::Authentication> and OAuth2 by L<Mojolicious::Plugin::OAuth2>.'\''' >> META_new.yml
+	$(NOECHO) $(ECHO) 'abstract: '\''from DBI tables does generate routes, make authentication and make restrict access (authorization) to app routes.'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) 'author:' >> META_new.yml
 	$(NOECHO) $(ECHO) '  - '\''Mikhail Che <mche@cpan.org>'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) 'build_requires:' >> META_new.yml
@@ -651,7 +651,7 @@ metafile : create_distdir
 	-$(NOECHO) $(MV) META_new.yml $(DISTVNAME)/META.yml
 	$(NOECHO) $(ECHO) Generating META.json
 	$(NOECHO) $(ECHO) '{' > META_new.json
-	$(NOECHO) $(ECHO) '   "abstract" : "from DBI tables does generate routes, make authentication and make restrict access (authorization) to requests. Plugin makes an auth operations throught the plugin L<Mojolicious::Plugin::Authentication> and OAuth2 by L<Mojolicious::Plugin::OAuth2>.",' >> META_new.json
+	$(NOECHO) $(ECHO) '   "abstract" : "from DBI tables does generate routes, make authentication and make restrict access (authorization) to app routes.",' >> META_new.json
 	$(NOECHO) $(ECHO) '   "author" : [' >> META_new.json
 	$(NOECHO) $(ECHO) '      "Mikhail Che <mche@cpan.org>"' >> META_new.json
 	$(NOECHO) $(ECHO) '   ],' >> META_new.json
@@ -1006,7 +1006,7 @@ testdb_static :: static pure_all
 # Creates a PPD (Perl Package Description) for a binary distribution.
 ppd :
 	$(NOECHO) $(ECHO) '<SOFTPKG NAME="Mojolicious-Plugin-RoutesAuthDBI" VERSION="0.801">' > Mojolicious-Plugin-RoutesAuthDBI.ppd
-	$(NOECHO) $(ECHO) '    <ABSTRACT>from DBI tables does generate routes, make authentication and make restrict access (authorization) to requests. Plugin makes an auth operations throught the plugin L&lt;Mojolicious::Plugin::Authentication&gt; and OAuth2 by L&lt;Mojolicious::Plugin::OAuth2&gt;.</ABSTRACT>' >> Mojolicious-Plugin-RoutesAuthDBI.ppd
+	$(NOECHO) $(ECHO) '    <ABSTRACT>from DBI tables does generate routes, make authentication and make restrict access (authorization) to app routes.</ABSTRACT>' >> Mojolicious-Plugin-RoutesAuthDBI.ppd
 	$(NOECHO) $(ECHO) '    <AUTHOR>Mikhail Che &lt;mche@cpan.org&gt;</AUTHOR>' >> Mojolicious-Plugin-RoutesAuthDBI.ppd
 	$(NOECHO) $(ECHO) '    <IMPLEMENTATION>' >> Mojolicious-Plugin-RoutesAuthDBI.ppd
 	$(NOECHO) $(ECHO) '        <PERLCORE VERSION="5,014,0,0" />' >> Mojolicious-Plugin-RoutesAuthDBI.ppd
