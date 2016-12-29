@@ -86,6 +86,7 @@ sub logout {
     
     $data ||= {};
     $data->{headers} = $c->req->headers->to_hash(1);
+    $data->{IP} = $c->tx->remote_address;
 
     my $guest = $self->model->store(json_enc($data));
     $c->session($self->session_key => $guest->{id});
