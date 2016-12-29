@@ -107,20 +107,14 @@ sub schema_drop {
   my $c = shift;
   my $vars = $c->_vars;
   #~ $schema = qq{"$schema".} if $schema;
-  $c->render(format=>'txt', text => <<TXT);
-@{[$dict->{'drop'}->template(%$vars)]}
+  $c->render(format=>'txt', text => $dict->{'drop'}->template(%$vars));
 
-TXT
 }
 
 sub schema_flush {
   my $c = shift;
   my $vars = $c->_vars;
-  $c->render(format=>'txt', text => <<TXT);
-
-@{[$dict->{'flush'}->template(%$vars)]}
-
-TXT
+  $c->render(format=>'txt', text => $dict->{'flush'}->template(%$vars));
 }
 
 1;
@@ -246,9 +240,11 @@ create table IF NOT EXISTS "{%= $schema %}"."{%= $tables->{oauth_users} %}" (
 );
 
 @@ guests
+-- Гостевые записи
 create table IF NOT EXISTS "{%= $schema %}"."{%= $tables->{guests} %}" (
   id integer NOT NULL DEFAULT nextval('{%= $sequence %}'::regclass) primary key,
-  ts timestamp without time zone NOT NULL DEFAULT now()
+  ts timestamp without time zone NOT NULL DEFAULT now(),
+  data jsonb null
   
 );
 
