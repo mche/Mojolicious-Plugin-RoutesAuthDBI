@@ -8,15 +8,20 @@ sub new {
 sub new_login {
   my $self = ref($_[0]) ? shift : shift->new;
   
-  $self->dbh->selectrow_hashref($self->sth('new login'), undef, (shift, shift))
+  $self->dbh->selectrow_hashref($self->sth('new login'), undef, (shift, shift));
 
 }
 
 sub login {
   my $self = ref($_[0]) ? shift : shift->new;
   
-  $self->dbh->selectrow_hashref($self->sth('login'), undef, (shift, shift))
+  $self->dbh->selectrow_hashref($self->sth('login'), undef, (shift, shift));
 
+}
+
+sub upd_pass {
+  my $self = ref($_[0]) ? shift : shift->new;
+  $self->dbh->selectrow_hashref($self->sth('update pass'), undef, (@_));
 }
 
 1;
@@ -31,3 +36,10 @@ select *
 from "{%= $schema %}"."{%= $tables->{logins} %}"
 where id=? or login=?;
 
+
+@@ update pass
+@@ login
+update "{%= $schema %}"."{%= $tables->{logins} %}"
+set pass = ?
+where id=? or login=?
+returning *;
