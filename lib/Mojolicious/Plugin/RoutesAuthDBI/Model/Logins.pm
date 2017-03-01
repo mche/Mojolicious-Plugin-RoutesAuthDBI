@@ -38,7 +38,6 @@ where id=? or login=?;
 
 
 @@ update pass
-@@ login
 update "{%= $schema %}"."{%= $tables->{logins} %}"
 set pass = ?
 where id=? or login=?
