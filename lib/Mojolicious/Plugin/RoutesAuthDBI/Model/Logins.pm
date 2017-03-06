@@ -28,7 +28,7 @@ sub upd_pass {
 sub upd_login {
   my $self = ref($_[0]) ? shift : shift->new;
   my $args = ref($_[0]) ? shift : {@_};
-  $self->dbh->selectrow_hashref($self->sth('update login'), undef, (@$args{qw(new_login id old_login)}));
+  $self->dbh->selectrow_hashref($self->sth('update login'), undef, (@$args{qw(new_login id old_login old_pass old_pass)}));
 }
 
 1;
@@ -54,6 +54,7 @@ returning *;
 @@ update login
 update "{%= $schema %}"."{%= $tables->{logins} %}"
 set login = ?
-where id=? or login=?
+where (id=? or login=?)
+  and (?::text is null or pass=?)
 returning *;
 
