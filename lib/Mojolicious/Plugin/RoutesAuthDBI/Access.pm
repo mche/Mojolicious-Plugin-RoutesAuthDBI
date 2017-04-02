@@ -91,13 +91,23 @@ sub apply_route {# meth in Plugin
   # STEP ACCESS
   $nr->over(access => $r_hash);
   
-  if ( $r_hash->{action} ) {
+# Controller and action in Mojolicious::Routes::Route->to
+    #~ elsif ($shortcut =~ /^([\w\-:]+)?\#(\w+)?$/) {
+      #~ $defaults{controller} = $1 if defined $1;
+      #~ $defaults{action}     = $2 if defined $2;
+    #~ }
+    
+  my %ns = (namespace => $r_hash->{namespace})
+    if $r_hash->{namespace};
+  my %controll = (controller=>$r_hash->{controller},)
+    if $r_hash->{controller};
 
-    my %ns = (namespace => $r_hash->{namespace})
-      if $r_hash->{namespace};
-      
-    if ( $r_hash->{action} =~ /#/ ) { $nr->to($r_hash->{action}, %ns); }
-    else { $nr->to(controller=>$r_hash->{controller}, action => $r_hash->{action}, %ns,); }
+  if ($r_hash->{to}) {
+    $nr->to($r_hash->{to}, %controll, %ns); 
+  } elsif ( $r_hash->{action} ) {
+    
+    if ( $r_hash->{action} =~ /#/ ) { $nr->to($r_hash->{action}, %controll, %ns); }
+    else { $nr->to( action => $r_hash->{action}, %controll, %ns,); }
     
   } elsif ( $r_hash->{callback} ) {
     
@@ -109,7 +119,8 @@ sub apply_route {# meth in Plugin
   } else {
     die "No defaults for route: ", $self->app->dumper($r_hash);
   }
-  $nr->name($r_hash->{name}) if $r_hash->{name};
+  $nr->name($r_hash->{name})
+    if $r_hash->{name};
   #~ $self->app->log->debug("$pkg generate the route from data row [@{[$self->app->dumper($r_hash) =~ s/\n/ /gr]}]");
   return $nr;
 }

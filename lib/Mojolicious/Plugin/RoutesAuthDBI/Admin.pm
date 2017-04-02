@@ -653,6 +653,8 @@ $pkg
 
 Указать имя или ID действия из списка или ввести новое имя действия
 
+Или указать undef чтобы привязать маршрут к контроллеру, но тогда на следующем шаге обязательно указать параметр to=->имя метода в котроллере
+
 Actions for selected controller (@{[scalar @$list]})
 ===
 @{[$c->dumper( $list )]}
@@ -664,7 +666,7 @@ Actions without controller (@{[scalar @$list2]}):
 TXT
 }
 
-my @route_cols = qw(request name descr auth disable interval_ts);
+my @route_cols = qw(request to name descr auth disable interval_ts);
 sub new_route {# показать маршруты к действию
   my $c = shift;
   my ($ns, $controll, $act) = $c->vars(qw'ns controll act');
@@ -675,8 +677,8 @@ sub new_route {# показать маршруты к действию
   $controll = $Init->plugin->model('Controllers')->controller_id_ns($controll =~ /\D/ ? (undef, $controll) : ($controll, undef,), $ns->{id}, $ns->{namespace}, $ns->{namespace},)
     || {controller=>$controll};
   
-  $act = $Init->plugin->model('Actions')->action_controller($controll->{id}, $act =~ /\D/ ? (undef, $act) : ($act, undef,),)
-    || $Init->plugin->model('Actions')->action_controller_null($act =~ /\D/ ? (undef, $act) : ($act, undef,),)
+  $act = ($act && $Init->plugin->model('Actions')->action_controller($controll->{id}, $act =~ /\D/ ? (undef, $act) : ($act, undef,),))
+    || ($act && $Init->plugin->model('Actions')->action_controller_null($act =~ /\D/ ? (undef, $act) : ($act, undef,),))
     || {action => $act};
   
   # Проверка на похожий $request ?? TODO
@@ -737,6 +739,7 @@ $pkg
 
 * request (request=GET POST /foo/:bar)
 * name (name=foo_bar)
+- to (to=Foo->bar or to=->bar)
 - descr (descr=пояснение такое)
 - auth (auth=1) (auth='only')
 - disable (disable=1)
@@ -757,21 +760,24 @@ TXT
 sub route_save {
   my $c = shift;
   my ($ns, $controll, $act, $route) = @_;
-  local $Init->plugin->dbh->{AutoCommit} = 0;
+  #~ local $Init->plugin->dbh->{AutoCommit} = 0;
   $ns = $Init->plugin->model('Namespaces')->new_namespace(@$ns{qw(namespace descr app_ns interval_ts)})
     if $ns->{namespace} && ! $ns->{id};
   $controll = $Init->plugin->model('Controllers')->new_controller(@$controll{qw(controller descr)})
     unless $controll->{id};
   $act = $Init->plugin->model('Actions')->new_action(@$act{qw(action callback descr)})
-    unless $act->{id};
-    
+    if $act->{action} && !$act->{id};
+  
+  $route->{to} =~ s/->/#/
+    if $route->{to};
+  
   $route = $Init->plugin->model('Routes')->new_route(@$route{@route_cols})
     unless $route->{id};
   my $ref = [map {
     $Init->plugin->model('Refs')->refer($$_[0]{id}, $$_[1]{id},)
       if $$_[0]{id} && $$_[1]{id};
-  } ([$ns, $controll], [$controll, $act], [$route, $act],)];
-  $Init->plugin->dbh->commit;
+  } ([$ns, $controll], [$controll, $act], [ $act, $route,], $act->{id} ? () : [$controll, $route,])];
+  #~ $Init->plugin->dbh->commit;
   return ($ns, $controll, $act, $route, $ref);
 
 }
@@ -785,14 +791,6 @@ sub vars {# получить из stash || param
     $var;
   } @_;
 }
-
-#~ sub ref {# get or save
-  #~ my $c = shift;
-  #~ my ($id1, $id2) = @_;
-  #~ $Init->plugin->model('Refs')->refer($id1, $id2,);
-#~ }
-
-
 
 my @self_routes_cols = qw(request action name auth descr);
 sub self_routes {# from plugin!

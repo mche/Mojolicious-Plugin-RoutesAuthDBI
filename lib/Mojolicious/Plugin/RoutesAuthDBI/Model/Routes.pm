@@ -44,22 +44,32 @@ where r.id2=?;
 
 @@ apply routes
 %# Генерация маршрутов приложения
-select r.*, ac.controller, ac.namespace, ac.action, ac.callback, ac.id as action_id, ac.controller_id, ac.namespace_id
+select r.*, coalesce(ac.controller, c.controller) as controller, coalesce(ac.namespace, c.namespace) as namespace, ac.action, ac.callback, ac.id as action_id, coalesce(ac.controller_id, c.id) as controller_id, coalesce(ac.namespace_id, c.namespace_id) as namespace_id
 from "{%= $schema %}"."{%= $tables->{routes} %}" r
-  join "{%= $schema %}"."{%= $tables->{refs} %}" rf on r.id=rf.id1
-  join 
-  (
-    select a.*, c.*
-    from "{%= $schema %}"."{%= $tables->{actions} %}" a 
-    left join (
-      select r.id2 as _id, c.controller, c.id as controller_id, n.namespace, n.id as namespace_id
-      from 
-        "{%= $schema %}"."{%= $tables->{refs} %}" r
-        join "{%= $schema %}"."{%= $tables->{controllers} %}" c on r.id1=c.id
-        left join "{%= $schema %}"."{%= $tables->{refs} %}" r2 on c.id=r2.id2
-        left join "{%= $schema %}"."{%= $tables->{namespaces} %}" n on n.id=r2.id1
-    ) c on a.id=c._id
-  ) ac on rf.id2=ac.id
+---  join "{%= $schema %}"."{%= $tables->{refs} %}" rf on r.id=rf.id1
+  left join ( -- связь действие-маршрут
+    select a.*, c.*, r.id2 as "ref_route_action"
+    from 
+      "{%= $schema %}"."{%= $tables->{refs} %}" r
+      join "{%= $schema %}"."{%= $tables->{actions} %}" a on r.id1=ac.id
+      left join (
+        select r.id2 as _id, c.controller, c.id as controller_id, n.namespace, n.id as namespace_id
+        from 
+          "{%= $schema %}"."{%= $tables->{refs} %}" r
+          join "{%= $schema %}"."{%= $tables->{controllers} %}" c on r.id1=c.id
+          left join "{%= $schema %}"."{%= $tables->{refs} %}" r2 on c.id=r2.id2
+          left join "{%= $schema %}"."{%= $tables->{namespaces} %}" n on n.id=r2.id1
+      ) c on a.id=c._id
+  ) ac on r.id=ac."ref_route_action"
+  left join ( -- связь контроллер-маршрут
+    select c.*, n.namespace, n.id as namespace_id, r.id2 as "ref_route_controller"
+    from
+      "{%= $schema %}"."{%= $tables->{refs} %}" r
+      join "{%= $schema %}"."{%= $tables->{controllers} %}" c on r.id1=c.id
+      left join "{%= $schema %}"."{%= $tables->{refs} %}" r2 on c.id=r2.id2
+      left join "{%= $schema %}"."{%= $tables->{namespaces} %}" n on n.id=r2.id1
+    
+  ) c on r.id=c."ref_route_controller"
 order by r.ts - (coalesce(r.interval_ts, 0::int)::varchar || ' second')::interval;
 
 @@ action routes
@@ -77,7 +87,7 @@ from "{%= $schema %}"."{%= $tables->{routes} %}" r
 ;
 
 @@ new route
-insert into "{%= $schema %}"."{%= $tables->{routes} %}" (request, name, descr, auth, disable, interval_ts)
-values (?,?,?,?,?,?)
+insert into "{%= $schema %}"."{%= $tables->{routes} %}" (request, "to", name, descr, auth, disable, interval_ts)
+values (?,?,?,?,?,?,?)
 returning *;
 

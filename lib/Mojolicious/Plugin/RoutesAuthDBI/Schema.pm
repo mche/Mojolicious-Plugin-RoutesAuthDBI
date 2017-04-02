@@ -136,7 +136,8 @@ CREATE SEQUENCE {%= $sequence %};-- one sequence for all tables id
 CREATE TABLE "{%= $schema %}"."{%= $tables->{routes} %}" (
   id integer default nextval('{%= $sequence %}'::regclass) not null primary key,
   ts timestamp without time zone default now() not null,
-  request character varying not null,
+  request character varying not null unique, -- 'get /foo/bar/:x'
+  "to" character varying, -- 'Foo#bar'
   name character varying not null unique,
   descr text null,
   auth varchar null,
