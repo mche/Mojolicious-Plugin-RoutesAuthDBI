@@ -617,13 +617,15 @@ sub new_route_c {# показать список контроллеров
   my ($ns) = $c->vars('ns');
   $ns = $Init->plugin->model('Namespaces')->namespace($ns && $ns =~ /\D/ ? (undef, $ns) : ($ns, undef,))
     || {namespace => $ns};
-  my $list = $Init->plugin->model('Controllers')->controllers_ns_id($ns->{id}, $ns->{id});
+  my $list = $ns->{id} ? $Init->plugin->model('Controllers')->controllers_ns_id($ns->{id}, $ns->{id}) : ['спейс пропускается'];
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
-1. namespace = [$ns->{id}:$ns->{namespace}]
+1. namespace = [@{[$c->dumper( $ns )]}]
 
 Указать имя или ID контроллера или ввести новое имя
+
+Если указать undef для последующей неявной привязкой через параметр маршрута - "to"
 
 Controllers (@{[scalar @$list]})
 ===
@@ -637,23 +639,23 @@ sub new_route_a {# показать список действий
   my $c = shift;
   my ($ns, $controll) = $c->vars(qw'ns controll');
   
-  $ns = $Init->plugin->model('Namespaces')->namespace($ns && $ns =~ /\D/ ? (undef, $ns) : ($ns, undef,))
+  $ns = ($ns && $Init->plugin->model('Namespaces')->namespace($ns && $ns =~ /\D/ ? (undef, $ns) : ($ns, undef,)))
     || {namespace => $ns};
   
-  $controll = $Init->plugin->model('Controllers')->controller_id_ns($controll =~ /\D/ ? (undef, $controll) : ($controll, undef,), $ns->{id}, $ns->{namespace}, $ns->{namespace},)
+  $controll = ($controll && $Init->plugin->model('Controllers')->controller_id_ns($controll =~ /\D/ ? (undef, $controll) : ($controll, undef,), $ns->{id}, $ns->{namespace}, $ns->{namespace},))
     || {controller=>$controll};
   
-  my $list = $Init->plugin->model('Actions')->actions_controller($controll->{id});
+  my $list = $controll->{id} ? $Init->plugin->model('Actions')->actions_controller($controll->{id}) : ['контроллер пропускается'];
   my $list2 = $Init->plugin->model('Actions')->actions_controller_null();
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
-1. namespace = [$ns->{id}:$ns->{namespace}]
-2. controller = [$controll->{id}:$controll->{controller}]
+1. namespace = [@{[$c->dumper( $ns )]}]
+2. controller = [@{[$c->dumper( $controll )]}]
 
 Указать имя или ID действия из списка или ввести новое имя действия
 
-Или указать undef чтобы привязать маршрут к контроллеру, но тогда на следующем шаге обязательно указать параметр to=->имя метода в котроллере
+Или указать undef чтобы привязать маршрут к контроллеру или вообще неявно через параметр route"to", но тогда на следующем шаге обязательно указать параметр to=->имя метода в котроллере 
 
 Actions for selected controller (@{[scalar @$list]})
 ===
@@ -671,10 +673,10 @@ sub new_route {# показать маршруты к действию
   my $c = shift;
   my ($ns, $controll, $act) = $c->vars(qw'ns controll act');
   
-  $ns = $Init->plugin->model('Namespaces')->namespace($ns&& $ns =~ /\D/ ? (undef, $ns) : ($ns, undef,))
+  $ns = ($ns && $Init->plugin->model('Namespaces')->namespace($ns&& $ns =~ /\D/ ? (undef, $ns) : ($ns, undef,)))
     || {namespace => $ns};
   
-  $controll = $Init->plugin->model('Controllers')->controller_id_ns($controll =~ /\D/ ? (undef, $controll) : ($controll, undef,), $ns->{id}, $ns->{namespace}, $ns->{namespace},)
+  $controll = ($controll && $Init->plugin->model('Controllers')->controller_id_ns($controll =~ /\D/ ? (undef, $controll) : ($controll, undef,), $ns->{id}, $ns->{namespace}, $ns->{namespace},))
     || {controller=>$controll};
   
   $act = ($act && $Init->plugin->model('Actions')->action_controller($controll->{id}, $act =~ /\D/ ? (undef, $act) : ($act, undef,),))
@@ -720,7 +722,7 @@ TXT
   
   # маршруты действия
   my $list = $act->{id} ? $Init->plugin->model('Routes')->routes_action($act->{id})
-    : [];
+    : ['нет явного действия'];
   # свободные маршруты
   my $list2 = $Init->plugin->model('Routes')->routes_action_null;
   
@@ -728,12 +730,12 @@ TXT
   $c->render(format=>'txt', text=><<TXT);
 $pkg
 
-1. namespace = [$ns->{id}:$ns->{namespace}]
-2. controller = [$controll->{id}:$controll->{controller}]
-3. action = [$act->{id}:$act->{action}]
+1. namespace = [@{[$c->dumper( $ns )]}]
+2. controller = [@{[$c->dumper( $controll )]}]
+3. action = [@{[$c->dumper( $act )]}]
 
-Указано: 
-@{[map ("$_=$route->{$_}\n", @route_cols)]}
+Маршрут: 
+@{[$c->dumper( $route )]}
 
 Указать параметры маршрута (?request=/x/y/:z&name=xyz&descr=...):
 
@@ -745,11 +747,11 @@ $pkg
 - disable (disable=1)
 - interval_ts (interval_ts=123)
 
-Exists routes for selected action (@{[$list ? scalar @$list : 0]})
+Exists routes for selected action (@{[scalar @$list ]})
 ===
 @{[$c->dumper( $list )]}
 
-Free routes (@{[$list2 ? scalar @$list2 : 0]})
+Free routes (@{[scalar @$list2]})
 ===
 @{[$c->dumper( $list2 )]}
 
@@ -764,7 +766,7 @@ sub route_save {
   $ns = $Init->plugin->model('Namespaces')->new_namespace(@$ns{qw(namespace descr app_ns interval_ts)})
     if $ns->{namespace} && ! $ns->{id};
   $controll = $Init->plugin->model('Controllers')->new_controller(@$controll{qw(controller descr)})
-    unless $controll->{id};
+    if $controll->{controller} && !$controll->{id};
   $act = $Init->plugin->model('Actions')->new_action(@$act{qw(action callback descr)})
     if $act->{action} && !$act->{id};
   

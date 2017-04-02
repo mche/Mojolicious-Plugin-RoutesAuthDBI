@@ -43,15 +43,15 @@ from
 where r.id2=?;
 
 @@ apply routes
-%# Генерация маршрутов приложения
+--- Генерация маршрутов приложения
 select r.*, coalesce(ac.controller, c.controller) as controller, coalesce(ac.namespace, c.namespace) as namespace, ac.action, ac.callback, ac.id as action_id, coalesce(ac.controller_id, c.id) as controller_id, coalesce(ac.namespace_id, c.namespace_id) as namespace_id
 from "{%= $schema %}"."{%= $tables->{routes} %}" r
----  join "{%= $schema %}"."{%= $tables->{refs} %}" rf on r.id=rf.id1
+%#  join "{%= $schema %}"."{%= $tables->{refs} %}" rf on r.id=rf.id2
   left join ( -- связь действие-маршрут
     select a.*, c.*, r.id2 as "ref_route_action"
     from 
       "{%= $schema %}"."{%= $tables->{refs} %}" r
-      join "{%= $schema %}"."{%= $tables->{actions} %}" a on r.id1=ac.id
+      join  "{%= $schema %}"."{%= $tables->{actions} %}" a on r.id1=a.id
       left join (
         select r.id2 as _id, c.controller, c.id as controller_id, n.namespace, n.id as namespace_id
         from 

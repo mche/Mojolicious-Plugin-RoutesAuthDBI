@@ -110,19 +110,31 @@ $t->get_ok("/$config->{prefix}/route/new")->status_is(200)
   ->content_like(qr/Namespaces \(1\)/i);
 
 $t->get_ok("/$config->{prefix}/route/new/undef")->status_is(200)
-  ->content_like(qr/1\. namespace = \[:\]/i);
+  ->content_like(qr/"namespace" => undef/i);
 
 $t->get_ok("/$config->{prefix}/route/new/undef/Test1")->status_is(200)
-  ->content_like(qr/2\. controller = \[\d+:Test1\]/i);
+  ->content_like(qr/"controller" => "Test1"/i);
 
 $t->get_ok("/$config->{prefix}/route/new/undef/Test1/test1")->status_is(200)
-  ->content_like(qr/3\. action = \[:test1\]/i);
+  ->content_like(qr/"action" => "test1"/i);
 
 $t->get_ok("/$config->{prefix}/route/new/undef/Test1/test1?request=GET FOO /test1&name=Test1->test1&descr=controller none namespace")->status_is(200)
   ->content_like(qr/Success done save!/i);
 
 $t->get_ok("/$config->{prefix}/routes")->status_is(200)
   ->content_like(qr/ROUTES \(1\)/i);
+
+$t->get_ok("/$config->{prefix}/route/new/undef/Test1/undef?request=GET FOO /test2&to=->test2&name=Test1 on test2&descr=route ref controll")->status_is(200)
+  ->content_like(qr/Success done save!/i);
+
+$t->get_ok("/$config->{prefix}/routes")->status_is(200)
+  ->content_like(qr/ROUTES \(2\)/i);
+
+$t->get_ok("/$config->{prefix}/route/new/undef/undef/undef?request=POST /test3&to=Test1->test3&name=Test1 on test3&descr=route none ref controll/action")->status_is(200)
+  ->content_like(qr/"request" => "POST \/test3"/i);
+
+$t->get_ok("/$config->{prefix}/routes")->status_is(200)
+  ->content_like(qr/ROUTES \(3\)/i);
 
 $t->get_ok("/$config->{prefix}/role/controller/$config->{role_admin}/undef/Test1")->status_is(200)
   ->content_like(qr/Success assign access/i);
