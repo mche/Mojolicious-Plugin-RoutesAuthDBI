@@ -1,19 +1,24 @@
 package Mojolicious::Plugin::RoutesAuthDBI::Util;
 use Mojo::Base -base;
 use Exporter 'import';
-use Mojo::JSON qw(decode_json encode_json);
-use Encode qw(encode decode);
+#~ use Mojo::JSON qw(decode_json encode_json);
+#~ use Encode qw(encode decode);
 use Mojo::Loader;
+use JSON::PP;
+
+my $JSON = JSON::PP->new->utf8(0);
 
 our @EXPORT_OK = qw(json_enc json_dec load_class);
 
 sub json_enc {
-  decode('utf-8', encode_json(shift));
+  #~ decode('utf-8', encode_json(shift));
+  $JSON->encode(shift);
   
 }
 
 sub json_dec {
-  decode_json(encode('utf-8', shift));
+  #~ decode_json(encode('utf-8', shift));
+  $JSON->decode(shift);
 }
 
 sub load_class {

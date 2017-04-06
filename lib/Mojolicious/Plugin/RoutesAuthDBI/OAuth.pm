@@ -1,6 +1,6 @@
 package Mojolicious::Plugin::RoutesAuthDBI::OAuth;
 use Mojo::Base 'Mojolicious::Controller';
-use Mojolicious::Plugin::RoutesAuthDBI::Util qw(json_enc);#load_class
+use Mojolicious::Plugin::RoutesAuthDBI::Util qw(json_enc json_dec);#load_class
 use Hash::Merge qw( merge );
 use Digest::MD5 qw(md5_hex);
 
@@ -322,6 +322,14 @@ sub _routes {# from plugin!
     name => 'oauth-detach',
     auth=>'only',
   },
+  {request=>'GET /oauth/data',
+    namespace => $Init->namespace,
+    controller=>$Init->controller,
+    action => 'oauth_data',
+    name => 'oauth data',
+    auth=>'only',
+  },
+  
   {request =>'/logout',
     namespace => $Init->namespace,
     controller => $Init->controller,
@@ -345,6 +353,24 @@ sub conf {
      "PROVIDERS\n---\n"
     . $c->dumper(($c->oauth2->providers))
   );
+}
+
+sub oauth_data {
+  my $c = shift;
+  my $uid = $c->auth_user->{id};
+  my $ou = $c->oauth->model->oauth_users_by_profile($uid);
+  
+  my %data = map {
+    my $oauth = $ou->{$_->{name}};# по имени сайта
+    $oauth->{profile} = json_dec($oauth->{profile})
+      and delete(@$oauth{qw(ts profile_ts site_name site_id)})
+      and delete (@{$oauth->{profile}}{qw(user_id access_token expires_in token_type refresh_token)})
+      if $oauth;
+    ($_->{name} => $oauth ); # || {}
+    
+  } grep($_->{id}, values %{$c->oauth2->providers});
+  
+  $c->render(json=>\%data);
 }
 
 1;
