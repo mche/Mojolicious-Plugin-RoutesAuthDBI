@@ -361,13 +361,17 @@ sub oauth_data {
   my $ou = $Init->model->oauth_users_by_profile($uid);
   
   my @data = map {
+    delete @$_{qw(secret)};
     my $oauth = $ou->{$_->{name}} || {};# по имени сайта
-    $oauth->{profile} = json_dec($oauth->{profile})
+    my $profile = $oauth->{profile};
+    
+    $_->{profile} = json_dec($profile)
       and delete(@$oauth{qw(ts profile_ts)})
-      and delete (@{$oauth->{profile}}{qw(user_id access_token expires_in token_type refresh_token)})
-      if $oauth->{profile};
-    $oauth->{site_name} ||= $_->{name};
-    $oauth; # || {}
+      and delete (@{$_->{profile}}{qw(user_id access_token expires_in token_type refresh_token)})
+      if $profile;
+    #~ $oauth->{site_name} ||= $_->{name};
+    #~ $oauth; # || {}
+    $_;
     
   } grep($_->{id}, values %{$c->oauth2->providers});
   
