@@ -360,17 +360,18 @@ sub oauth_data {
   my $uid = $c->auth_user->{id};
   my $ou = $Init->model->oauth_users_by_profile($uid);
   
-  my %data = map {
-    my $oauth = $ou->{$_->{name}};# по имени сайта
+  my @data = map {
+    my $oauth = $ou->{$_->{name}} || {};# по имени сайта
     $oauth->{profile} = json_dec($oauth->{profile})
-      and delete(@$oauth{qw(ts profile_ts site_name site_id)})
+      and delete(@$oauth{qw(ts profile_ts)})
       and delete (@{$oauth->{profile}}{qw(user_id access_token expires_in token_type refresh_token)})
-      if $oauth;
-    ($_->{name} => $oauth ); # || {}
+      if $oauth->{profile};
+    $oauth->{site_name} ||= $_->{name};
+    $oauth; # || {}
     
   } grep($_->{id}, values %{$c->oauth2->providers});
   
-  $c->render(json=>\%data);
+  $c->render(json=>\@data);
 }
 
 1;
@@ -479,6 +480,10 @@ Remove attached oauth user to profile. Stash B<site> and param 'redirect' as abo
 =head2 /logout
 
 Clear session and redirect to param 'redirect' || '/'. This route has builtin name 'logout'. 
+
+=head2 /oauth/data
+
+Get remote oauth data site only configured.
 
 =head1 SEE ALSO
 
