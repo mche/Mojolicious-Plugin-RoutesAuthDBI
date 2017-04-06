@@ -358,7 +358,7 @@ sub conf {
 sub oauth_data {
   my $c = shift;
   my $uid = $c->auth_user->{id};
-  my $ou = $c->oauth->model->oauth_users_by_profile($uid);
+  my $ou = $c->model->oauth_users_by_profile($uid);
   
   my %data = map {
     my $oauth = $ou->{$_->{name}};# по имени сайта
