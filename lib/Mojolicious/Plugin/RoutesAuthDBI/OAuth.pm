@@ -250,13 +250,16 @@ sub _process_profile_tx {
   
 }
 
-sub remote_profile {# получить по access_token
+sub oauth_profile {# получить по access_token
   my $c = shift;
   my $site_name = $c->stash('site');
   my $site = $c->oauth2->providers->{$site_name}
     or return $c->render(json=>{error=>"No such oauth provider [$site_name]"});
-  my $auth = {access_token=>$c->stash('access_token')};
-    #~ or return $c->render(json=>{ error=>"access_token not defined"});
+  my $auth = $c->req->json
+    or return $c->render(json=>{error=>"Must send JSON auth data"});
+  return $c->render(json=>{ error=>"JSON data access_token not defined"})
+    unless $auth->{'access_token'};
+  
   my $url = Mojo::URL->new($site->{profile_url})->query($c->${ \$site->{profile_query} }($auth));
   
   $c->render_later;
@@ -273,7 +276,7 @@ sub remote_profile {# получить по access_token
   
 }
 
-sub отсоединить {
+sub detach {# отсоединить
   my $c = shift;
   my $site_name = $c->stash('site');
 
@@ -291,7 +294,6 @@ sub отсоединить {
   $c->redirect_to($redirect);
 }
 
-
 sub out {# выход
   my $c = shift;
   $c->logout;
@@ -303,22 +305,22 @@ sub _routes {# from plugin!
   
   return (
   
-  {request=>'/login/:site',
+  {request=>'/oauth/login/:site',
     namespace => $Init->namespace,
     controller => $Init->controller,
     action => 'login',
     name => 'oauth-login',
   },
-  {request=>'/login/profile/:site/:access_token',
+  {request=>'POST /oauth/profile/:site',
     namespace => $Init->namespace,
     controller => $Init->controller,
-    action => 'remote_profile',
-    name => 'remote_profile',
+    action => 'oauth_profile',
+    name => 'oauth profile',
   },
-  {request=>'/detach/:site',
+  {request=>'/oauth/detach/:site',
     namespace => $Init->namespace,
     controller=>$Init->controller,
-    action => 'отсоединить',
+    action => 'detach',
     name => 'oauth-detach',
     auth=>'only',
   },
@@ -361,7 +363,7 @@ sub oauth_data {
   my $ou = $Init->model->oauth_users_by_profile($uid);
   
   my @data = map {
-    delete @$_{qw(secret)};
+    delete @$_{qw(secret profile_query authorize_url token_url profile_url authorize_query scope)};
     my $oauth = $ou->{$_->{name}} || {};# по имени сайта
     my $profile = $oauth->{profile};
     
