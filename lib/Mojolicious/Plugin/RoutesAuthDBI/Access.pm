@@ -160,6 +160,62 @@ sub access_role {#implicit
   return scalar $self->plugin->model('Roles')->access($role =~ /\D/ ? (undef, $role) : ($role, undef), $id2);
 }
 
+my $Mojo_Util_loaded;
+sub auth_cookie {
+  my ($self, $c, $value, $name) = @_;
+  $name ||= $c->app->sessions->cookie_name;
+  return $c->cookie($name)#'mojolicious'
+    unless $value;
+  
+  if ($value =~ s/--([^\-]+)$//) {
+    my $signature = $1;
+    load_class 'Mojo::Util'
+      unless $Mojo_Util_loaded++;
+
+    my $valid;
+    my $secrets = $c->app->secrets;
+    for my $secret (@$secrets) {
+      my $check = Mojo::Util::hmac_sha1_sum($value, $secret);
+      ++$valid
+        and last
+        if Mojo::Util::secure_compare($signature, $check);
+    }
+    
+    $c->app->log->warn(qq{Cookie [$value] has a bad signature})
+      and return undef
+      unless $valid;
+    
+  } else {
+    $c->app->log->warn(qq{Cookie [$value] is not signed})
+      and return undef;
+  }
+
+  my $session = $c->app->sessions->deserialize->(Mojo::Util::b64_decode $value)
+    or $c->app->log->warn(qq{Cookie [$value] couldnt deserialize})
+    and return undef;
+  
+  my $key =  $self->plugin->merge_conf->{auth}{session_key} || 'auth_data';
+  my $profile_id = $session->{$key}
+    or $c->app->log->warn(qq{Cookie [$value] doesnt has profile id})
+    and return undef;
+  #~ $c->app->log->fatal($c->dumper($c->stash->{'mojo.session'}), $c->stash->{'mojo.active_session'});
+  #~ warn $c->auth_user || 'none auth';
+  $c->authenticate(undef, undef, {id=> $profile_id}); # session only store
+  #~ 
+  #~ $c->app->log->fatal($c->dumper($c->stash->{'mojo.session'}), $c->stash->{'mojo.active_session'});
+  #~ $c->app->log->fatal($_->name, $_->{value}) for @{$c->req->cookies};
+  #~ $c->app->log->fatal($c->cookie('mojolicious'));
+  $c->app->sessions->store($c);
+  #~ $c->app->log->fatal($c->cookie('mojolicious'));
+  #~ $c->app->log->fatal($_->name, $_->value) for @{$c->res->cookies});
+  my $new_cookie = (grep($_->name eq $name, @{$c->res->cookies}))[0];
+  my $profile = $c->auth_user;
+  $profile->auth_cookie($new_cookie->value)
+    if $new_cookie;
+  
+  return $profile;
+}
+
 1;
 
 =pod
@@ -226,75 +282,86 @@ See detail L<Mojolicious::Plugin::RoutesAuthDBI#access>
 
 =head1 OPTIONS for plugin
 
-=over 4
+=head2 namespace
 
-=item * B<namespace> - default 'Mojolicious::Plugin::RoutesAuthDBI',
+Default 'Mojolicious::Plugin::RoutesAuthDBI'.
 
-=item * B<module> - default 'Access' (this module),
+=head2 module
+
+Default 'Access' (this module).
 
 Both above options determining the module which will play as manager of authentication, accessing and generate routing from DBI source.
 
-=item * B<fail_auth_cb> = sub {my $c = shift;...}
+=head2 fail_auth_cb
+
+  fail_auth_cb => sub {my $c = shift;...}
 
 This callback invoke when request need auth route but authentication was failure.
 
-=item * B<fail_access_cb> = sub {my ($c, $route, $r_hash, $u) = @_;...}
+=head2 fail_access_cb
+
+  fail_access_cb => sub {my ($c, $route, $r_hash, $u) = @_;...}
 
 This callback invoke when request need auth route but access was failure. $route - L<Mojolicious::Routes::Route> object, $r_hash - route hashref db item, $u - useer hashref.
 
-=back
 
 =head1 EXPORT SUBS
 
-=over 4
+=head2 load_user($c, $uid)
 
-=item * B<load_user($c, $uid)> - fetch user record from table profiles by COOKIES. Import for Mojolicious::Plugin::Authentication. Required.
+Fetch user record from table profiles by COOKIES. Import for Mojolicious::Plugin::Authentication. Required.
 
-=item * B<validate_user($c, $login, $pass, $extradata)> - fetch login record from table logins by Mojolicious::Plugin::Authentication. Required. If hashref $extradata->{id} then no fetch and $extradata->{id} will return.
+=head2 validate_user($c, $login, $pass, $extradata)
 
-=back
+Fetch login record from table logins by Mojolicious::Plugin::Authentication. Required. If hashref $extradata->{id} then no fetch and $extradata->{id} will return.
 
-=head1 METHODS NEEDS IN PLUGIN
+=head1 METHODS
 
-=over 4
+As child of L<Mojolicious::Controller> inherits all parent methods and following ones:
 
-=item * B<new(app=> ..., plugin => ...)>
+=head2 new(app=> ..., plugin => ...)
 
 Return new access object.
 
-=item * B<apply_ns()>
+=head2 apply_ns()
 
 Select from db table I<namespaces> ns thus app_ns=1 and push them to $app->namespaces()
 
-=item * B<apply_route($r_hash)>
+=head2 apply_route($r_hash)
 
 Heart of routes generation from db tables and not only. Insert to app->routes an hash item $r_hash. DB schema specific. Return new Mojolicious route.
 
-=item * B<routes()>
+=head2 routes()
 
 Fetch records for apply_routes. Must return arrayref of hashrefs routes.
 
-=item * B<access_explicit($id1, $id2)>
+=head2 access_explicit($id1, $id2)
 
 Check access to route ($id1 arrayref - either route id or action id or controller id or namespace id) by roles ids ($id2 arrayref). Must return false for deny access or true - allow access.
 
-=item * B<access_namespace($namespace, $id2)>
+=head2 access_namespace($namespace, $id2)
 
 Check implicit access to route by $namespace for profile roles ids ($id2 arrayref). Must return false for deny access or true - allow access to all actions of this namespace.
 
-=item * B<access_controller($namespace, $controller, $id2)>
+=head2 access_controller($namespace, $controller, $id2)
 
 Check implicit access to route by $namespace and $controller for profile roles ids ($id2 arrayref). Must return false for deny access or true - allow access to all actions of this controller.
 
-=item * B<access_action($namespace, $controller, $action, $id2)>
+=head2 access_action($namespace, $controller, $action, $id2)
 
 Check implicit access to route by $namespace and $controller and $action for profile roles ids ($id2 arrayref). Must return false for deny access or true - allow access to this action.
 
-=item * B<access_role($role, $id2)>
+=head2 access_role($role, $id2)
 
 Check implicit access to route by $role (id|name) and profile roles ids ($id2 arrayref). Must return false for deny access or true - allow access.
 
-=back
+=head2 auth_cookie($c, $cookie_value, $cookie_name)
+
+Returns C<< $c->cookie($cookie_name) >> unless $cookie_value.
+
+Returns authenticate profile for $cookie_value. I use this method for cordova mobile app then cookie lost on any reasons.
+
+C<< $cookie_name >> has defaults to C<< $c->app->sessions->cookie_name >>
 
 =head1 SEE ALSO
 

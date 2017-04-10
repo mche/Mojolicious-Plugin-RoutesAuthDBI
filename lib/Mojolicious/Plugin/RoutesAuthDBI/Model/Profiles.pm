@@ -1,7 +1,7 @@
 package Profile;
 use Mojo::Base -base;
 
-has [qw(roles)];
+has [qw(roles auth_cookie)];
 
 #==========
 # END Profie pkg

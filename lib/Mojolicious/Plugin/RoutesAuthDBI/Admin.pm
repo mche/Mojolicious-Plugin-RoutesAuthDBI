@@ -56,6 +56,12 @@ sub signout {
   
 }
 
+sub out {# выход с редиректом
+  my $c = shift;
+  $c->logout;
+  $c->redirect_to($c->param('redirect') || '/');
+}
+
 sub users {
   my $c = shift;
   
@@ -852,6 +858,7 @@ sub self_routes {# from plugin!
 #post /sign/in	sign	signin params	0	Auth by params
 /$prefix/sign/in/:login/:pass	sign	signin stash	0	Auth by stash
 /$prefix/sign/out	signout	go away	1	Exit
+/logout	out	logout	1	Exit and redirect
 #
 
 /$prefix/$trust/$role_admin/new/:login/:pass	trust_new_user	$prefix/$trust !trust create user!	0	Add new user by :login & :pass and auto assign to role 'Admin' and assign to access this controller!
@@ -883,7 +890,7 @@ TABLE
 
 =head1 WARN
 
-More or less complete!
+More or less complete! :)
 
 =head1 NAME
 
@@ -948,17 +955,18 @@ Examples options:
 
 =head1 METHODS NEEDS IN PLUGIN
 
-=over 4
+=head2 self_routes()
 
-=item * B<self_routes()> - builtin to this access controller routes. Return array of hashrefs routes records for apply route on app. Depends on conf options I<prefix> and I<trust>.
+Builtin to this admin controller routes. Return array of hashrefs routes records for apply route on app. Depends on conf options I<prefix> and I<trust>.
 
-=back
+
+=head1 ROUTES
+
+There are number of app routes on this controller. See in console C< $perl your-app.pl routes >. That routes will not apply then admin controller disabled.
 
 =head1 SEE ALSO
 
 L<Mojolicious::Plugin::RoutesAuthDBI>
-
-L<Mojolicious::Plugin::RoutesAuthDBI::Sth>
 
 =head1 AUTHOR
 
@@ -976,4 +984,3 @@ This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
 
 =cut
-

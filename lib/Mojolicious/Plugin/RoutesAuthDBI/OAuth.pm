@@ -228,9 +228,10 @@ sub _process_profile_tx {
   @$data{keys %$auth} = values %$auth;
   
   my @bind = (json_enc($data), $site->{id}, $auth->{uid} || $auth->{user_id} || $data->{uid} || $data->{id} || $data->{user_id});
+  
   my $oau = $Init->model->user(@bind);
   
-  return "Вход на сайт через [$site->{name}] пользователя #$oau->{user_id} уже используется. Невозможно привязать дважды. Можно <a href='/logout?redirect=/login/$site->{name}' class='relogin'>переключиться</a> на этот вход."
+  return "Вход на сайт через [$site->{name}] пользователя #$oau->{user_id} уже используется. Невозможно привязать дважды. Можно <a href='/logout?redirect=@{[$c->url_for('oauth-login', site=>$site->{name})]}' class='relogin'>переключиться</a> на этот вход."
     if $oau->{old} && $curr_profile;
   
   my $profile = 
@@ -242,6 +243,8 @@ sub _process_profile_tx {
         || $Init->plugin->model('Profiles')->new_profile([$data->{first_name} || $data->{given_name}, $data->{last_name} || $data->{family_name},]);
 
   my $r = $Init->plugin->model('Refs')->refer($profile->{id}, $oau->{id},);
+  
+  #~ $c->app->log->error("Связь профиль-внеш", $c->dumper($r), $c->dumper($profile), $c->dumper($oau));
       
   $c->authenticate(undef, undef, $profile) # session only store
     unless $curr_profile;
@@ -249,6 +252,7 @@ sub _process_profile_tx {
   return $profile;
   
 }
+
 
 sub oauth_profile {# получить по access_token
   my $c = shift;
@@ -260,9 +264,25 @@ sub oauth_profile {# получить по access_token
   return $c->render(json=>{ error=>"JSON data access_token not defined"})
     unless $auth->{'access_token'};
   
-  my $url = Mojo::URL->new($site->{profile_url})->query($c->${ \$site->{profile_query} }($auth));
+  #~ $c->curr_profile($c->auth_user);
+  #~ $c->session($session_key => $extradata->{auto_validate});
+  #~ $c->session($session_key => $uid);
   
-  $c->render_later;
+  $c->app->log->error($c->dumper([$c->stash->{'mojo.active_session'}, $c->stash->{'mojo.session'}]));
+  return $c->render(json=>{ error=> $c->session});
+  
+  
+  my $profile_query = $site->{profile_query};
+  #~ $c->app->log->error($c->dumper($site));
+  my $query = $c->$profile_query($auth);
+  #~ $c->app->log->error($c->dumper($query), $site->{profile_url});
+  
+  my $url = Mojo::URL->new($site->{profile_url})->query($query);
+  
+ #~ $c->render_later;
+  $c->delay(sub {
+    my $delay = shift;
+  
   $c->ua->get($url, sub {
     my ($ua, $tx) = @_;
     
@@ -270,17 +290,26 @@ sub oauth_profile {# получить по access_token
       
     return $c->render(json=>{ error=>$profile })
       unless ref $profile;
-    
-    return $c->render(json=>$profile);
+    # {"disable":null,"id":2457,"names":["Михаил","Ломов"],"ts":"2017-04-07 13:54:33.148705"}
+    my $ou = $Init->model->oauth_users_by_profile($profile->id);
+    my $oprofile = json_dec $ou->{$site_name}{profile};
+    delete @$oprofile{qw(user_id access_token expires_in token_type refresh_token)};
+    #~ my $profile = $oauth->;
+    #~ $delay->end
+    return $c->render(json=>$oprofile);
   });
+  })->wait;
   
 }
 
 sub detach {# отсоединить
   my $c = shift;
   my $site_name = $c->stash('site');
+  
+  my $is_post = uc($c->req->method) eq 'POST';
 
   my $site = $c->oauth2->providers->{$site_name}
+    or ($is_post && return $c->render(json=>{err=>"No such oauth provider [$site_name]"}))
     or return $c->render('profile/index', err=>"No such oauth provider [$site_name]");
   
   my $curr_profile = $c->curr_profile;
@@ -290,15 +319,17 @@ sub detach {# отсоединить
   
   $Init->plugin->model('Refs')->del($r->{ref_id}, undef, undef);
   
+  $is_post && return $c->render(json=>{success=>"detach [$site_name]"});
+  
   my $redirect = $c->param('redirect') || ($c->req->headers->referrer && Mojo::URL->new($c->req->headers->referrer)->path) || 'profile';
-  $c->redirect_to($redirect);
+  return $c->redirect_to($redirect);
 }
 
-sub out {# выход
-  my $c = shift;
-  $c->logout;
-  $c->redirect_to($c->param('redirect') || '/');
-}
+#~ sub out {# выход
+  #~ my $c = shift;
+  #~ $c->logout;
+  #~ $c->redirect_to($c->param('redirect') || '/');
+#~ }
 
 sub _routes {# from plugin!
   my $self = shift;
@@ -332,12 +363,12 @@ sub _routes {# from plugin!
     auth=>'only',
   },
   
-  {request =>'/logout',
-    namespace => $Init->namespace,
-    controller => $Init->controller,
-    action => 'out',
-    name => 'logout',
-  },
+  #~ {request =>'/logout',
+    #~ namespace => $Init->namespace,
+    #~ controller => $Init->controller,
+    #~ action => 'out',
+    #~ name => 'logout',
+  #~ },
   {request =>'/'.$Init->plugin->admin->trust."/oauth/conf",
     namespace => $Init->namespace,
     controller => $Init->controller,
@@ -363,17 +394,19 @@ sub oauth_data {
   my $ou = $Init->model->oauth_users_by_profile($uid);
   
   my @data = map {
-    delete @$_{qw(secret profile_query authorize_url token_url profile_url authorize_query scope)};
-    my $oauth = $ou->{$_->{name}} || {};# по имени сайта
+    my %site = %$_;
+    delete @site{qw(secret profile_query authorize_url token_url profile_url authorize_query scope)};
+    my $oauth = $ou->{$site{name}} || {};# по имени сайта
     my $profile = $oauth->{profile};
     
-    $_->{profile} = json_dec($profile)
-      and delete(@$oauth{qw(ts profile_ts)})
-      and delete (@{$_->{profile}}{qw(user_id access_token expires_in token_type refresh_token)})
+    $site{profile} = json_dec($profile)
+      #~ and delete(@$oauth{qw(ts profile_ts)})
+      and delete (@{$site{profile}}{qw(user_id access_token expires_in token_type refresh_token)})
       if $profile;
+    
     #~ $oauth->{site_name} ||= $_->{name};
     #~ $oauth; # || {}
-    $_;
+    \%site;
     
   } grep($_->{id}, values %{$c->oauth2->providers});
   
@@ -427,13 +460,15 @@ Hashref for key/value per each need provider. Required.
 
 See L<Mojolicious::Plugin::OAuth2>. But two additional parameters (keys of provider hash) are needs:
 
-=over 4
+=head4 profile_url
 
-=item * B<profile_url> abs url string to fetch profile info after success oauth.
+Abs url string to fetch profile info after success oauth.
 
   profile_url=> 'https://www.googleapis.com/oauth2/v1/userinfo',
 
-=item * B<profile_query> coderef which prepare additional query params for C<profile_url>
+=head4 profile_query
+
+Coderef which prepare additional query params for C<profile_url>
 
 Example for google:
 
@@ -448,8 +483,6 @@ Example for google:
 In: $auth hash ref with access_token.
 
 Out: hashref C<profile_url> query params.
-
-=back
 
 =head2 Defaults options for oauth:
 
@@ -469,9 +502,11 @@ disable oauth module
 
 This oauth controller routes. Return array of hashrefs routes records for apply route on app. Plugin internal use.
 
-=head1 Controller routes
+=head1 ROUTES
 
-=head2 /login/:site
+There are number of app routes on this controller:
+
+=head2 /oauth/login/:site
 
 Main route of this controller. Stash B<site> is the name of the hash key of the C<providers> config above. Example html link:
 
@@ -479,17 +514,27 @@ Main route of this controller. Stash B<site> is the name of the hash key of the 
 
 This route has builtin name 'oauth-login'. This route accept param 'redirect' and will use for $c->redirect_to after success oauith and also failed oauth clauses with param 'err'.
 
-=head2 /detach/:site
+=head2 /oauth/detach/:site
 
 Remove attached oauth user to profile. Stash B<site> and param 'redirect' as above. Route has builtin name 'oauth-detach'.
-
-=head2 /logout
-
-Clear session and redirect to param 'redirect' || '/'. This route has builtin name 'logout'. 
 
 =head2 /oauth/data
 
 Get remote oauth data site only configured.
+
+=head2 POST /oauth/profile/:site
+
+Usefull for cordova mobile app oauth connect.
+
+IN: json data C<{access_token=>"..."}> that got from oauth B<authorize_url> API request.
+
+OUT: stored remote oauth API profile.
+
+=head2 <trust admin option>/oauth/conf
+
+The L<Mojolicious::Plugin::RoutesAuthDBI::Admin/"trust"> option.
+
+Returns text dump current hash of L<Mojolicious::Plugin::OAuth2/"providers">.
 
 =head1 SEE ALSO
 
