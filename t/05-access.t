@@ -103,6 +103,8 @@ isnt $cookie =~ s/--([^\-]+)$//r, $cookie0 && $cookie0->value =~ s/--([^\-]+)$//
 $t->post_ok('/auth/cookie' => json => {cookie => $cookie}) #
   ->status_is(200);
 
+#~ $t->app->log->fatal($t->app->dumper($t->tx->res->headers));
+
 $t->json_like('/profile/auth_cookie' => qr'^(?:\w+)--(?:[^\-]+)$');
 
 my $cookie2 = $t->tx->res->cookie($t->app->sessions->cookie_name);

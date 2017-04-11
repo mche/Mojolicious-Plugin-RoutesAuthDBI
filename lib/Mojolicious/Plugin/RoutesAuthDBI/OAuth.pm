@@ -25,6 +25,7 @@ has _providers => sub {# default
           fields=>'photo_100',
         };
       },
+      profile_avatar =>'photo_100',
     },
     google=>{# обязательно redirect_url
       scope=>'profile',
@@ -36,6 +37,7 @@ has _providers => sub {# default
           access_token => $auth->{access_token},
         };
       },
+      profile_avatar =>'picture',
     },
     yandex=>{# обязательно redirect_url
       authorize_url=>"https://oauth.yandex.ru/authorize",
@@ -49,6 +51,8 @@ has _providers => sub {# default
           oauth_token=> $auth->{access_token},
         };
       },
+      # "default_avatar_id": "458/1266-1543797358",
+      profile_avatar =>'default_avatar_id',# appRoutes!!
     },
     mailru => {
       authorize_url=>"https://connect.mail.ru/oauth/authorize?response_type=code",
@@ -66,6 +70,7 @@ has _providers => sub {# default
         $param->{sig} = md5_hex map("$_=$param->{$_}", sort keys %$param), $Init->config->{mailru}{secret};
         $param;
       },
+      profile_avatar =>'pic_small',
 
     }
   }
@@ -231,7 +236,8 @@ sub _process_profile_tx {
   
   my $oau = $Init->model->user(@bind);
   
-  return "Вход на сайт через [$site->{name}] пользователя #$oau->{user_id} уже используется. Невозможно привязать дважды. Можно <a href='/logout?redirect=@{[$c->url_for('oauth-login', site=>$site->{name})]}' class='relogin'>переключиться</a> на этот вход."
+   $c->app->log->error("Конфликт использования внешнего профиля, уже привязан в другом профиле")
+    and return "Вход на сайт через [$site->{name}] пользователя #$oau->{user_id} уже используется. Невозможно привязать дважды. Можно <a href='/logout?redirect=@{[$c->url_for('oauth-login', site=>$site->{name})]}' class='relogin'>переключиться</a> на этот вход."
     if $oau->{old} && $curr_profile;
   
   my $profile = 
@@ -243,8 +249,6 @@ sub _process_profile_tx {
         || $Init->plugin->model('Profiles')->new_profile([$data->{first_name} || $data->{given_name}, $data->{last_name} || $data->{family_name},]);
 
   my $r = $Init->plugin->model('Refs')->refer($profile->{id}, $oau->{id},);
-  
-  #~ $c->app->log->error("Связь профиль-внеш", $c->dumper($r), $c->dumper($profile), $c->dumper($oau));
       
   $c->authenticate(undef, undef, $profile) # session only store
     unless $curr_profile;
@@ -264,41 +268,32 @@ sub oauth_profile {# получить по access_token
   return $c->render(json=>{ error=>"JSON data access_token not defined"})
     unless $auth->{'access_token'};
   
-  #~ $c->curr_profile($c->auth_user);
-  #~ $c->session($session_key => $extradata->{auto_validate});
-  #~ $c->session($session_key => $uid);
-  
-  $c->app->log->error($c->dumper([$c->stash->{'mojo.active_session'}, $c->stash->{'mojo.session'}]));
-  return $c->render(json=>{ error=> $c->session});
-  
-  
-  my $profile_query = $site->{profile_query};
-  #~ $c->app->log->error($c->dumper($site));
-  my $query = $c->$profile_query($auth);
-  #~ $c->app->log->error($c->dumper($query), $site->{profile_url});
-  
-  my $url = Mojo::URL->new($site->{profile_url})->query($query);
-  
- #~ $c->render_later;
-  $c->delay(sub {
-    my $delay = shift;
-  
-  $c->ua->get($url, sub {
-    my ($ua, $tx) = @_;
-    
-    my $profile = $c->_process_profile_tx($site, $auth, $tx);
+  $c->delay(
+    sub {# ну-ка профиль
+      my ($delay) = @_;
       
-    return $c->render(json=>{ error=>$profile })
-      unless ref $profile;
-    # {"disable":null,"id":2457,"names":["Михаил","Ломов"],"ts":"2017-04-07 13:54:33.148705"}
-    my $ou = $Init->model->oauth_users_by_profile($profile->id);
-    my $oprofile = json_dec $ou->{$site_name}{profile};
-    delete @$oprofile{qw(user_id access_token expires_in token_type refresh_token)};
-    #~ my $profile = $oauth->;
-    #~ $delay->end
-    return $c->render(json=>$oprofile);
-  });
-  })->wait;
+      my $url = Mojo::URL->new($site->{profile_url})->query($c->${ \$site->{profile_query} }($auth));
+      
+      $c->ua->get($url, $delay->begin);
+      #~ $delay->pass($auth);
+    },
+    sub {# профиль сайта получен
+      my ($delay, $tx,) = @_;
+      
+      my $profile = $c->_process_profile_tx($site, $auth, $tx);
+      
+      return $c->render(json=>{ error=>$profile })
+        unless ref $profile;
+      
+      $c->authenticate(undef, undef, $profile) # mobile app
+        unless $c->curr_profile;
+      
+      my $ou = $Init->model->oauth_users_by_profile($profile->{id});
+      my $oprofile = json_dec $ou->{$site_name}{profile};
+      delete @$oprofile{qw(user_id access_token expires_in token_type refresh_token id_token)};
+      $c->render(json=>$oprofile);
+    },
+  );
   
 }
 
@@ -360,7 +355,6 @@ sub _routes {# from plugin!
     controller=>$Init->controller,
     action => 'oauth_data',
     name => 'oauth data',
-    auth=>'only',
   },
   
   #~ {request =>'/logout',
@@ -390,19 +384,24 @@ sub conf {
 
 sub oauth_data {
   my $c = shift;
-  my $uid = $c->auth_user->{id};
-  my $ou = $Init->model->oauth_users_by_profile($uid);
+  my $uid = $c->curr_profile && $c->curr_profile->{id};
+  my $ou = $Init->model->oauth_users_by_profile($uid)
+    if $uid;
   
   my @data = map {
     my %site = %$_;
     delete @site{qw(secret profile_query authorize_url token_url profile_url authorize_query scope)};
-    my $oauth = $ou->{$site{name}} || {};# по имени сайта
-    my $profile = $oauth->{profile};
-    
-    $site{profile} = json_dec($profile)
-      #~ and delete(@$oauth{qw(ts profile_ts)})
-      and delete (@{$site{profile}}{qw(user_id access_token expires_in token_type refresh_token)})
-      if $profile;
+    if ($ou) {# already authenticate
+      my $oauth = $ou->{$site{name}} || {};# по имени сайта
+      my $profile = $oauth->{profile};
+      
+      $site{profile} = json_dec($profile)
+        #~ and delete(@$oauth{qw(ts profile_ts)})
+        and delete (@{$site{profile}}{qw(user_id access_token id_token expires_in token_type refresh_token)})
+        if $profile;
+    } else {# needs authenticate
+      #~ $site{authenticate}=1;
+    }
     
     #~ $oauth->{site_name} ||= $_->{name};
     #~ $oauth; # || {}

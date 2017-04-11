@@ -201,16 +201,32 @@ sub auth_cookie {
   #~ $c->app->log->fatal($c->dumper($c->stash->{'mojo.session'}), $c->stash->{'mojo.active_session'});
   #~ warn $c->auth_user || 'none auth';
   $c->authenticate(undef, undef, {id=> $profile_id}); # session only store
-  #~ 
+  #~ $c->app->sessions->store($c);
   #~ $c->app->log->fatal($c->dumper($c->stash->{'mojo.session'}), $c->stash->{'mojo.active_session'});
-  #~ $c->app->log->fatal($_->name, $_->{value}) for @{$c->req->cookies};
+  #~ $c->app->log->fatal($_->name, $_->{value}) for @{$c->res->cookies};
+  #~ $c->app->log->fatal( $c->dumper($c->res->cookies) );
+  #~ $c->app->log->fatal( $c->dumper($c->res->headers) );
+  #~ $c->res->headers->set_cookie('foo=bar; path=/');
+  
+  my $old_set_cookie = $c->res->headers->set_cookie;# && scalar @{$c->res->headers->{'set-cookie'}};
+  #~ $c->app->log->fatal( $c->dumper($old_set_cookie) );
   #~ $c->app->log->fatal($c->cookie('mojolicious'));
   $c->app->sessions->store($c);
+  #~ $c->app->log->fatal( $c->dumper( $c->res->headers->to_hash) );
+  #~ my $cc = scalar @{$c->res->cookies};
   #~ $c->app->log->fatal($c->cookie('mojolicious'));
   #~ $c->app->log->fatal($_->name, $_->value) for @{$c->res->cookies});
-  my $new_cookie = (grep($_->name eq $name, @{$c->res->cookies}))[0];
+  #~ my $new_cookie = (grep($_->name eq $name, @{$c->res->cookies}))[0];
+  my $new_cookie = pop @{$c->res->cookies};
+  #~ $c->app->log->fatal( $c->dumper($c->res->cookies) );
+  $c->res->headers->set_cookie($old_set_cookie // 'auth=ok; path=/');
+  #~ $set_cookie ? pop @{$c->res->headers->{'set-cookie'}} : delete $c->res->headers->{'set-cookie'};
+  #~ $c->app->log->fatal( $c->dumper($c->res->headers) );
+  #~ $c->app->log->fatal($c->dumper($c->stash->{'mojo.session'}), $c->stash->{'mojo.active_session'});
+  
   my $profile = $c->auth_user;
   $profile->auth_cookie($new_cookie->value)
+    #~ and unshift(@a,$x,$y)   splice(@{$c->res->cookies},0,0,$x,$y)
     if $new_cookie;
   
   return $profile;

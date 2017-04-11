@@ -857,8 +857,9 @@ sub self_routes {# from plugin!
 #get foo /sign/in	sign	signin form	0	Login&pass form
 #post /sign/in	sign	signin params	0	Auth by params
 /$prefix/sign/in/:login/:pass	sign	signin stash	0	Auth by stash
-/$prefix/sign/out	signout	go away	1	Exit
-/logout	out	logout	1	Exit and redirect
+/$prefix/sign/out	signout	go away	only	Exit
+/logout	out	logout	only	Exit and redirect
+/reauth/:cookie	auth_cookie	auth-cookie	0	Relogin by cookie
 #
 
 /$prefix/$trust/$role_admin/new/:login/:pass	trust_new_user	$prefix/$trust !trust create user!	0	Add new user by :login & :pass and auto assign to role 'Admin' and assign to access this controller!
@@ -876,6 +877,30 @@ TABLE
   }
   
   return @r;
+}
+
+sub auth_cookie {# action
+  my $c = shift;
+  my $json = $c->req->json;
+  
+  my ($cookie) = ($json && $json->{cookie})
+    || $c->vars('cookie');
+  
+  unless ($cookie) {
+    return $c->render(json=>{error=>"No cookie"})
+      if $json;
+    
+    return $c->render(text=>"Error: no cookie");
+    
+  }
+  
+  my $profile = { %{$c->access->auth_cookie($c, $cookie) || {error=>"none profile by given cookie [$cookie]"}} };
+  
+  return $c->render(json=>{profile=>$profile})
+    if $json;
+  
+  return $c->render(text=>"Success signed by cookie\n".$c->dumper($profile));
+  
 }
 
 1;
