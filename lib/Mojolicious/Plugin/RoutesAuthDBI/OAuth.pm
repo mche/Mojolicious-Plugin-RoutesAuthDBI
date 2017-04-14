@@ -92,6 +92,8 @@ has curr_profile => sub { shift->${ \$Init->plugin->merge_conf->{auth}{current_u
 
 has ua => sub {shift->app->ua->connect_timeout(30);};
 
+#~ sub curr_profile { shift->${ \$Init->plugin->merge_conf->{auth}{current_user_fn} };};
+
 sub init {# from plugin
   state $self = shift->SUPER::new(@_);
   
@@ -115,12 +117,12 @@ sub login {
   my $site_name = $c->stash('site');
 
   my $site = $c->oauth2->providers->{$site_name}
-    or return $c->redirect_to($c->url_for($referrer)->query(err=> "No such oauth provider [$site_name]"));
+    or return $c->redirect_to($c->url_for($referrer)->query(error=> "No such oauth provider [$site_name]"));
     #~ or return $c->render('profile/index', err=>);
   
   if (my @fatal = grep !defined $site->{$_}, qw(id key secret authorize_url token_url profile_url profile_query)) {
     #~ die "OAuth provider [$site_name] does not configured: [@fatal] is not defined";
-    return $c->redirect_to($c->url_for($referrer)->query(err=> "OAuth provider [$site_name] does not configured: [@fatal] is not defined"));
+    return $c->redirect_to($c->url_for($referrer)->query(error=> "OAuth provider [$site_name] does not configured: [@fatal] is not defined"));
   }
   
   my $curr_profile = $c->curr_profile;
@@ -128,10 +130,11 @@ sub login {
   my $r; $r = $Init->model->check_profile($curr_profile->{id}, $site->{id})
     and $c->app->log->warn("Попытка двойной авторизации сайта $site_name", $c->dumper($r), "профиль: ", $c->dumper($curr_profile),)
     #~ and return $c->redirect_to($c->url_for(${ delete $c->session->{oauth_init} }{redirect})->query(err=> "Уже есть авторизация сайта $site_name"))
-    and return $c->redirect_to($c->url_for($referrer)->query(err=> "Уже есть авторизация сайта $site_name"))
+    and return $c->redirect_to($c->url_for($referrer)->query(error=> "Уже есть авторизация сайта $site_name"))
     if $curr_profile;
   
   $c->session(oauth_init => {
+    site => $site_name,
     referrer => $referrer, # failback
     redirect => $redirect, # success
   })
@@ -153,7 +156,7 @@ sub login {
       
       $c->app->log->error("Автоизация $site_name:", $err, $c->dumper($auth))
         #~ and return $c->$fail_auth_cb()
-        and return $c->redirect_to($c->url_for(${ delete $c->session->{oauth_init} }{referrer})->query(err=> $err." Нет access_token"))
+        and return $c->redirect_to($c->url_for(${ delete $c->session->{oauth_init} }{referrer})->query(error=> $err." Нет access_token"))
         unless $auth->{access_token};
       
       my $url = Mojo::URL->new($site->{profile_url})->query($c->${ \$site->{profile_query} }($auth));
@@ -166,26 +169,30 @@ sub login {
       
       my $profile = $c->_process_profile_tx($site, $auth, $tx);
       
-      $c->session(oauth_err => $profile)
-        #~ and return $c->redirect_to($c->url_for(${ delete $c->session->{oauth_init} }{redirect}))#->query(err=> $profile)
+      #~ $c->session(oauth_err => $profile)
+        #~ and
+      my $oauth_init = delete $c->session->{oauth_init};
+      return $c->redirect_to($c->url_for($oauth_init->{referrer})->query(error=> $profile, site=>$oauth_init->{site}))#
         unless ref $profile;
 
-      #~ $c->app->log->debug("Профиль: ", $c->dumper($profile));
-      return $c->redirect_to($c->url_for(${ delete $c->session->{oauth_init} }{redirect}))#->query(err=> $profile)
+      return $c->redirect_to($c->url_for($oauth_init->{redirect}));#
       #~ $c->redirect_to(${ delete $c->session->{oauth_init} }{redirect});
     },
   ); # end delay
   
 }
 
-sub _process_profile_tx {
+sub _process_profile_tx {# $auth->{conflict} = 'old' нужен для мобильного приложения в редактировании привязок к сайтам, т.е. не допустить использования внешнего профиля привязанного в другом аккаунте
   my $c = shift;
   my ($site, $auth, $tx) = @_;
   my $curr_profile = $c->curr_profile;
+  if (my $auth_cookie = delete $auth->{auth_cookie}) {
+    $curr_profile ||= $c->access->auth_cookie($c, $auth_cookie);
+  }
   my ($data, $err) = $c->oauth2->process_tx($tx);
   $err .= json_enc($data->{error})
     if ref($data) eq 'HASH' && $data->{error};
-  $c->app->log->error("Профиль $site->{name}:", $err, $tx->req->url, $c->dumper($tx->res), $c->dumper($data),)
+  $c->app->log->error("Ошибка профиля сайта $site->{name}:", $err, $tx->req->url, $c->dumper($tx->res), $c->dumper($data),)
     and return $err
     if $err;
   
@@ -199,8 +206,9 @@ sub _process_profile_tx {
   
   my $oau = $Init->model->user(@bind);
   
-   $c->app->log->error("Конфликт использования внешнего профиля, уже привязан в другом профиле")
-    and return "Вход на сайт через [$site->{name}] пользователя #$oau->{user_id} уже используется. Невозможно привязать дважды. Можно <a href='/logout?redirect=@{[$c->url_for('oauth-login', site=>$site->{name})]}' class='relogin'>переключиться</a> на этот вход."
+  $c->app->log->error("Конфликт использования внешнего профиля, уже привязан в другом профиле")
+    #~ and return "Вход на сайт через [$site->{name}] пользователя #$oau->{user_id} уже используется. Невозможно привязать дважды. Можно <a href='/logout?redirect=@{[$c->url_for('oauth-login', site=>$site->{name})]}' class='relogin'>переключиться</a> на этот вход."
+    and return 'CONFLICT'
     if $oau->{old} && $curr_profile;
   
   my $profile = 
@@ -210,11 +218,12 @@ sub _process_profile_tx {
         || $Init->model->profile($oau->{id}) # по внешнему профилю получить наш профиль
 
         || $Init->plugin->model('Profiles')->new_profile([$data->{first_name} || $data->{given_name}, $data->{last_name} || $data->{family_name},]);
-
-  my $r = $Init->plugin->model('Refs')->refer($profile->{id}, $oau->{id},);
-      
+  
+  
   $c->authenticate(undef, undef, $profile) # session only store
     unless $curr_profile;
+  
+  my $r = $Init->plugin->model('Refs')->refer($profile->{id}, $oau->{id},);
   
   return $profile;
   
@@ -248,8 +257,8 @@ sub oauth_profile {# получить по access_token
       return $c->render(json=>{ error=>$profile })
         unless ref $profile;
       
-      $c->authenticate(undef, undef, $profile) # mobile app
-        unless $c->curr_profile;
+      #~ $c->authenticate(undef, undef, $profile) # mobile app
+        #~ unless $c->curr_profile;
       
       my $ou = $Init->model->oauth_users_by_profile($profile->{id});
       my $oprofile = json_dec $ou->{$site_name}{profile};
@@ -262,13 +271,15 @@ sub oauth_profile {# получить по access_token
 
 sub detach {# отсоединить
   my $c = shift;
+  my $referrer =  $c->req->headers->referrer && Mojo::URL->new($c->req->headers->referrer)->path || 'profile';
+  my $redirect = $c->param('redirect') || $referrer;
   my $site_name = $c->stash('site');
   
   my $is_post = uc($c->req->method) eq 'POST';
 
   my $site = $c->oauth2->providers->{$site_name}
-    or ($is_post && return $c->render(json=>{err=>"No such oauth provider [$site_name]"}))
-    or return $c->render('profile/index', err=>"No such oauth provider [$site_name]");
+    or ($is_post && return $c->render(json=>{error =>"No such oauth provider [$site_name]"}))
+    or return $c->redirect_to($c->url_for($referrer)->query(error => "No such oauth provider [$site_name]"));
   
   my $curr_profile = $c->curr_profile;
   
@@ -279,7 +290,7 @@ sub detach {# отсоединить
   
   $is_post && return $c->render(json=>{success=>"detach [$site_name]"});
   
-  my $redirect = $c->param('redirect') || ($c->req->headers->referrer && Mojo::URL->new($c->req->headers->referrer)->path) || 'profile';
+  #~ my $redirect = $c->param('redirect') || ($c->req->headers->referrer && Mojo::URL->new($c->req->headers->referrer)->path) || 'profile';
   return $c->redirect_to($redirect);
 }
 
