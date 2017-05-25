@@ -142,7 +142,7 @@ CREATE TABLE "{%= $schema %}"."{%= $tables->{routes} %}" (
   descr text null,
   auth varchar null,
   -- was bit(1): alter table "{%= $schema %}"."{%= $tables->{routes} %}" alter column auth type varchar;
-  disable bit(1) null,
+  disable boolean null,
   -- interval_ts - смещение ts (seconds) для приоритета маршрута, т.е. влияет на сортровку маршрутов
   interval_ts int null
   -- was order_by int null; alter table "{%= $schema %}"."{%= $tables->{routes} %}" rename column order_by to interval_ts;
@@ -188,7 +188,7 @@ create table "{%= $schema %}"."{%= $tables->{logins} %}" (
   ts timestamp without time zone default now() not null,
   login varchar not null unique,
   pass varchar not null,
-  disable bit(1)
+  disable boolean
 );
 
 @@ profiles
@@ -197,7 +197,7 @@ create table "{%= $schema %}"."{%= $tables->{profiles} %}" (
   id int default nextval('{%= $sequence %}'::regclass) not null  primary key,
   ts timestamp without time zone default now() not null,
   names text[] not null,
-  disable bit(1)
+  disable boolean
 );
 
 @@ roles
@@ -206,7 +206,7 @@ create table "{%= $schema %}"."{%= $tables->{roles} %}" (
   id int default nextval('{%= $sequence %}'::regclass) not null  primary key,
   ts timestamp without time zone default now() not null,
   name varchar not null unique,
-  disable bit(1)
+  disable boolean
 );
 
 @@ refs
