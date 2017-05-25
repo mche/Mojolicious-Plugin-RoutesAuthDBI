@@ -90,6 +90,11 @@ sub apply_route {# meth in Plugin
   #~ $nr->over(authenticated=>$r_hash->{auth});
   # STEP ACCESS
   $nr->over(access => $r_hash);
+  $nr->over(host => qr/$r_hash->{host_re}/)
+    if $r_hash->{host_re};
+  $nr->over(host => $r_hash->{host})
+    if $r_hash->{host};
+  
   
 # Controller and action in Mojolicious::Routes::Route->to
     #~ elsif ($shortcut =~ /^([\w\-:]+)?\#(\w+)?$/) {

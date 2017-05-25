@@ -35,7 +35,7 @@ sub new_route {
 
 __DATA__
 @@ role routes
-%# Маршруты роли/действия
+-- Маршруты роли/действия
 select t.*
 from
   "{%= $schema %}"."{%= $tables->{routes} %}" t
@@ -46,7 +46,7 @@ where r.id2=?;
 --- Генерация маршрутов приложения
 select r.*, coalesce(ac.controller, c.controller) as controller, coalesce(ac.namespace, c.namespace) as namespace, ac.action, ac.callback, ac.id as action_id, coalesce(ac.controller_id, c.id) as controller_id, coalesce(ac.namespace_id, c.namespace_id) as namespace_id
 from "{%= $schema %}"."{%= $tables->{routes} %}" r
-%#  join "{%= $schema %}"."{%= $tables->{refs} %}" rf on r.id=rf.id2
+---  join "{%= $schema %}"."{%= $tables->{refs} %}" rf on r.id=rf.id2
   left join ( -- связь действие-маршрут
     select a.*, c.*, r.id2 as "ref_route_action"
     from 
@@ -73,7 +73,7 @@ from "{%= $schema %}"."{%= $tables->{routes} %}" r
 order by r.ts - (coalesce(r.interval_ts, 0::int)::varchar || ' second')::interval;
 
 @@ action routes
-%# маршрут может быть не привязан к действию
+-- маршрут может быть не привязан к действию
 select * from (
 select r.*, s.action_id
 from "{%= $schema %}"."{%= $tables->{routes} %}" r
@@ -87,7 +87,7 @@ from "{%= $schema %}"."{%= $tables->{routes} %}" r
 ;
 
 @@ new route
-insert into "{%= $schema %}"."{%= $tables->{routes} %}" (request, "to", name, descr, auth, disable, interval_ts)
-values (?,?,?,?,?,?,?)
+insert into "{%= $schema %}"."{%= $tables->{routes} %}" (request, host_re, "to", name, descr, auth, disable, interval_ts)
+values (?,?,?,?,?,?,?,?)
 returning *;
 
