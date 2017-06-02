@@ -61,11 +61,11 @@ DIRFILESEP = /
 DFSEP = $(DIRFILESEP)
 NAME = Mojolicious::Plugin::RoutesAuthDBI
 NAME_SYM = Mojolicious_Plugin_RoutesAuthDBI
-VERSION = 0.830
+VERSION = 0.831
 VERSION_MACRO = VERSION
-VERSION_SYM = 0_830
+VERSION_SYM = 0_831
 DEFINE_VERSION = -D$(VERSION_MACRO)=\"$(VERSION)\"
-XS_VERSION = 0.830
+XS_VERSION = 0.831
 XS_VERSION_MACRO = XS_VERSION
 XS_DEFINE_VERSION = -D$(XS_VERSION_MACRO)=\"$(XS_VERSION)\"
 INST_ARCHLIB = blib/arch
@@ -335,7 +335,7 @@ RCS_LABEL = rcs -Nv$(VERSION_SYM): -q
 DIST_CP = best
 DIST_DEFAULT = tardist
 DISTNAME = Mojolicious-Plugin-RoutesAuthDBI
-DISTVNAME = Mojolicious-Plugin-RoutesAuthDBI-0.830
+DISTVNAME = Mojolicious-Plugin-RoutesAuthDBI-0.831
 
 
 # --- MakeMaker macro section:
@@ -646,7 +646,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '  Mojolicious::Plugin::Authentication: '\''1.29'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Mojolicious::Plugin::OAuth2::Che: '\''1.539'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  perl: '\''5.014'\''' >> META_new.yml
-	$(NOECHO) $(ECHO) 'version: '\''0.830'\''' >> META_new.yml
+	$(NOECHO) $(ECHO) 'version: '\''0.831'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) 'x_serialization_backend: '\''CPAN::Meta::YAML version 0.018'\''' >> META_new.yml
 	-$(NOECHO) $(MV) META_new.yml $(DISTVNAME)/META.yml
 	$(NOECHO) $(ECHO) Generating META.json
@@ -695,7 +695,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '      }' >> META_new.json
 	$(NOECHO) $(ECHO) '   },' >> META_new.json
 	$(NOECHO) $(ECHO) '   "release_status" : "stable",' >> META_new.json
-	$(NOECHO) $(ECHO) '   "version" : "0.830",' >> META_new.json
+	$(NOECHO) $(ECHO) '   "version" : "0.831",' >> META_new.json
 	$(NOECHO) $(ECHO) '   "x_serialization_backend" : "JSON::PP version 2.27400_02"' >> META_new.json
 	$(NOECHO) $(ECHO) '}' >> META_new.json
 	-$(NOECHO) $(MV) META_new.json $(DISTVNAME)/META.json
@@ -1005,7 +1005,7 @@ testdb_static :: static pure_all
 # --- MakeMaker ppd section:
 # Creates a PPD (Perl Package Description) for a binary distribution.
 ppd :
-	$(NOECHO) $(ECHO) '<SOFTPKG NAME="Mojolicious-Plugin-RoutesAuthDBI" VERSION="0.830">' > Mojolicious-Plugin-RoutesAuthDBI.ppd
+	$(NOECHO) $(ECHO) '<SOFTPKG NAME="Mojolicious-Plugin-RoutesAuthDBI" VERSION="0.831">' > Mojolicious-Plugin-RoutesAuthDBI.ppd
 	$(NOECHO) $(ECHO) '    <ABSTRACT>from DBI tables does generate routes, make authentication and make restrict access (authorization) to app routes.</ABSTRACT>' >> Mojolicious-Plugin-RoutesAuthDBI.ppd
 	$(NOECHO) $(ECHO) '    <AUTHOR>Mikhail Che &lt;mche@cpan.org&gt;</AUTHOR>' >> Mojolicious-Plugin-RoutesAuthDBI.ppd
 	$(NOECHO) $(ECHO) '    <IMPLEMENTATION>' >> Mojolicious-Plugin-RoutesAuthDBI.ppd

@@ -90,12 +90,9 @@ sub apply_route {# meth in Plugin
   #~ $nr->over(authenticated=>$r_hash->{auth});
   # STEP ACCESS
   $nr->over(access => $r_hash);
-  my $host = eval ($r_hash->{host_re} || $r_hash->{host});
+  my $host = eval {$r_hash->{host_re} || $r_hash->{host}};
   $nr->over(host => $host)
     if $host;
-  $nr->over(host => $r_hash->{host})
-    if ;
-  
   
 # Controller and action in Mojolicious::Routes::Route->to
     #~ elsif ($shortcut =~ /^([\w\-:]+)?\#(\w+)?$/) {
@@ -103,17 +100,15 @@ sub apply_route {# meth in Plugin
       #~ $defaults{action}     = $2 if defined $2;
     #~ }
     
-  my %ns = (namespace => $r_hash->{namespace})
-    if $r_hash->{namespace};
-  my %controll = (controller=>$r_hash->{controller},)
-    if $r_hash->{controller};
+  my @to = $r_hash->{namespace} ? (namespace => $r_hash->{namespace}) : (), 
+    $r_hash->{controller} ? (controller=>$r_hash->{controller},) : ();
 
   if ($r_hash->{to}) {
-    $nr->to($r_hash->{to}, %controll, %ns); 
+    $nr->to($r_hash->{to}, @to); 
   } elsif ( $r_hash->{action} ) {
     
-    if ( $r_hash->{action} =~ /#/ ) { $nr->to($r_hash->{action}, %controll, %ns); }
-    else { $nr->to( action => $r_hash->{action}, %controll, %ns,); }
+    if ( $r_hash->{action} =~ /#/ ) { $nr->to($r_hash->{action}, @to); }
+    else { $nr->to( action => $r_hash->{action}, @to,); }
     
   } elsif ( $r_hash->{callback} ) {
     

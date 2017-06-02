@@ -139,6 +139,7 @@ CREATE TABLE "{%= $schema %}"."{%= $tables->{routes} %}" (
   request character varying not null unique, -- 'get /foo/bar/:x'
   host_re character varying, --regexp for HeaderCondition plugin
   "to" character varying, -- 'Foo#bar'
+  "namespace" character varying,
   name character varying not null unique,
   descr text null,
   auth varchar null,
