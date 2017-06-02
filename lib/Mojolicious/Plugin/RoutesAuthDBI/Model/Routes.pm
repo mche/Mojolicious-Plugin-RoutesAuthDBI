@@ -70,6 +70,7 @@ from "{%= $schema %}"."{%= $tables->{routes} %}" r
       left join "{%= $schema %}"."{%= $tables->{namespaces} %}" n on n.id=r2.id1
     
   ) c on r.id=c."ref_route_controller"
+--- where not coalesce(r.disable, false)
 order by r.ts - (coalesce(r.interval_ts, 0::int)::varchar || ' second')::interval;
 
 @@ action routes

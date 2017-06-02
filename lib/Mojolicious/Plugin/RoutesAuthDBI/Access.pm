@@ -90,10 +90,11 @@ sub apply_route {# meth in Plugin
   #~ $nr->over(authenticated=>$r_hash->{auth});
   # STEP ACCESS
   $nr->over(access => $r_hash);
-  $nr->over(host => qr/$r_hash->{host_re}/)
-    if $r_hash->{host_re};
+  my $host = eval ($r_hash->{host_re} || $r_hash->{host});
+  $nr->over(host => $host)
+    if $host;
   $nr->over(host => $r_hash->{host})
-    if $r_hash->{host};
+    if ;
   
   
 # Controller and action in Mojolicious::Routes::Route->to
