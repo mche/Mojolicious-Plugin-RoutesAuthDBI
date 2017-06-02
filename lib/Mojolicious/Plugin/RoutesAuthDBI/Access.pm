@@ -100,8 +100,8 @@ sub apply_route {# meth in Plugin
       #~ $defaults{action}     = $2 if defined $2;
     #~ }
     
-  my @to = $r_hash->{namespace} ? (namespace => $r_hash->{namespace}) : (), 
-    $r_hash->{controller} ? (controller=>$r_hash->{controller},) : ();
+  my @to = ($r_hash->{namespace} ? ("namespace" => $r_hash->{namespace}) : (), 
+    $r_hash->{controller} ? ("controller"=>$r_hash->{controller},) : ());
 
   if ($r_hash->{to}) {
     $nr->to($r_hash->{to}, @to); 
@@ -122,7 +122,7 @@ sub apply_route {# meth in Plugin
   }
   $nr->name($r_hash->{name})
     if $r_hash->{name};
-  #~ $self->app->log->debug("$pkg generate the route from data row [@{[$self->app->dumper($r_hash) =~ s/\n/ /gr]}]");
+  $self->app->log->debug("Apply DBI route [$r_hash->{request}] ". $self->app->dumper($nr->pattern->defaults) =~ s/\s*\n+\s*//gr);
   return $nr;
 }
 
