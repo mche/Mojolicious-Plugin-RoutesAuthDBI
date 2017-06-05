@@ -135,7 +135,7 @@ sub routes {
 sub access_explicit {# i.e. by refs table
   my ($self, $id1, $id2,) = @_;
   my $r = $self->plugin->model('Refs')->exists($id1, $id2);
-  $self->app->log->debug("Test access_explicit: ", $r);
+  #~ $self->app->log->debug("Test access_explicit: ", $r);
   return $r;
 }
 

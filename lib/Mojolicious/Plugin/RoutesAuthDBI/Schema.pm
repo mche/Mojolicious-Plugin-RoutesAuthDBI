@@ -208,6 +208,7 @@ create table "{%= $schema %}"."{%= $tables->{roles} %}" (
   id int default nextval('{%= $sequence %}'::regclass) not null  primary key,
   ts timestamp without time zone default now() not null,
   name varchar not null unique,
+  descr text,
   disable boolean
 );
 
