@@ -122,7 +122,8 @@ sub apply_route {# meth in Plugin
   }
   $nr->name($r_hash->{name})
     if $r_hash->{name};
-  $self->app->log->debug("Apply DBI route [$r_hash->{request}] ". $self->app->dumper($nr->pattern->defaults) =~ s/\s*\n+\s*//gr);
+  $self->app->log->debug("Apply DBI route [$r_hash->{request}] ". $self->app->dumper($nr->pattern->defaults) =~ s/\s*
+  \n+\s*//gr);
   return $nr;
 }
 
@@ -133,7 +134,9 @@ sub routes {
 
 sub access_explicit {# i.e. by refs table
   my ($self, $id1, $id2,) = @_;
-  return scalar $self->plugin->model('Refs')->cnt($id1, $id2);
+  my $r = $self->plugin->model('Refs')->exists($id1, $id2);
+  $self->app->log->debug("Test access_explicit: ", $r);
+  return $r;
 }
 
 
