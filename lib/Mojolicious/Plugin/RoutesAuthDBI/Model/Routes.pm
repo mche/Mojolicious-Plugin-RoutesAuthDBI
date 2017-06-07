@@ -71,7 +71,9 @@ from "{%= $schema %}"."{%= $tables->{routes} %}" r
     
   ) c on r.id=c."ref_route_controller"
 --- where not coalesce(r.disable, false)
-order by r.ts - (coalesce(r.interval_ts, 0::int)::varchar || ' second')::interval;
+order by regexp_replace(r.request, '^.* ', '') ---r.ts - (coalesce(r.interval_ts, 0::int)::varchar || ' second')::interval
+
+;
 
 @@ action routes
 -- маршрут может быть не привязан к действию
