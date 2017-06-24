@@ -108,7 +108,7 @@ WITH RECURSIVE rc AS (
   where r.id2=? --- profile id
 )
 
-select distinct g.*
+select distinct g.id, g.name
 from 
   pr
   join rc on pr.id=rc.id
