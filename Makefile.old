@@ -29,7 +29,7 @@
 
 # --- MakeMaker const_config section:
 
-# These definitions are from config.sh (via /home/guest/perl5/perlbrew/perls/perl-5.25.11/lib/5.25.11/x86_64-linux/Config.pm).
+# These definitions are from config.sh (via /home/guest/perl5/perlbrew/perls/perl-5.26.1/lib/5.26.1/x86_64-linux/Config.pm).
 # They may have been overridden via Makefile.PL or on the command line.
 AR = ar
 CC = cc
@@ -42,14 +42,14 @@ FULL_AR = /usr/bin/ar
 LD = cc
 LDDLFLAGS = -shared -O2 -L/usr/local/lib -fstack-protector-strong
 LDFLAGS =  -fstack-protector-strong -L/usr/local/lib
-LIBC = libc-2.23.so
+LIBC = libc-2.25.so
 LIB_EXT = .a
 OBJ_EXT = .o
 OSNAME = linux
-OSVERS = 4.4.39-calculate
+OSVERS = 4.9.51-calculate
 RANLIB = :
-SITELIBEXP = /home/guest/perl5/perlbrew/perls/perl-5.25.11/lib/site_perl/5.25.11
-SITEARCHEXP = /home/guest/perl5/perlbrew/perls/perl-5.25.11/lib/site_perl/5.25.11/x86_64-linux
+SITELIBEXP = /home/guest/perl5/perlbrew/perls/perl-5.26.1/lib/site_perl/5.26.1
+SITEARCHEXP = /home/guest/perl5/perlbrew/perls/perl-5.26.1/lib/site_perl/5.26.1/x86_64-linux
 SO = so
 VENDORARCHEXP = 
 VENDORLIBEXP = 
@@ -61,11 +61,11 @@ DIRFILESEP = /
 DFSEP = $(DIRFILESEP)
 NAME = Mojolicious::Plugin::RoutesAuthDBI
 NAME_SYM = Mojolicious_Plugin_RoutesAuthDBI
-VERSION = 0.840
+VERSION = 0.841
 VERSION_MACRO = VERSION
-VERSION_SYM = 0_840
+VERSION_SYM = 0_841
 DEFINE_VERSION = -D$(VERSION_MACRO)=\"$(VERSION)\"
-XS_VERSION = 0.840
+XS_VERSION = 0.841
 XS_VERSION_MACRO = XS_VERSION
 XS_DEFINE_VERSION = -D$(XS_VERSION_MACRO)=\"$(XS_VERSION)\"
 INST_ARCHLIB = blib/arch
@@ -79,57 +79,57 @@ MAN3EXT = 3
 INSTALLDIRS = site
 DESTDIR = 
 PREFIX = $(SITEPREFIX)
-PERLPREFIX = /home/guest/perl5/perlbrew/perls/perl-5.25.11
-SITEPREFIX = /home/guest/perl5/perlbrew/perls/perl-5.25.11
+PERLPREFIX = /home/guest/perl5/perlbrew/perls/perl-5.26.1
+SITEPREFIX = /home/guest/perl5/perlbrew/perls/perl-5.26.1
 VENDORPREFIX = 
-INSTALLPRIVLIB = /home/guest/perl5/perlbrew/perls/perl-5.25.11/lib/5.25.11
+INSTALLPRIVLIB = /home/guest/perl5/perlbrew/perls/perl-5.26.1/lib/5.26.1
 DESTINSTALLPRIVLIB = $(DESTDIR)$(INSTALLPRIVLIB)
-INSTALLSITELIB = /home/guest/perl5/perlbrew/perls/perl-5.25.11/lib/site_perl/5.25.11
+INSTALLSITELIB = /home/guest/perl5/perlbrew/perls/perl-5.26.1/lib/site_perl/5.26.1
 DESTINSTALLSITELIB = $(DESTDIR)$(INSTALLSITELIB)
 INSTALLVENDORLIB = 
 DESTINSTALLVENDORLIB = $(DESTDIR)$(INSTALLVENDORLIB)
-INSTALLARCHLIB = /home/guest/perl5/perlbrew/perls/perl-5.25.11/lib/5.25.11/x86_64-linux
+INSTALLARCHLIB = /home/guest/perl5/perlbrew/perls/perl-5.26.1/lib/5.26.1/x86_64-linux
 DESTINSTALLARCHLIB = $(DESTDIR)$(INSTALLARCHLIB)
-INSTALLSITEARCH = /home/guest/perl5/perlbrew/perls/perl-5.25.11/lib/site_perl/5.25.11/x86_64-linux
+INSTALLSITEARCH = /home/guest/perl5/perlbrew/perls/perl-5.26.1/lib/site_perl/5.26.1/x86_64-linux
 DESTINSTALLSITEARCH = $(DESTDIR)$(INSTALLSITEARCH)
 INSTALLVENDORARCH = 
 DESTINSTALLVENDORARCH = $(DESTDIR)$(INSTALLVENDORARCH)
-INSTALLBIN = /home/guest/perl5/perlbrew/perls/perl-5.25.11/bin
+INSTALLBIN = /home/guest/perl5/perlbrew/perls/perl-5.26.1/bin
 DESTINSTALLBIN = $(DESTDIR)$(INSTALLBIN)
-INSTALLSITEBIN = /home/guest/perl5/perlbrew/perls/perl-5.25.11/bin
+INSTALLSITEBIN = /home/guest/perl5/perlbrew/perls/perl-5.26.1/bin
 DESTINSTALLSITEBIN = $(DESTDIR)$(INSTALLSITEBIN)
 INSTALLVENDORBIN = 
 DESTINSTALLVENDORBIN = $(DESTDIR)$(INSTALLVENDORBIN)
-INSTALLSCRIPT = /home/guest/perl5/perlbrew/perls/perl-5.25.11/bin
+INSTALLSCRIPT = /home/guest/perl5/perlbrew/perls/perl-5.26.1/bin
 DESTINSTALLSCRIPT = $(DESTDIR)$(INSTALLSCRIPT)
-INSTALLSITESCRIPT = /home/guest/perl5/perlbrew/perls/perl-5.25.11/bin
+INSTALLSITESCRIPT = /home/guest/perl5/perlbrew/perls/perl-5.26.1/bin
 DESTINSTALLSITESCRIPT = $(DESTDIR)$(INSTALLSITESCRIPT)
 INSTALLVENDORSCRIPT = 
 DESTINSTALLVENDORSCRIPT = $(DESTDIR)$(INSTALLVENDORSCRIPT)
-INSTALLMAN1DIR = /home/guest/perl5/perlbrew/perls/perl-5.25.11/man/man1
+INSTALLMAN1DIR = /home/guest/perl5/perlbrew/perls/perl-5.26.1/man/man1
 DESTINSTALLMAN1DIR = $(DESTDIR)$(INSTALLMAN1DIR)
-INSTALLSITEMAN1DIR = /home/guest/perl5/perlbrew/perls/perl-5.25.11/man/man1
+INSTALLSITEMAN1DIR = /home/guest/perl5/perlbrew/perls/perl-5.26.1/man/man1
 DESTINSTALLSITEMAN1DIR = $(DESTDIR)$(INSTALLSITEMAN1DIR)
 INSTALLVENDORMAN1DIR = 
 DESTINSTALLVENDORMAN1DIR = $(DESTDIR)$(INSTALLVENDORMAN1DIR)
-INSTALLMAN3DIR = /home/guest/perl5/perlbrew/perls/perl-5.25.11/man/man3
+INSTALLMAN3DIR = /home/guest/perl5/perlbrew/perls/perl-5.26.1/man/man3
 DESTINSTALLMAN3DIR = $(DESTDIR)$(INSTALLMAN3DIR)
-INSTALLSITEMAN3DIR = /home/guest/perl5/perlbrew/perls/perl-5.25.11/man/man3
+INSTALLSITEMAN3DIR = /home/guest/perl5/perlbrew/perls/perl-5.26.1/man/man3
 DESTINSTALLSITEMAN3DIR = $(DESTDIR)$(INSTALLSITEMAN3DIR)
 INSTALLVENDORMAN3DIR = 
 DESTINSTALLVENDORMAN3DIR = $(DESTDIR)$(INSTALLVENDORMAN3DIR)
-PERL_LIB = /home/guest/perl5/perlbrew/perls/perl-5.25.11/lib/5.25.11
-PERL_ARCHLIB = /home/guest/perl5/perlbrew/perls/perl-5.25.11/lib/5.25.11/x86_64-linux
-PERL_ARCHLIBDEP = /home/guest/perl5/perlbrew/perls/perl-5.25.11/lib/5.25.11/x86_64-linux
+PERL_LIB = /home/guest/perl5/perlbrew/perls/perl-5.26.1/lib/5.26.1
+PERL_ARCHLIB = /home/guest/perl5/perlbrew/perls/perl-5.26.1/lib/5.26.1/x86_64-linux
+PERL_ARCHLIBDEP = /home/guest/perl5/perlbrew/perls/perl-5.26.1/lib/5.26.1/x86_64-linux
 LIBPERL_A = libperl.a
 FIRST_MAKEFILE = Makefile
 MAKEFILE_OLD = Makefile.old
 MAKE_APERL_FILE = Makefile.aperl
 PERLMAINCC = $(CC)
-PERL_INC = /home/guest/perl5/perlbrew/perls/perl-5.25.11/lib/5.25.11/x86_64-linux/CORE
-PERL_INCDEP = /home/guest/perl5/perlbrew/perls/perl-5.25.11/lib/5.25.11/x86_64-linux/CORE
-PERL = "/home/guest/perl5/perlbrew/perls/perl-5.25.11/bin/perl5.25.11"
-FULLPERL = "/home/guest/perl5/perlbrew/perls/perl-5.25.11/bin/perl5.25.11"
+PERL_INC = /home/guest/perl5/perlbrew/perls/perl-5.26.1/lib/5.26.1/x86_64-linux/CORE
+PERL_INCDEP = /home/guest/perl5/perlbrew/perls/perl-5.26.1/lib/5.26.1/x86_64-linux/CORE
+PERL = "/home/guest/perl5/perlbrew/perls/perl-5.26.1/bin/perl"
+FULLPERL = "/home/guest/perl5/perlbrew/perls/perl-5.26.1/bin/perl"
 ABSPERL = $(PERL)
 PERLRUN = $(PERL)
 FULLPERLRUN = $(FULLPERL)
@@ -142,7 +142,7 @@ PERM_DIR = 755
 PERM_RW = 644
 PERM_RWX = 755
 
-MAKEMAKER   = /home/guest/perl5/perlbrew/perls/perl-5.25.11/lib/5.25.11/ExtUtils/MakeMaker.pm
+MAKEMAKER   = /home/guest/perl5/perlbrew/perls/perl-5.26.1/lib/5.26.1/ExtUtils/MakeMaker.pm
 MM_VERSION  = 7.24
 MM_REVISION = 72400
 
@@ -335,7 +335,7 @@ RCS_LABEL = rcs -Nv$(VERSION_SYM): -q
 DIST_CP = best
 DIST_DEFAULT = tardist
 DISTNAME = Mojolicious-Plugin-RoutesAuthDBI
-DISTVNAME = Mojolicious-Plugin-RoutesAuthDBI-0.840
+DISTVNAME = Mojolicious-Plugin-RoutesAuthDBI-0.841
 
 
 # --- MakeMaker macro section:
@@ -646,7 +646,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '  Mojolicious::Plugin::Authentication: '\''1.29'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Mojolicious::Plugin::OAuth2::Che: '\''1.539'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  perl: '\''5.014'\''' >> META_new.yml
-	$(NOECHO) $(ECHO) 'version: '\''0.840'\''' >> META_new.yml
+	$(NOECHO) $(ECHO) 'version: '\''0.841'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) 'x_serialization_backend: '\''CPAN::Meta::YAML version 0.018'\''' >> META_new.yml
 	-$(NOECHO) $(MV) META_new.yml $(DISTVNAME)/META.yml
 	$(NOECHO) $(ECHO) Generating META.json
@@ -695,7 +695,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '      }' >> META_new.json
 	$(NOECHO) $(ECHO) '   },' >> META_new.json
 	$(NOECHO) $(ECHO) '   "release_status" : "stable",' >> META_new.json
-	$(NOECHO) $(ECHO) '   "version" : "0.840",' >> META_new.json
+	$(NOECHO) $(ECHO) '   "version" : "0.841",' >> META_new.json
 	$(NOECHO) $(ECHO) '   "x_serialization_backend" : "JSON::PP version 2.27400_02"' >> META_new.json
 	$(NOECHO) $(ECHO) '}' >> META_new.json
 	-$(NOECHO) $(MV) META_new.json $(DISTVNAME)/META.json
@@ -953,8 +953,8 @@ $(FIRST_MAKEFILE) : Makefile.PL $(CONFIGDEP)
 
 # --- MakeMaker makeaperl section ---
 MAP_TARGET    = perl
-FULLPERL      = "/home/guest/perl5/perlbrew/perls/perl-5.25.11/bin/perl5.25.11"
-MAP_PERLINC   = "-Iblib/arch" "-Iblib/lib" "-I/home/guest/perl5/perlbrew/perls/perl-5.25.11/lib/5.25.11/x86_64-linux" "-I/home/guest/perl5/perlbrew/perls/perl-5.25.11/lib/5.25.11"
+FULLPERL      = "/home/guest/perl5/perlbrew/perls/perl-5.26.1/bin/perl"
+MAP_PERLINC   = "-Iblib/arch" "-Iblib/lib" "-I/home/guest/perl5/perlbrew/perls/perl-5.26.1/lib/5.26.1/x86_64-linux" "-I/home/guest/perl5/perlbrew/perls/perl-5.26.1/lib/5.26.1"
 
 $(MAP_TARGET) :: $(MAKE_APERL_FILE)
 	$(MAKE) $(USEMAKEFILE) $(MAKE_APERL_FILE) $@
@@ -1005,7 +1005,7 @@ testdb_static :: static pure_all
 # --- MakeMaker ppd section:
 # Creates a PPD (Perl Package Description) for a binary distribution.
 ppd :
-	$(NOECHO) $(ECHO) '<SOFTPKG NAME="Mojolicious-Plugin-RoutesAuthDBI" VERSION="0.840">' > Mojolicious-Plugin-RoutesAuthDBI.ppd
+	$(NOECHO) $(ECHO) '<SOFTPKG NAME="Mojolicious-Plugin-RoutesAuthDBI" VERSION="0.841">' > Mojolicious-Plugin-RoutesAuthDBI.ppd
 	$(NOECHO) $(ECHO) '    <ABSTRACT>from DBI tables does generate routes, make authentication and make restrict access (authorization) to app routes.</ABSTRACT>' >> Mojolicious-Plugin-RoutesAuthDBI.ppd
 	$(NOECHO) $(ECHO) '    <AUTHOR>Mikhail Che &lt;mche@cpan.org&gt;</AUTHOR>' >> Mojolicious-Plugin-RoutesAuthDBI.ppd
 	$(NOECHO) $(ECHO) '    <IMPLEMENTATION>' >> Mojolicious-Plugin-RoutesAuthDBI.ppd
@@ -1016,7 +1016,7 @@ ppd :
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Mojolicious::" VERSION="6" />' >> Mojolicious-Plugin-RoutesAuthDBI.ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Mojolicious::Plugin::Authentication" VERSION="1.29" />' >> Mojolicious-Plugin-RoutesAuthDBI.ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Mojolicious::Plugin::OAuth2::Che" VERSION="1.539" />' >> Mojolicious-Plugin-RoutesAuthDBI.ppd
-	$(NOECHO) $(ECHO) '        <ARCHITECTURE NAME="x86_64-linux-5.25" />' >> Mojolicious-Plugin-RoutesAuthDBI.ppd
+	$(NOECHO) $(ECHO) '        <ARCHITECTURE NAME="x86_64-linux-5.26" />' >> Mojolicious-Plugin-RoutesAuthDBI.ppd
 	$(NOECHO) $(ECHO) '        <CODEBASE HREF="" />' >> Mojolicious-Plugin-RoutesAuthDBI.ppd
 	$(NOECHO) $(ECHO) '    </IMPLEMENTATION>' >> Mojolicious-Plugin-RoutesAuthDBI.ppd
 	$(NOECHO) $(ECHO) '</SOFTPKG>' >> Mojolicious-Plugin-RoutesAuthDBI.ppd
