@@ -34,5 +34,3 @@ t/config.pm
 t/manifest.t
 t/pod-coverage.t
 t/pod.t
-MYMETA.yml
-MYMETA.json
