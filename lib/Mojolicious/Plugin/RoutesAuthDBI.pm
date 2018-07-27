@@ -130,7 +130,7 @@ sub register {
   die "Plugin must work with dbh, see SYNOPSIS" unless $self->dbh;
   
   # init base model
-  load_class('DBIx::Mojo::Model')->singleton(dbh=>$self->dbh, template_vars=>$self->merge_conf->{template}, mt=>{tag_start=>'{%', tag_end=>'%}'});
+  load_class($self->merge_conf->{model_namespace}."::Base")->singleton(dbh=>$self->dbh, template_vars=>$self->merge_conf->{template}, mt=>{tag_start=>'{%', tag_end=>'%}'});
   
   my $access = $self->access;
   
@@ -156,6 +156,9 @@ sub register {
   
   $self->guest
     if $self->conf->{guest};
+  
+  $self->log
+    if $self->conf->{log};
   
   $self->app->helper('access', sub {$access});
   

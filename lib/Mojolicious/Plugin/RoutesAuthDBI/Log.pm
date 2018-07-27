@@ -6,7 +6,19 @@ use Mojolicious::Plugin::RoutesAuthDBI::Util qw(json_enc json_dec);
 has [qw(app plugin model)];
 
 sub new {
-  state $self = shift->SUPER::new(@_);
+  my $self = shift->SUPER::new(@_);
+  $self->app->hook(after_dispatch => sub {
+    my $c = shift;
+    my $route = $c->match->endpoint
+      or return;
+    my $route_db = $route->{'Mojolicious::Plugin::RoutesAuthDBI'} && $route->{'Mojolicious::Plugin::RoutesAuthDBI'}{route};
+    my $conf = $self->plugin->merge_conf;
+    my $auth_helper = $conf->{auth}{current_user_fn};
+    my $u = $c->$auth_helper
+      or return;
+    $c->app->log->debug(sprintf "log after_dispatch: [%s]", $c->dumper($route_db) =~ s/\s+//gr,)#join(', ', sort keys %$route_db)
+      if $route_db;#
+  });
 }
 
 
