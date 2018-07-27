@@ -9,6 +9,7 @@ lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Controllers.pm
 lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Namespaces.pm
 lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Roles.pm
 lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Guest.pm
+lib/Mojolicious/Plugin/RoutesAuthDBI/Model/Log.pm
 lib/Mojolicious/Plugin/RoutesAuthDBI/Util.pm
 lib/Mojolicious/Plugin/RoutesAuthDBI/OAuth.pm
 lib/Mojolicious/Plugin/RoutesAuthDBI/Schema.pm
@@ -16,6 +17,7 @@ lib/Mojolicious/Plugin/RoutesAuthDBI/Install.pm
 lib/Mojolicious/Plugin/RoutesAuthDBI/Admin.pm
 lib/Mojolicious/Plugin/RoutesAuthDBI/Access.pm
 lib/Mojolicious/Plugin/RoutesAuthDBI/Guest.pm
+lib/Mojolicious/Plugin/RoutesAuthDBI/Log.pm
 lib/Mojolicious/Plugin/RoutesAuthDBI.pm
 README.pod
 Makefile.PL

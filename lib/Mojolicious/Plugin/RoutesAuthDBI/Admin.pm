@@ -674,7 +674,7 @@ Actions without controller (@{[scalar @$list2]}):
 TXT
 }
 
-my @route_cols = qw(request to name descr auth disable interval_ts);
+my @route_cols = qw(request host_re to name descr auth disable interval_ts);
 sub new_route {# показать маршруты к действию
   my $c = shift;
   my ($ns, $controll, $act) = $c->vars(qw'ns controll act');

@@ -104,11 +104,11 @@ sub logout {
 
 Доброго всем
 
-¡ ¡ ¡ ALL GLORY TO GLORIA ! ! !
+
 
 =head1 Mojolicious::Plugin::RoutesAuthDBI::Guest
 
-The code of module is mostly copy/paste from Mojolicious::Plugin::Authentication 1.29
+¡ ¡ ¡ ALL GLORY TO GLORIA ! ! !
 
 =head1 NAME
 
@@ -184,7 +184,7 @@ Please report any bugs or feature requests at L<https://github.com/mche/Mojolici
 
 =head1 COPYRIGHT
 
-Copyright 2016 Mikhail Che.
+Copyright 2016+ Mikhail Che.
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
