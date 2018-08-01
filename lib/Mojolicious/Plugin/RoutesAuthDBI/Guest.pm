@@ -124,19 +124,26 @@ Mojolicious::Plugin::RoutesAuthDBI::Guest - session for guests. Store guests in 
 
 =head1 OPTIONS
 
-=over 4
+=head2 namespace
 
-=item * B<namespace> - string, default to 'Mojolicious::Plugin::RoutesAuthDBI',
+String, default to 'Mojolicious::Plugin::RoutesAuthDBI'.
 
-=item * B<module> - string, default to 'Guest' (this module),
+=head2 module
 
-=item * B<session_key> - string, session storage of guest data. Default to 'guest_data'.
+String, default to 'Guest' (this module).
 
-=item * B<tables> - hashref, any DB tables names. See L<Mojolicious::Plugin::RoutesAuthDBI::Schema#Default-variables-for-SQL-templates>.
+=head2 session_key
 
-=item * B<table> - string, DB table B<guests> name. See L<Mojolicious::Plugin::RoutesAuthDBI::Schema#Default-variables-for-SQL-templates>.
+String, session storage of guest data. Default to 'guest_data'.
 
-=back
+=head2 tables
+
+Hashref, any DB tables names. See L<Mojolicious::Plugin::RoutesAuthDBI::Schema#Default-variables-for-SQL-templates>.
+
+=head2 table
+
+String, DB table B<guests> name. See L<Mojolicious::Plugin::RoutesAuthDBI::Schema#Default-variables-for-SQL-templates>.
+
 
 =head1 METHODS
 
