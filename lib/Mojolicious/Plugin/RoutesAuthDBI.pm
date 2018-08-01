@@ -79,6 +79,8 @@ has merge_conf => sub {#hashref
 has access => sub {# object
   my $self = shift;
   my $conf = $self->merge_conf->{'access'};
+  @{$self->merge_conf->{template}{tables}}{keys %{$conf->{tables}}} = values %{$conf->{tables}}
+    if $conf->{tables};
   my $class = load_class($conf);
   $class->import( @{ $conf->{import} });
   $class->new(app=>$self->app, plugin=>$self,);
@@ -87,6 +89,8 @@ has access => sub {# object
 has admin => sub {# object
   my $self = shift;
   my $conf = $self->merge_conf->{'admin'};
+  @{$self->merge_conf->{template}{tables}}{keys %{$conf->{tables}}} = values %{$conf->{tables}}
+    if $conf->{tables};
   #~ $conf->{module} ||= $conf->{controller};
   load_class($conf)->init(%$conf, app=>$self->app, plugin=>$self,);
 };
@@ -94,22 +98,35 @@ has admin => sub {# object
 has oauth => sub {
   my $self = shift;
   my $conf = $self->merge_conf->{'oauth'};
+  @{$self->merge_conf->{template}{tables}}{keys %{$conf->{tables}}} = values %{$conf->{tables}}
+    if $conf->{tables};
   load_class($conf)->init(%$conf, app=>$self->app, plugin=>$self, model=>$self->model($conf->{controller}),);
 };
 
 has guest => sub {# object
   my $self = shift;
   my $conf = $self->merge_conf->{'guest'};
-  my $class = load_class($conf);
+  @{$self->merge_conf->{template}{tables}}{keys %{$conf->{tables}}} = values %{$conf->{tables}}
+    if $conf->{tables};
   
+  $self->merge_conf->{template}{tables}{guests} = $conf->{table}
+    if $conf->{table};
+  
+  my $class = load_class($conf);
   $class->new( %$conf, app=>$self->app, plugin=>$self, model=>$self->model($conf->{module}), );
 };
 
 has log => sub {# object
   my $self = shift;
   my $conf = $self->merge_conf->{'log'};
-  my $class = load_class($conf);
   
+  @{$self->merge_conf->{template}{tables}}{keys %{$conf->{tables}}} = values %{$conf->{tables}}
+    if $conf->{tables};
+  
+  $self->merge_conf->{template}{tables}{logs} = $conf->{table}
+    if $conf->{table};
+  
+  my $class = load_class($conf);
   $class->new( %$conf, app=>$self->app, plugin=>$self, model=>$self->model($conf->{module}), )
     unless $conf->{disabled};
 };
@@ -169,7 +186,7 @@ sub register {
 sub cond_access {# add_condition
   my $self= shift;
   my ($route, $c, $captures, $args) = @_;# $args - это маршрут-хэш из запроса БД или хэш из кода 
-  $route->{(PKG)}{route} = $args;# может пригодиться
+  $route->{(PKG)}{route} = $args;# может пригодиться: $c->match->endpoint->{'Mojolicious::Plugin::RoutesAuthDBI'}...
   my $conf = $self->merge_conf;
   my $app = $c->app;
   my $access = $self->access;

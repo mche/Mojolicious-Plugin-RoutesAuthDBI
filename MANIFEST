@@ -31,6 +31,7 @@ t/04-admin.t
 t/05-access.t
 t/06-guest.t
 t/07-oauth.t
+t/08-log.t
 t/99-drop.t
 t/Test/Test1.pm
 t/config.pm

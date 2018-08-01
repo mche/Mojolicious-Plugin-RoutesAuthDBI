@@ -1,23 +1,33 @@
 package Mojolicious::Plugin::RoutesAuthDBI::Log;
 use Mojo::Base -base;#'Mojolicious::Plugin::Authentication'
 use Mojolicious::Plugin::RoutesAuthDBI::Util qw(json_enc json_dec);
+use Mojo::Util qw(decode url_unescape);
 
+use constant  PKG => __PACKAGE__;
 
 has [qw(app plugin model)];
 
 sub new {
   my $self = shift->SUPER::new(@_);
-  $self->app->hook(after_dispatch => sub {
+  #~ $self->app->hook("before_dispatch" => sub {
+    #~ my $c = shift;
+    #~ $c->timing->begin(PKG);
+  #~ });
+  my $model = $self->model;
+  $self->app->hook("after_dispatch" => sub {
     my $c = shift;
-    my $route = $c->match->endpoint
-      or return;
-    my $route_db = $route->{'Mojolicious::Plugin::RoutesAuthDBI'} && $route->{'Mojolicious::Plugin::RoutesAuthDBI'}{route};
     my $conf = $self->plugin->merge_conf;
     my $auth_helper = $conf->{auth}{current_user_fn};
-    my $u = $c->$auth_helper
+    my $u = $c->$auth_helper || ($self->plugin->guest && $self->plugin->guest->current($c))
       or return;
-    $c->app->log->debug(sprintf "log after_dispatch: [%s]", $c->dumper($route_db) =~ s/\s+//gr,)#join(', ', sort keys %$route_db)
-      if $route_db;#
+    my $route = $c->match->endpoint ||  {'non_static_url'=>$c->req->url->to_string};#$c->req->url->path->to_route or return;
+    my $route_id = $route->{'Mojolicious::Plugin::RoutesAuthDBI'} && $route->{'Mojolicious::Plugin::RoutesAuthDBI'}{route} && $route->{'Mojolicious::Plugin::RoutesAuthDBI'}{route}{id};
+    #~ my $elapsed = $c->timing->elapsed(PKG);
+    my $elapsed = $c->timing->elapsed('mojo.timer')
+      or return;# не будет для статики
+    #~ $c->app->log->debug(sprintf "%s elapsed:%s`s", ($route_id || decode('UTF-8', url_unescape($route->{non_static_url} || '/')), $elapsed)#join(', ', sort keys %$route_db)
+    $model->log(user_id=>$u->{id}, route_id=>$route_id, url=>$route_id ? undef : decode('UTF-8', url_unescape($route->{non_static_url} || '/')), status=>$c->res->code, elapsed=>$elapsed)
+      if $route_id || $route->{non_static_url};# без статики
   });
 }
 
@@ -63,6 +73,9 @@ Mojolicious::Plugin::RoutesAuthDBI::Log - store log in DBI table.
 
 =head1 METHODS
 
+=head2 new
+
+Apply logging into DBI table by "after_dispatch" hook
 
 
 =head1 SEE ALSO
