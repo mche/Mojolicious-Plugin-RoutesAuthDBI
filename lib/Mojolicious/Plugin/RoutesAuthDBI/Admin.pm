@@ -930,7 +930,7 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
 
     $app->plugin('RoutesAuthDBI', 
         ...
-        admin => {< options below >},
+        admin => {< hashref options list below >},
         ...
     );
 

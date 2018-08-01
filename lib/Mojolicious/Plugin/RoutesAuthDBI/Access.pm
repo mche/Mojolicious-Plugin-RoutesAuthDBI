@@ -296,7 +296,7 @@ See detail L<Mojolicious::Plugin::RoutesAuthDBI#access>
 
     $app->plugin('RoutesAuthDBI', 
         ...
-        access => {< options list below >},
+        access => {< hashref options list below >},
         ...
     );
 

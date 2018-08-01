@@ -118,7 +118,7 @@ Mojolicious::Plugin::RoutesAuthDBI::Guest - session for guests. Store guests in 
 
     $app->plugin('RoutesAuthDBI', 
         ...
-        guest => {< options list below >},
+        guest => {< hashref options list below >},
         ...
     );
 

@@ -72,7 +72,6 @@ has default => sub {
 
 has merge_conf => sub {#hashref
   my $self = shift;
-  #~ @{ $self->conf }{qw(app plugin)} = ($self->app, $self);
   merge($self->conf, $self->default);
 };
 
@@ -91,7 +90,6 @@ has admin => sub {# object
   my $conf = $self->merge_conf->{'admin'};
   @{$self->merge_conf->{template}{tables}}{keys %{$conf->{tables}}} = values %{$conf->{tables}}
     if $conf->{tables};
-  #~ $conf->{module} ||= $conf->{controller};
   load_class($conf)->init(%$conf, app=>$self->app, plugin=>$self,);
 };
 
@@ -185,7 +183,7 @@ sub register {
 
 sub cond_access {# add_condition
   my $self= shift;
-  my ($route, $c, $captures, $args) = @_;# $args - это маршрут-хэш из запроса БД или хэш из кода 
+  my ($route, $c, $captures, $args) = @_;# $args - это маршрут-хэш из запроса БД или хэш-конфиг из кода 
   $route->{(PKG)}{route} = $args;# может пригодиться: $c->match->endpoint->{'Mojolicious::Plugin::RoutesAuthDBI'}...
   my $conf = $self->merge_conf;
   my $app = $c->app;

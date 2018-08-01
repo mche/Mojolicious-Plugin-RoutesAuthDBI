@@ -410,7 +410,7 @@ See L<https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI/blob/master/Diagr
 
     $app->plugin('RoutesAuthDBI', 
         ...
-        oauth => {< options below >},
+        oauth => {< hashref options list below >},
         ...
     );
 
