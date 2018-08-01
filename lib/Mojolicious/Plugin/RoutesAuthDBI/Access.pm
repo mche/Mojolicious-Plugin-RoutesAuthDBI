@@ -324,6 +324,10 @@ This callback invoke when request need auth route but authentication was failure
 
 This callback invoke when request need auth route but access was failure. $route - L<Mojolicious::Routes::Route> object, $r_hash - route hashref db item, $u - useer hashref.
 
+=head2 tables
+
+Hashref of any DB tables names. See L<Mojolicious::Plugin::RoutesAuthDBI::Schema#Default-variables-for-SQL-templates>.
+
 
 =head1 EXPORT SUBS
 

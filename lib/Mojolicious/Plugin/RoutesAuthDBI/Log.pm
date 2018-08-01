@@ -62,11 +62,15 @@ Mojolicious::Plugin::RoutesAuthDBI::Log - store log in DBI table.
 
 =over 4
 
-=item * B<namespace> - default 'Mojolicious::Plugin::RoutesAuthDBI',
+=item * B<namespace> - string, default 'Mojolicious::Plugin::RoutesAuthDBI',
 
-=item * B<module> - default 'Guest' (this module),
+=item * B<module> - string, default 'Guest' (this module),
 
 =item * B<disabled> - boolean, disable logging.
+
+=item * B<tables> - hashref, any DB tables names. See L<Mojolicious::Plugin::RoutesAuthDBI::Schema#Default-variables-for-SQL-templates>.
+
+=item * B<table> - string, DB table B<logs> name. See L<Mojolicious::Plugin::RoutesAuthDBI::Schema#Default-variables-for-SQL-templates>.
 
 
 =back

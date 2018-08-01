@@ -457,6 +457,10 @@ In: $auth hash ref with access_token.
 
 Out: hashref C<profile_url> query params.
 
+=head3 tables
+
+Hashref of any DB tables names. See L<Mojolicious::Plugin::RoutesAuthDBI::Schema#Default-variables-for-SQL-templates>.
+
 =head2 Defaults options for oauth:
 
   oauth = > {

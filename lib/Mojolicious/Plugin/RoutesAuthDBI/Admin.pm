@@ -959,6 +959,10 @@ String. Is a url subprefix for trust admin urls of this module. See defaults bel
 
 String. Is a name of role for admonistrators.
 
+=head3 tables
+
+Hashref of any DB tables names. See L<Mojolicious::Plugin::RoutesAuthDBI::Schema#Default-variables-for-SQL-templates>.
+
 =head2 Default options
 
   admin = > {
