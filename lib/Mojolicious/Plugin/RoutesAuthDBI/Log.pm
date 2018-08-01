@@ -3,7 +3,7 @@ use Mojo::Base -base;#'Mojolicious::Plugin::Authentication'
 use Mojolicious::Plugin::RoutesAuthDBI::Util qw(json_enc json_dec);
 use Mojo::Util qw(decode url_unescape);
 
-use constant  PKG => __PACKAGE__;
+#~ use constant  PKG => __PACKAGE__;
 
 has [qw(app plugin model)];
 
