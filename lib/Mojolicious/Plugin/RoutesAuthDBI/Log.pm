@@ -7,28 +7,38 @@ use Mojo::Util qw(decode url_unescape);
 
 has [qw(app plugin model)];
 
+has hook => sub {
+  my $self = shift;
+  $self->app->hook("after_dispatch" => sub {
+    $self->log(shift);
+  });
+  
+};
+
 sub new {
-  my $self = shift->SUPER::new(@_);
+  state $self = shift->SUPER::new(@_);
   #~ $self->app->hook("before_dispatch" => sub {
     #~ my $c = shift;
     #~ $c->timing->begin(PKG);
   #~ });
-  my $model = $self->model;
-  $self->app->hook("after_dispatch" => sub {
-    my $c = shift;
-    my $conf = $self->plugin->merge_conf;
-    my $auth_helper = $conf->{auth}{current_user_fn};
-    my $u = $c->$auth_helper || ($self->plugin->guest && $self->plugin->guest->current($c))
-      or return;
-    my $route = $c->match->endpoint ||  {'non_static_url'=>$c->req->url->to_string};#$c->req->url->path->to_route or return;
-    my $route_id = $route->{'Mojolicious::Plugin::RoutesAuthDBI'} && $route->{'Mojolicious::Plugin::RoutesAuthDBI'}{route} && $route->{'Mojolicious::Plugin::RoutesAuthDBI'}{route}{id};
-    #~ my $elapsed = $c->timing->elapsed(PKG);
-    my $elapsed = $c->timing->elapsed('mojo.timer')
-      or return;# не будет для статики
-    #~ $c->app->log->debug(sprintf "%s elapsed:%s`s", ($route_id || decode('UTF-8', url_unescape($route->{non_static_url} || '/')), $elapsed)#join(', ', sort keys %$route_db)
-    $model->log(user_id=>$u->{id}, route_id=>$route_id, url=>$route_id ? undef : decode('UTF-8', url_unescape($route->{non_static_url} || '/')), status=>$c->res->code, elapsed=>$elapsed)
-      if $route_id || $route->{non_static_url};# без статики
-  });
+  $self->hook();
+}
+
+sub log {
+  my ($self, $c) = @_;
+  my $conf = $self->plugin->merge_conf;
+  my $auth_helper = $conf->{auth}{current_user_fn};
+  my $u = $c->$auth_helper || ($self->plugin->guest && $self->plugin->guest->current($c))
+    or return;
+  my $route = $c->match->endpoint ||  {'non_static_url'=>$c->req->url->to_string};#$c->req->url->path->to_route or return;
+  my $route_id = $route->{'Mojolicious::Plugin::RoutesAuthDBI'} && $route->{'Mojolicious::Plugin::RoutesAuthDBI'}{route} && $route->{'Mojolicious::Plugin::RoutesAuthDBI'}{route}{id};
+  #~ my $elapsed = $c->timing->elapsed(PKG);
+  my $elapsed = $c->timing->elapsed('mojo.timer')
+    or return;# не будет для статики
+  #~ $c->app->log->debug(sprintf "%s elapsed:%s`s", ($route_id || decode('UTF-8', url_unescape($route->{non_static_url} || '/')), $elapsed)#join(', ', sort keys %$route_db)
+  $self->model->log(user_id=>$u->{id}, route_id=>$route_id, url=>$route_id ? undef : decode('UTF-8', url_unescape($route->{non_static_url} || '/')), status=>$c->res->code, elapsed=>$elapsed)
+    if $route_id || $route->{non_static_url};# без статики
+  
 }
 
 
