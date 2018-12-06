@@ -3,6 +3,7 @@ use Mojo::Base 'Mojolicious::Plugin::Authentication';
 use Mojolicious::Plugin::RoutesAuthDBI::Util qw(load_class);
 use Mojo::Util qw(hmac_sha1_sum);
 use Hash::Merge qw( merge );
+use Scalar::Util 'weaken';
 
 use constant  PKG => __PACKAGE__;
 
@@ -155,6 +156,7 @@ sub register {
   $self->SUPER::register($self->app, $self->merge_conf->{auth});
   $self->app->plugin('HeaderCondition');# routes host_re
   
+  weaken $self;
   $self->app->routes->add_condition(access => sub {$self->cond_access(@_)});
   $access->apply_ns();
   $access->apply_route($_) for @{ $access->routes };
@@ -175,6 +177,7 @@ sub register {
   $self->log
     if $self->conf->{log};
   
+  weaken $access;
   $self->app->helper('access', sub {$access});
   
   return $self, $access;
@@ -360,7 +363,7 @@ sub model {
   
 };
 
-our $VERSION = '0.851';
+our $VERSION = '0.860';
 
 =pod
 
@@ -376,11 +379,11 @@ Plugin makes an auth operations throught the plugin L<Mojolicious::Plugin::Authe
 
 =head1 VERSION
 
-0.851
+0.860
 
 =head1 NAME
 
-Mojolicious::Plugin::RoutesAuthDBI - from DBI tables does generate routes, make authentication and make restrict access (authorization) to app routes.
+Mojolicious::Plugin::RoutesAuthDBI - from DBI tables does generate app routes, make authentication and make restrict access (authorization).
 
 =head1 DB DESIGN DIAGRAM
 
