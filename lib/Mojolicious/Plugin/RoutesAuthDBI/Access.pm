@@ -7,6 +7,7 @@ use Mojo::Util qw(md5_sum);
 #~ use Mojo::Exception;
 
 has [qw(app plugin)], undef, weak=>1;
+has qw(model);
 
 #~ has model_profiles => sub { shift->plugin->model('Profiles') };
 #~ has model => sub {
