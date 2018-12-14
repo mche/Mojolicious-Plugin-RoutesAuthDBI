@@ -364,7 +364,7 @@ sub model {
   
 };
 
-our $VERSION = '0.862';
+our $VERSION = '0.863';
 
 =pod
 
@@ -380,7 +380,7 @@ Plugin makes an auth operations throught the plugin L<Mojolicious::Plugin::Authe
 
 =head1 VERSION
 
-0.862
+0.863
 
 =head1 NAME
 
