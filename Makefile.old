@@ -62,11 +62,11 @@ DIRFILESEP = /
 DFSEP = $(DIRFILESEP)
 NAME = Mojolicious::Plugin::RoutesAuthDBI
 NAME_SYM = Mojolicious_Plugin_RoutesAuthDBI
-VERSION = 0.866
+VERSION = 0.872
 VERSION_MACRO = VERSION
-VERSION_SYM = 0_866
+VERSION_SYM = 0_872
 DEFINE_VERSION = -D$(VERSION_MACRO)=\"$(VERSION)\"
-XS_VERSION = 0.866
+XS_VERSION = 0.872
 XS_VERSION_MACRO = XS_VERSION
 XS_DEFINE_VERSION = -D$(XS_VERSION_MACRO)=\"$(XS_VERSION)\"
 INST_ARCHLIB = blib/arch
@@ -339,7 +339,7 @@ RCS_LABEL = rcs -Nv$(VERSION_SYM): -q
 DIST_CP = best
 DIST_DEFAULT = tardist
 DISTNAME = Mojolicious-Plugin-RoutesAuthDBI
-DISTVNAME = Mojolicious-Plugin-RoutesAuthDBI-0.866
+DISTVNAME = Mojolicious-Plugin-RoutesAuthDBI-0.872
 
 
 # --- MakeMaker macro section:
@@ -654,7 +654,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '  perl: '\''5.014'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) 'resources:' >> META_new.yml
 	$(NOECHO) $(ECHO) '  repository: git://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI.git' >> META_new.yml
-	$(NOECHO) $(ECHO) 'version: '\''0.866'\''' >> META_new.yml
+	$(NOECHO) $(ECHO) 'version: '\''0.872'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) 'x_homepage: https://github.com/mche' >> META_new.yml
 	$(NOECHO) $(ECHO) 'x_serialization_backend: '\''CPAN::Meta::YAML version 0.018'\''' >> META_new.yml
 	-$(NOECHO) $(MV) META_new.yml $(DISTVNAME)/META.yml
@@ -711,7 +711,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '         "web" : "https://github.com/mche/Mojolicious-Plugin-RoutesAuthDBI"' >> META_new.json
 	$(NOECHO) $(ECHO) '      }' >> META_new.json
 	$(NOECHO) $(ECHO) '   },' >> META_new.json
-	$(NOECHO) $(ECHO) '   "version" : "0.866",' >> META_new.json
+	$(NOECHO) $(ECHO) '   "version" : "0.872",' >> META_new.json
 	$(NOECHO) $(ECHO) '   "x_homepage" : "https://github.com/mche",' >> META_new.json
 	$(NOECHO) $(ECHO) '   "x_serialization_backend" : "JSON::PP version 4.04"' >> META_new.json
 	$(NOECHO) $(ECHO) '}' >> META_new.json
@@ -1022,7 +1022,7 @@ testdb_static :: static pure_all
 # --- MakeMaker ppd section:
 # Creates a PPD (Perl Package Description) for a binary distribution.
 ppd :
-	$(NOECHO) $(ECHO) '<SOFTPKG NAME="Mojolicious-Plugin-RoutesAuthDBI" VERSION="0.866">' > Mojolicious-Plugin-RoutesAuthDBI.ppd
+	$(NOECHO) $(ECHO) '<SOFTPKG NAME="Mojolicious-Plugin-RoutesAuthDBI" VERSION="0.872">' > Mojolicious-Plugin-RoutesAuthDBI.ppd
 	$(NOECHO) $(ECHO) '    <ABSTRACT>from DBI tables does generate app routes, make authentication and make restrict access (authorization).</ABSTRACT>' >> Mojolicious-Plugin-RoutesAuthDBI.ppd
 	$(NOECHO) $(ECHO) '    <AUTHOR>Mikhail Che &lt;mche@cpan.org&gt;</AUTHOR>' >> Mojolicious-Plugin-RoutesAuthDBI.ppd
 	$(NOECHO) $(ECHO) '    <IMPLEMENTATION>' >> Mojolicious-Plugin-RoutesAuthDBI.ppd
