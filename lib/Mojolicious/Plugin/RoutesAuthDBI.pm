@@ -63,6 +63,7 @@ has default => sub {
     module => 'Guest',
     #~ import => [qw(load_guest)],
   },
+  
   log=>{
     namespace => PKG,
     module => 'Log',
@@ -163,10 +164,10 @@ sub register {
     $access->apply_route($_) for $oauth->_routes;
   }
   
-  #~ if ($self->conf->{admin} && ref $self->conf->{admin} eq 'HASH' && keys %{$self->conf->{admin}}) {
-    #~ my $admin = $self->admin;
-    #~ $access->apply_route($_) for $admin->self_routes;
-  #~ }
+  if ($self->conf->{admin} && ref($self->conf->{admin} eq 'HASH') && keys(%{$self->conf->{admin}})) {
+    my $admin = $self->admin;
+    $access->apply_route($_) for $admin->self_routes;
+  }
   
   $self->guest
     if $self->conf->{guest};
